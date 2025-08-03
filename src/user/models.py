@@ -89,8 +89,8 @@ class UserProfile(Base):
         nullable=True,  # Макс. длина ТГ юзернейма
     )
 
-    # Проверка, что или оба параметра связанные с ТГ пустые, или оба имеют значение
     __table_args__ = (
+        # Проверка, что или оба параметра связанные с ТГ пустые, или оба имеют значение
         CheckConstraint(
             """
             (telegram_id IS NULL AND telegram_username IS NULL)
@@ -98,6 +98,15 @@ class UserProfile(Base):
             (telegram_id IS NOT NULL AND telegram_username IS NOT NULL)
             """,
             name="ck_telegram_fields_null_together",
+        ),
+        # Проверка, что или оба параметра связанные с Дискорд пустые, или оба имеют значение
+        CheckConstraint(
+            """
+            (discord_id IS NULL AND discord_username IS NULL)
+            OR
+            (discord_id IS NOT NULL AND discord_username IS NOT NULL)
+            """,
+            name="ck_discord_fields_null_together",
         ),
     )
 
