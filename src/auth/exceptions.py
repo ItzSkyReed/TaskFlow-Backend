@@ -69,7 +69,17 @@ class RefreshTokenNotFound(BaseAPIException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             msg="Refresh token not found in cookies",
             loc=["cookie", "token"],
-            err_type="token_error.refresh_token_not_found",
+            err_type="token_error.refresh_token_not_found_in_cookies",
+        )
+
+
+class InvalidRefreshToken(BaseAPIException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            msg="Refresh token JTI not found in whitelist",
+            loc=["cookie", "token"],
+            err_type="token_error.refresh_token_not_found_in_whitelist",
         )
 
 

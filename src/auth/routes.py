@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from ..database import get_async_session
+from ..schemas import SuccessResponseModel
 from .config import get_auth_settings
 from .dependencies import token_verification, validate_user_uniqueness
 from .exceptions import RefreshTokenNotFound
@@ -17,8 +18,13 @@ from .schemas import (
     SignInSchema,
     SignUpSchema,
 )
-from .usecases import refresh_user_tokens, sign_in_user, sign_up_user
-from .usecases.change_user_password import change_user_password
+from .usecases import (
+    change_user_password,
+    logout_user,
+    refresh_user_tokens,
+    sign_in_user,
+    sign_up_user,
+)
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentification"])
 
@@ -158,4 +164,32 @@ async def change_password_route(
 
     await change_user_password(passwords, refresh_token, session)
 
-    return {"success": True}
+    return SuccessResponseModel()
+
+
+@auth_router.post(
+    "/logout",
+    name="Выход",
+    response_model=None,
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="При выходе будет удален refresh токен из куки + БД сервера",
+    responses={
+        400: {"description": "Некорректные данные в запросе."},
+        401: {"description": "RefreshToken не найден, истек или некорректен"},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def logout_user_route(request: Request, response: Response) -> None:
+    refresh_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise RefreshTokenNotFound()
+
+    await logout_user(refresh_token)
+
+    response.delete_cookie(
+        key="refresh_token",
+        path=auth_router.prefix,
+    )
+
+    return None
