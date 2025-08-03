@@ -44,8 +44,11 @@ class User(Base):
     )
 
     user_profile: Mapped["UserProfile"] = relationship(
-        "UserProfile", back_populates="user", uselist=False,
-        cascade="all, delete-orphan", passive_deletes=True,
+        "UserProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     group_memberships: Mapped[list["GroupMembers"]] = relationship(

@@ -1,7 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from pydantic_settings import SettingsConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from ..auth.constants import LOGIN_PATTERN
 

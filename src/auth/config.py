@@ -13,7 +13,9 @@ class AuthSettings(BaseSettings):
     jwt_algorithm: str
     jwt_secret: str
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="AUTH_")
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", env_prefix="AUTH_"
+    )
 
 
 # noinspection PyArgumentList
