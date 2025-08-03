@@ -28,7 +28,7 @@
 
 3. **Конфигурация окружения**
    - Настроить`.env` в корне проекта, пример: [.env.example](.env.example)
-   - Настроить `redis.conf`Ж ([redis.conf.example](redis.conf.example)):
+   - Настроить `redis.conf`, пример: ([redis.conf.example](redis.conf.example)):
    
    > Пароль для Redis в `.env` и `redis.conf` должен совпадать
    
@@ -66,13 +66,12 @@
 ## Миграции
 
 #### Создать Миграцию
-
-```shell
-alembic revision --autogenerate -m "<MSG>"
-```
+   ```shell
+   alembic revision --autogenerate -m "<MSG>"
+   ```
 
 #### Применить миграцию
-
-```shell
-alembic upgrade head
-```
+    > Миграции автоматически применяются при запуске через docker-compose
+   ```shell
+   alembic upgrade head
+   ```
