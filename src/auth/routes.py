@@ -38,6 +38,7 @@ auth_settings = get_auth_settings()
     status_code=status.HTTP_201_CREATED,
     description="Регистрация нового пользователя",
     responses={
+        201: {"description": "Успешная регистрация"},
         400: {"description": "Некорректные данные в запросе."},
         409: {"description": "Пользователь с таким логином или email уже существует."},
         422: {"description": "Некорректные данные в запросе (валидация схемы)."},
@@ -71,6 +72,7 @@ async def sign_up_user_route(
     status_code=status.HTTP_200_OK,
     description="Вход пользователя в систему",
     responses={
+        200: {"description": "Успешный вход"},
         400: {"description": "Некорректные данные в запросе."},
         401: {"description": "Логин/Емаил/Пароль неверные или JWT токен поврежден"},
         422: {"description": "Некорректные данные в запросе (валидация схемы)."},
@@ -104,6 +106,7 @@ async def sign_in_user_route(
     status_code=status.HTTP_200_OK,
     description="Обновление токенов",
     responses={
+        200: {"description": "Успешное обновление токена"},
         400: {"description": "Некорректные данные в запросе."},
         401: {"description": "RefreshToken не найден, истек или некорректен"},
         429: {"description": "Превышены лимиты API."},
@@ -140,6 +143,7 @@ async def refresh_tokens_route(
     response_model=SuccessResponseModel,
     description="Изменение пароля на новый",
     responses={
+        200: {"description": "Успешная смена пароля"},
         400: {"description": "Некорректные данные в запросе."},
         401: {"description": "RefreshToken не найден, истек или некорректен"},
         403: {"description": "Старый пароль не верный"},
@@ -174,6 +178,7 @@ async def change_password_route(
     status_code=status.HTTP_204_NO_CONTENT,
     description="При выходе будет удален refresh токен из куки + БД сервера",
     responses={
+        204: {"description": "Успешный выход"},
         400: {"description": "Некорректные данные в запросе."},
         401: {"description": "RefreshToken не найден, истек или некорректен"},
         500: {"description": "Внутренняя ошибка сервера."},
