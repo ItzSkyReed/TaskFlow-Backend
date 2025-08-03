@@ -1,6 +1,7 @@
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic_settings import SettingsConfigDict
 
 from ..auth.constants import LOGIN_PATTERN
 
@@ -12,5 +13,4 @@ class UserSchema(BaseModel):
     )
     email: EmailStr = Field(..., max_length=320, examples=["johndoe@example.com"])
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
