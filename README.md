@@ -17,7 +17,7 @@
 ## Запуск проекта
 1. **Клонировать репозиторий**
    ```shell
-   git clone <URL>
+   git clone https://github.com/ItzSkyReed/TaskFlow-Backend.git
    ```
 
 2. **Установить Docker и Docker Compose**
