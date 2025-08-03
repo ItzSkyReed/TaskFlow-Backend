@@ -1,7 +1,7 @@
 from functools import lru_cache
 from logging import getLogger
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = getLogger(__name__)
 
@@ -13,10 +13,7 @@ class AuthSettings(BaseSettings):
     jwt_algorithm: str
     jwt_secret: str
 
-    class Config:
-        env_prefix = "AUTH_"
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="AUTH_")
 
 
 # noinspection PyArgumentList

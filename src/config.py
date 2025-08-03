@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import List, Literal
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
 
@@ -53,9 +53,7 @@ class Settings(BaseSettings):
             database=self.postgres_db,
         )
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env", extra = "ignore")
 
 
 # noinspection PyArgumentList
