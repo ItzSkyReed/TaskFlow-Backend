@@ -1,0 +1,10 @@
+appendonly yes
+appendfsync everysec
+save 900 1
+dir /data
+dbfilename dump.rdb
+appendfilename appendonly.aof
+loglevel notice
+databases 1
+
+requirepass CHANGE_THIS_PASSWORD

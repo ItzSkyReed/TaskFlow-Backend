@@ -1,0 +1,40 @@
+[project]
+name = "TaskFlow"
+version = "0.1.0"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi[standard-no-fastapi-cloud-cli]",
+    "orjson",
+    "uvicorn[standard]",
+    "pydantic_settings",
+    "uvloop ; sys_platform != 'win32'",
+    "httptools",
+    "sqlalchemy[asyncio]",
+    "alembic",
+    "asyncpg",
+    "psycopg2-binary",
+    "argon2-cffi",
+    "python-dotenv",
+    "email-validator",
+    "python-jose[cryptography]",
+    "redis",
+    "fastapi-limiter"
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+lint.select = ["E", "F", "I", "B"]
+lint.ignore = ["E501", "B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "auto"
+indent-style = "space"
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+strict = false
+exclude = "alembic"
+ignore_missing_imports = true

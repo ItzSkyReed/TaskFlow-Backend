@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgres:17.5-alpine3.22
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_OUT_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - db
+
+  redis:
+    image: redis:8.0.3-alpine
+    container_name: redis
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "${REDIS_OUT_PORT}:${REDIS_PORT}"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - db
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  migrate:
+    build: .
+    container_name: taskflow_migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MIGRATION_INSIDE_DOCKER: 1
+    env_file:
+      - .env
+    command: alembic upgrade head
+    networks:
+      - db
+
+
+  web:
+    build: .
+    container_name: taskflow_web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/fast_api/src
+    command: [ "fastapi", "dev", "src/main.py", "--host", "0.0.0.0" ]
+    networks:
+      - db
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  db:
+    name: db
+    driver: bridge

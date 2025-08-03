@@ -1,0 +1,24 @@
+from ..schemas import TokenSchema
+from ..services import (
+    add_new_refresh_token,
+    remove_previous_refresh_token,
+)
+from ..utils import JWTUtils
+
+
+async def refresh_user_tokens(
+    refresh_token: str,
+) -> TokenSchema:
+    token_payload = JWTUtils.decode_token(refresh_token)
+
+    new_tokens = JWTUtils.refresh_tokens(token_payload.sub)
+
+    await remove_previous_refresh_token(
+        user_id=token_payload.sub,
+        token_jti=token_payload.jti,  # type: ignore[arg-type]
+    )
+    await add_new_refresh_token(token_payload.sub, new_tokens.refresh_token.jti)
+    return TokenSchema(
+        access_token=new_tokens.access_token,
+        refresh_token=new_tokens.refresh_token.token,
+    )
