@@ -44,7 +44,8 @@ class User(Base):
     )
 
     user_profile: Mapped["UserProfile"] = relationship(
-        "UserProfile", back_populates="user", uselist=False
+        "UserProfile", back_populates="user", uselist=False,
+        cascade="all, delete-orphan", passive_deletes=True,
     )
 
     group_memberships: Mapped[list["GroupMembers"]] = relationship(
@@ -57,7 +58,7 @@ class UserProfile(Base):
 
     id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
-        ForeignKey("users.id"),
+        ForeignKey(User.id, ondelete="CASCADE"),
         primary_key=True,
         nullable=False,
     )
@@ -73,7 +74,7 @@ class UserProfile(Base):
 
     discord_username: Mapped[str] = mapped_column(
         String(32),  # Макс. длина дискорд юзернейма
-        unique=True,
+        unique=False,
         nullable=True,
     )
 
