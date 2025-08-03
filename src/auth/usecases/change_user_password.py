@@ -2,10 +2,13 @@ from logging import getLogger
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..exceptions import InvalidOldPasswordException
+from ..exceptions import InvalidOldPasswordException, InvalidRefreshToken
 from ..schemas import ChangePasswordSchema
-from ..services import get_user_by_id
-from ..services.token_rotation import remove_all_refresh_tokens_except
+from ..services import (
+    get_user_by_id,
+    is_refresh_jti_valid,
+    remove_all_refresh_tokens_except,
+)
 from ..utils import JWTUtils, PasswordUtils
 
 logger = getLogger(__name__)
@@ -17,6 +20,10 @@ async def change_user_password(
     session: AsyncSession,
 ) -> None:
     refresh_token_payload = JWTUtils.decode_token(refresh_token)
+
+    if not is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti):
+        raise InvalidRefreshToken()
+
     user = await get_user_by_id(refresh_token_payload.sub, session)
 
     if not PasswordUtils.verify_password(user.hashed_password, passwords.old_password):
