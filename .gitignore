@@ -210,3 +210,4 @@ redis.conf
 .env
 !.env.example
 *.pem
+.idea
