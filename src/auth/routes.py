@@ -131,6 +131,7 @@ async def refresh_tokens_route(
     "/change_password",
     name="Смена пароля",
     status_code=status.HTTP_200_OK,
+    response_model=SuccessResponseModel,
     description="Изменение пароля на новый",
     responses={
         400: {"description": "Некорректные данные в запросе."},
@@ -149,7 +150,7 @@ async def change_password_route(
     request: Request,
     passwords: Annotated[ChangePasswordSchema, Body(...)],
     session: AsyncSession = Depends(get_async_session),
-) -> dict[str, str | bool | int]:
+) -> SuccessResponseModel:
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:
