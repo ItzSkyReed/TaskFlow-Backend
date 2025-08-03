@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import BIGINT, CheckConstraint, ForeignKey, String, DateTime, func
+from sqlalchemy import BIGINT, CheckConstraint, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.expression import text
@@ -38,7 +38,6 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )  # Время регистрации
-
 
     created_groups: Mapped[list["Group"]] = relationship(
         back_populates="creator", cascade="all, delete-orphan"

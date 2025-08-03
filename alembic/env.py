@@ -7,10 +7,9 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
 from src import get_settings
 from src.database import Base
-from src.models import *
+from src.models import *  # noqa: F401, F403
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -33,9 +32,15 @@ target_metadata = Base.metadata
 # ... etc.
 settings = get_settings()
 if os.getenv("MIGRATION_INSIDE_DOCKER") in ("1", "true", "True"):
-    config.set_main_option("sqlalchemy.url", settings.database_url.render_as_string(hide_password=False))
+    config.set_main_option(
+        "sqlalchemy.url", settings.database_url.render_as_string(hide_password=False)
+    )
 else:
-    config.set_main_option("sqlalchemy.url", settings.outside_docker_database_url.render_as_string(hide_password=False))
+    config.set_main_option(
+        "sqlalchemy.url",
+        settings.outside_docker_database_url.render_as_string(hide_password=False),
+    )
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -75,8 +80,8 @@ async def run_async_migrations() -> None:
     """
 
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        poolclass=pool.NullPool)
+        config.get_section(config.config_ini_section, {}), poolclass=pool.NullPool
+    )
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

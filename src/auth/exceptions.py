@@ -32,6 +32,7 @@ class InvalidPasswordException(BaseAPIException):
             err_type="value_error.invalid_password",
         )
 
+
 class InvalidOldPasswordException(BaseAPIException):
     def __init__(self):
         super().__init__(
@@ -40,6 +41,7 @@ class InvalidOldPasswordException(BaseAPIException):
             loc=["body", "password"],
             err_type="value_error.invalid_password",
         )
+
 
 class TokenExpiredException(BaseAPIException):
     def __init__(self):

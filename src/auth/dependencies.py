@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Coroutine
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials
@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from src.auth.schemas import TokenPayloadSchema
+
 from ..auth.schemas import SignUpSchema
 from ..database import get_async_session
 from ..user import User

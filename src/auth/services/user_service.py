@@ -16,10 +16,9 @@ async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User
         raise UserNotFoundByIdentifierException()
     return user
 
+
 async def get_user_by_id(user_id: UUID, session: AsyncSession) -> User:
-    result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
+    result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise UserNotFoundByIdentifierException()

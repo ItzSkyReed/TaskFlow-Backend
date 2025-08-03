@@ -7,9 +7,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TypedDict
 
-import uvicorn
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi_limiter import FastAPILimiter
@@ -19,16 +16,16 @@ from .auth import auth_router
 from .config import get_settings
 from .exceptions import rate_limit_default_callback
 from .logging_config import LOGGING_CONFIG
-from .redis import redis_client
 
 # To correctly load all models
-from .models import * # noqa: F401
-
+from .models import *  # noqa: F401, F403
+from .redis import redis_client
 
 # uvloop if faster than standart event loop
 if sys.platform != "win32":
     # noinspection PyUnresolvedReferences
     import uvloop
+
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 BASE_DIR = Path(os.getcwd())  # project_root
@@ -56,6 +53,7 @@ if settings.environment != "PROD":
 
 
 executor = ThreadPoolExecutor(max_workers=1)  # Один поток для миграций
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

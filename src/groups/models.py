@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.expression import text
 
 from ..database import Base
+
 if TYPE_CHECKING:
     from ..user import User
 

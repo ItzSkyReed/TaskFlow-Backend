@@ -1,20 +1,20 @@
 from logging import getLogger
-from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..exceptions import InvalidOldPasswordException
+from ..schemas import ChangePasswordSchema
 from ..services import get_user_by_id
-from ..exceptions import InvalidPasswordException, InvalidOldPasswordException
-from ..schemas import TokenSchema, ChangePasswordSchema
 from ..services.token_rotation import remove_all_refresh_tokens_except
 from ..utils import JWTUtils, PasswordUtils
 
 logger = getLogger(__name__)
 
+
 async def change_user_password(
-        passwords: ChangePasswordSchema,
-        refresh_token: str,
-        session: AsyncSession,
+    passwords: ChangePasswordSchema,
+    refresh_token: str,
+    session: AsyncSession,
 ) -> None:
     refresh_token_payload = JWTUtils.decode_token(refresh_token)
     user = await get_user_by_id(refresh_token_payload.sub, session)

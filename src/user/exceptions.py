@@ -12,6 +12,7 @@ class UserNotFoundByIdentifierException(BaseAPIException):
             err_type="value_error.invalid_identifier",
         )
 
+
 class UserNotFoundByIdException(BaseAPIException):
     def __init__(self):
         super().__init__(

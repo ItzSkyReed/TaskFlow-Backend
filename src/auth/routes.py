@@ -1,24 +1,24 @@
-from typing import Annotated, Any, Coroutine
+from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
 from fastapi_limiter.depends import RateLimiter
-from redis.auth.token import TokenResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
-from .usecases.change_user_password import change_user_password
 from ..database import get_async_session
 from .config import get_auth_settings
 from .dependencies import token_verification, validate_user_uniqueness
 from .exceptions import RefreshTokenNotFound
 from .schemas import (
     AccessTokenSchema,
+    ChangePasswordSchema,
     SignInSchema,
-    SignUpSchema, ChangePasswordSchema,
+    SignUpSchema,
 )
-from .usecases import sign_in_user, refresh_user_tokens, sign_up_user
+from .usecases import refresh_user_tokens, sign_in_user, sign_up_user
+from .usecases.change_user_password import change_user_password
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentification"])
 
@@ -41,9 +41,9 @@ auth_settings = get_auth_settings()
     dependencies=[Depends(RateLimiter(times=1000, minutes=5))],
 )
 async def sign_up_user_route(
-        response: Response,
-        user_in: SignUpSchema = Depends(validate_user_uniqueness),
-        session: AsyncSession = Depends(get_async_session),
+    response: Response,
+    user_in: SignUpSchema = Depends(validate_user_uniqueness),
+    session: AsyncSession = Depends(get_async_session),
 ) -> AccessTokenSchema:
     register_result = await sign_up_user(user_in, session)
 
@@ -74,9 +74,9 @@ async def sign_up_user_route(
     dependencies=[Depends(RateLimiter(times=3000, minutes=5))],
 )
 async def sign_in_user_route(
-        response: Response,
-        user_in: Annotated[SignInSchema, Body(...)],
-        session: AsyncSession = Depends(get_async_session),
+    response: Response,
+    user_in: Annotated[SignInSchema, Body(...)],
+    session: AsyncSession = Depends(get_async_session),
 ) -> AccessTokenSchema:
     login_result = await sign_in_user(user_in, session)
 
@@ -107,7 +107,7 @@ async def sign_in_user_route(
     dependencies=[Depends(RateLimiter(times=20, minutes=5))],
 )
 async def refresh_tokens_route(
-        request: Request, response: Response
+    request: Request, response: Response
 ) -> AccessTokenSchema:
     refresh_token = request.cookies.get("refresh_token")
 
@@ -141,13 +141,14 @@ async def refresh_tokens_route(
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[
-        Depends(token_verification), Depends(RateLimiter(times=20, minutes=5)),
+        Depends(token_verification),
+        Depends(RateLimiter(times=20, minutes=5)),
     ],
 )
 async def change_password_route(
-        request: Request,
-        passwords: Annotated[ChangePasswordSchema, Body(...)],
-        session: AsyncSession = Depends(get_async_session)
+    request: Request,
+    passwords: Annotated[ChangePasswordSchema, Body(...)],
+    session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, str | bool | int]:
     refresh_token = request.cookies.get("refresh_token")
 

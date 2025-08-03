@@ -1,15 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user import User
-from ...user.schemas import UserSchema
-from ..schemas import TokenSchema, TokenUserSchema, SignUpSchema
+from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
 
 
 async def sign_up_user(
-        user_in: SignUpSchema,
-        session: AsyncSession,
+    user_in: SignUpSchema,
+    session: AsyncSession,
 ) -> TokenSchema:
     hashed_password = PasswordUtils.hash_password(user_in.password)
     user = User(
@@ -29,6 +28,4 @@ async def sign_up_user(
     # Сохраняем refresh_token в БД/Redis
     await add_new_refresh_token(user.id, refresh_token.jti)
 
-    return TokenSchema(
-        access_token=access_token, refresh_token=refresh_token.token
-    )
+    return TokenSchema(access_token=access_token, refresh_token=refresh_token.token)
