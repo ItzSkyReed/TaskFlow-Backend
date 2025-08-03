@@ -9,6 +9,11 @@ auth_settings = get_auth_settings()
 
 
 async def add_new_refresh_token(user_id: UUID, token_jti: UUID) -> None:
+    """
+    Добавляет новый refresh токен пользователю, удаляет самый старый если токенов > 5
+    :param user_id: UUID пользователя
+    :param token_jti: UUID токена который будет сохранен
+    """
     key = f"refresh:{user_id}"
 
     async with redis_client.lock(f"lock:refresh_tokens:{user_id}", timeout=5):
@@ -28,6 +33,11 @@ async def add_new_refresh_token(user_id: UUID, token_jti: UUID) -> None:
 async def remove_all_refresh_tokens_except(
     user_id: UUID, except_token_jti: UUID
 ) -> None:
+    """
+    Удаляет refresh token пользователя кроме определенного
+    :param user_id: UUID пользователя
+    :param except_token_jti: UUID токена который будет сохранен
+    """
     lock_key = f"lock:change_password:{user_id}"
     async with redis_client.lock(lock_key, timeout=5):
         key = f"refresh:{user_id}"
@@ -45,17 +55,29 @@ async def remove_all_refresh_tokens_except(
             await pipe.execute()
 
 
-async def remove_previous_refresh_token(user_id: UUID, token_jti: UUID) -> None:
-    key = f"refresh:{user_id}"
-    await redis_client.zrem(key, str(token_jti))
+async def remove_refresh_token(user_id: UUID, token_jti: UUID) -> None:
+    """
+    Удаляет refresh token пользователя по его jti
+    :param user_id: UUID пользователя
+    :param token_jti: UUID токена
+    """
+    await redis_client.zrem(f"refresh:{user_id}", str(token_jti))
 
 
 async def remove_all_refresh_tokens(user_id: UUID) -> None:
-    key = f"refresh:{user_id}"
-    await redis_client.delete(key)
+    """
+    Удаляет ВСЕ refresh токены пользователя
+    :param user_id: UUID пользователя
+    """
+    await redis_client.delete(f"refresh:{user_id}")
 
 
 async def is_refresh_jti_valid(user_id: UUID, jti: UUID) -> bool:
-    key = f"refresh:{user_id}"
-    score = await redis_client.zscore(key, str(jti))
+    """
+    Проверяет, есть ли refresh токен в списке валидных
+    :param user_id:
+    :param jti:
+    :return:
+    """
+    score = await redis_client.zscore(f"refresh:{user_id}", str(jti))
     return score is not None
