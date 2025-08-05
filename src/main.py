@@ -2,7 +2,6 @@ import asyncio
 import logging.config
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TypedDict
@@ -21,7 +20,7 @@ from .logging_config import LOGGING_CONFIG
 from .models import *  # noqa: F401, F403
 from .redis import redis_client
 
-# uvloop if faster than standart event loop
+# uvloop быстрее стандартного event loop
 if sys.platform != "win32":
     # noinspection PyUnresolvedReferences
     import uvloop
@@ -50,9 +49,6 @@ if settings.environment != "PROD":
         "redoc_url": "/redoc",
         "openapi_url": "/openapi.json",
     }
-
-
-executor = ThreadPoolExecutor(max_workers=1)  # Один поток для миграций
 
 
 @asynccontextmanager

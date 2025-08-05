@@ -10,6 +10,12 @@ async def sign_up_user(
     user_in: SignUpSchema,
     session: AsyncSession,
 ) -> TokenSchema:
+    """
+    Логика регистрации пользователя
+    :param user_in: Схема регистрации пользователя
+    :param session: Сессия
+    :return: Схема содержащая access и refresh токены
+    """
     hashed_password = PasswordUtils.hash_password(user_in.password)
     user = User(
         login=user_in.login,

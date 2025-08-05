@@ -8,6 +8,10 @@ from starlette.responses import Response
 
 
 class BaseAPIException(HTTPException):
+    """
+    Базовая HTTP ошибка, от которой должны наследоваться все остальные
+    """
+
     def __init__(
         self,
         msg: str,
@@ -25,6 +29,11 @@ class BaseAPIException(HTTPException):
 async def rate_limit_default_callback(
     request: Request, response: Response, pexpire: int
 ):
+    """
+    Функция вызываемая FastApi Limiter при достижении лимита обращений в эндпоинту
+    :param pexpire: количество ms до след запроса
+    :return: Ошибка с 429 кодом и соответствующим описанием
+    """
     expire = ceil(pexpire / 1000)
     raise RateLimitExceeded(headers={"Retry-After": str(expire)})
 

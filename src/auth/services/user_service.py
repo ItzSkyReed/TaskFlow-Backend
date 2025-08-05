@@ -3,11 +3,16 @@ from uuid import UUID
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user import User
-from ...user.exceptions import UserNotFoundByIdentifierException
+from ...user import User, UserNotFoundByIdentifierException, UserNotFoundByIdException
 
 
 async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User:
+    """
+    Получение пользователя по identifier
+    :param identifier: Login/Email пользователя
+    :param session: Сессия
+    :raises UserNotFoundByIdentifierException: Если пользователь не найден
+    """
     result = await session.execute(
         select(User).where(or_(User.email == identifier, User.login == identifier))
     )
@@ -18,8 +23,14 @@ async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User
 
 
 async def get_user_by_id(user_id: UUID, session: AsyncSession) -> User:
+    """
+    Получение пользователя по identifier
+    :param user_id: UUID пользователя
+    :param session: Сессия
+    :raises UserNotFoundByIdException: Если пользователь не найден
+    """
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
-        raise UserNotFoundByIdentifierException()
+        raise UserNotFoundByIdException()
     return user

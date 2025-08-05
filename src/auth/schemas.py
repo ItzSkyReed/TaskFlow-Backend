@@ -12,11 +12,14 @@ from pydantic import (
     field_validator,
 )
 
-from ..user.schemas import UserSchema
 from .constants import LOGIN_PATTERN, PASSWORD_PATTERN
 
 
 class SignUpSchema(BaseModel):
+    """
+    Схема регистрации пользователя
+    """
+
     login: Annotated[
         str,
         Field(
@@ -24,7 +27,7 @@ class SignUpSchema(BaseModel):
             min_length=4,
             max_length=64,
             pattern=LOGIN_PATTERN,
-            examples=["srun4ikPRO"],
+            examples=["SuperUniqueLogin", "Login12345", "Login_megalogin"],
             description="Login",
         ),
     ]
@@ -33,7 +36,7 @@ class SignUpSchema(BaseModel):
         Field(
             ...,
             max_length=320,
-            examples=["johndoe@example.com"],
+            examples=["johndoe@example.com", "nepoka@mail.ru"],
             description="Email адрес",
         ),
     ]
@@ -50,6 +53,10 @@ class SignUpSchema(BaseModel):
 
 
 class SignInSchema(BaseModel):
+    """
+    Схема входа пользователя
+    """
+
     identifier: Annotated[
         str,
         Field(
@@ -64,8 +71,13 @@ class SignInSchema(BaseModel):
     @classmethod
     @field_validator("identifier", mode="after")
     def validate_identifier(cls, login_or_email: str) -> str:
+        """
+        Проверка валидности идентификатора (должен соответствовать либо правилам Email, либо Login
+        :param login_or_email: Login или Email пользователя
+        :raises ValueError: Если login_or_email не проходит обе проверки валидации
+        """
         try:
-            TypeAdapter(EmailStr).validate_python(login_or_email)
+            EmailStr.validate(login_or_email)
             return login_or_email
         except ValidationError:
             pass
@@ -79,6 +91,10 @@ class SignInSchema(BaseModel):
 
 
 class ChangePasswordSchema(BaseModel):
+    """
+    Схема смены пароля пользователя
+    """
+
     old_password: Annotated[
         str,
         Field(
@@ -104,11 +120,6 @@ class ChangePasswordSchema(BaseModel):
 class TokenSchema(BaseModel):
     access_token: Annotated[str, Field(...)]
     refresh_token: Annotated[str, Field(...)]
-
-
-class TokenUserSchema(BaseModel):
-    tokens: Annotated[TokenSchema, Field(...)]
-    user: Annotated[UserSchema, Field(...)]
 
 
 class RefreshTokenDataSchema(BaseModel):

@@ -28,10 +28,21 @@ class PasswordUtils:
 
     @classmethod
     def hash_password(cls, password: str) -> str:
+        """
+        Хэширует пароль (используется argon2)
+        :param password: Пароль
+        :return: Захешированный пароль
+        """
         return cls.__password_hasher.hash(password)
 
     @classmethod
     def verify_password(cls, hashed_password: str, password: str) -> bool:
+        """
+        Проверяет валидность введенного пароля
+        :param hashed_password: Хэшированный пароль, с которым хотим сравнить.
+        :param password: Пароль, с которым сравниваем хэш
+        :return: Являются ли пароли одинаковыми
+        """
         try:
             return cls.__password_hasher.verify(hash=hashed_password, password=password)
         except VerifyMismatchError:
@@ -46,6 +57,10 @@ class JWTUtils:
 
     @classmethod
     def create_access_token(cls, user_id: str | UUID) -> str:
+        """
+        Создает access token
+        :param user_id: UUID пользователя
+        """
         now = datetime.now(UTC)
 
         payload = {
@@ -62,6 +77,10 @@ class JWTUtils:
 
     @classmethod
     def create_refresh_token(cls, user_id: str | UUID) -> RefreshTokenDataSchema:
+        """
+        Создает refresh token
+        :param user_id: UUID пользователя
+        """
         jti = uuid4()
         now = datetime.now(UTC)
 
@@ -84,6 +103,12 @@ class JWTUtils:
 
     @classmethod
     def decode_token(cls, token: str) -> TokenPayloadSchema:
+        """
+        Декодирует/Валидирует access/refresh токены
+        :param token: Токен пользователя
+        :raises TokenExpiredException: Если истекло время жизни токена
+        :raises InvalidTokenException: При любой другой проблеме с токеном
+        """
         try:
             payload = jwt.decode(
                 token,
@@ -116,6 +141,9 @@ class CustomHTTPBearer(HTTPBearer):
         )
 
     async def __call__(self, request: Request) -> HTTPAuthorizationCredentials:
+        """
+        :raises AccessTokenNotFound: Если access token не найден в запросе
+        """
         credentials = await super().__call__(request)
         if not credentials:
             raise AccessTokenNotFound()

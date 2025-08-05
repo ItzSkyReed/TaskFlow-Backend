@@ -2,7 +2,11 @@ from logging import getLogger
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..exceptions import InvalidOldPasswordException, InvalidRefreshToken
+from ..exceptions import (
+    InvalidOldPasswordException,
+    PasswordsAreSameException,
+    RefreshTokenNotWhitelisted,
+)
 from ..schemas import ChangePasswordSchema
 from ..services import (
     get_user_by_id,
@@ -19,10 +23,23 @@ async def change_user_password(
     refresh_token: str,
     session: AsyncSession,
 ) -> None:
+    """
+    Логика изменения пароля пользователя
+    :param passwords: Схема с паролями пользователей
+    :param refresh_token: Refresh token пользователя
+    :param session: Сессия
+    :raises RefreshTokenNotWhitelisted: Если Refresh токена нет в redis (разрешенные токены)
+    :raises InvalidOldPasswordException: Если старый пароль не совпадает с актуальным
+    :raises PasswordsAreSameException: Если старый и новый пароль одинаковы
+    """
+
+    if passwords.old_password == passwords.new_password:
+        raise PasswordsAreSameException()
+
     refresh_token_payload = JWTUtils.decode_token(refresh_token)
 
     if not is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti):
-        raise InvalidRefreshToken()
+        raise RefreshTokenNotWhitelisted()
 
     user = await get_user_by_id(refresh_token_payload.sub, session)
 

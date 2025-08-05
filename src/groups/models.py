@@ -16,6 +16,10 @@ if TYPE_CHECKING:
 
 
 class Group(Base):
+    """
+    Хранение групп
+    """
+
     __tablename__ = "groups"
 
     id: Mapped[UUID] = mapped_column(
@@ -24,16 +28,23 @@ class Group(Base):
         server_default=text("uuid_generate_v4()"),
     )
 
-    name: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # Название группы
 
-    description: Mapped[str] = mapped_column(String(5000), nullable=True)
+    description: Mapped[str] = mapped_column(
+        String(5000), nullable=True
+    )  # Описание группы
 
     creator_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        # Не позволяем удалить пользователя пока у него есть владельцы, сначала их надо передать кому-либо
+        # (возможно автоматически тем, у кого самые большие права,
+        # возможно случайному, возможно ему самому надо будет выбрать будущего владельца)
         nullable=False,
         index=True,
-    )
+    )  # UUID пользователя создавшего группу (владелец)
 
     creator: Mapped["User"] = relationship(back_populates="created_groups")
 
@@ -47,6 +58,10 @@ class Group(Base):
 
 
 class GroupMembers(Base):
+    """
+    Хранение участников групп
+    """
+
     __tablename__ = "group_members"
 
     id: Mapped[UUID] = mapped_column(
@@ -73,7 +88,6 @@ class GroupMembers(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время входа пользователя в группу
 
-    # ORM-связи
     group: Mapped["Group"] = relationship(back_populates="members")
     user: Mapped["User"] = relationship(back_populates="group_memberships")
 
@@ -83,12 +97,20 @@ class GroupMembers(Base):
 
 
 class InvitationStatus(str, Enum):
+    """
+    Статусы заявок приглашений
+    """
+
     PENDING = "PENDING"
     ACCEPTED = "ACCEPTED"
     REJECTED = "REJECTED"
 
 
 class GroupInvitation(Base):
+    """
+    Хранение приглашений пользователей в группы
+    """
+
     __tablename__ = "group_invitations"
 
     id: Mapped[UUID] = mapped_column(
@@ -148,3 +170,61 @@ class GroupInvitation(Base):
             ),
         ),
     )
+
+
+# Идея с запросами в группу
+
+# class JoinRequestStatus(str, Enum):
+#     PENDING = "PENDING"
+#     APPROVED = "APPROVED"
+#     REJECTED = "REJECTED"
+#
+# class GroupJoinRequest(Base):
+#     __tablename__ = "group_join_requests"
+#
+#     id: Mapped[UUID] = mapped_column(
+#         pgUUID(as_uuid=True),
+#         primary_key=True,
+#         server_default=text("uuid_generate_v4()"),
+#     )
+#
+#     group_id: Mapped[UUID] = mapped_column(
+#         pgUUID(as_uuid=True),
+#         ForeignKey("groups.id", ondelete="CASCADE"),
+#         nullable=False,
+#     )  # Группа, куда хочет вступить пользователь
+#
+#     requester_id: Mapped[UUID] = mapped_column(
+#         pgUUID(as_uuid=True),
+#         ForeignKey("users.id", ondelete="CASCADE"),
+#         nullable=False,
+#     )  # Пользователь, подавший заявку
+#
+#     status: Mapped[JoinRequestStatus] = mapped_column(
+#         PgEnum(JoinRequestStatus, name="join_request_status"),
+#         server_default=text(f"'{JoinRequestStatus.PENDING.name}'::join_request_status"),
+#         nullable=False,
+#     )
+#
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime, server_default=func.now(), nullable=False
+#     )
+#
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime, nullable=False, server_default=func.now(), onupdate=datetime.now
+#     )
+#
+#     group: Mapped["Group"] = relationship()
+#     requester: Mapped["User"] = relationship()
+#
+#     __table_args__ = (
+#         Index(
+#             "uq_group_join_request_pending",
+#             "group_id",
+#             "requester_id",
+#             unique=True,
+#             postgresql_where=text(
+#                 f"status = '{JoinRequestStatus.PENDING.name}'::join_request_status"
+#             ),
+#         ),
+#     )

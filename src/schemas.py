@@ -4,4 +4,8 @@ from pydantic import BaseModel, Field
 
 
 class SuccessResponseModel(BaseModel):
-    success: Annotated[bool, Field(default=True, frozen=True)]
+    """
+    Используется для отправки успешного ответа в 200 коде в случае отсутствия каких либо других схем
+    """
+
+    success: Annotated[bool, Field(default=True, frozen=True)] = True

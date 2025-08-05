@@ -10,6 +10,13 @@ async def sign_in_user(
     user_in: SignInSchema,
     session: AsyncSession,
 ) -> TokenSchema:
+    """
+    Логика входа пользователя на сайт
+    :param user_in: Схема данных для входа
+    :param session: Сессия
+    :return: Схема содержащая access и refresh токены
+    :raises InvalidPasswordException: Если пароль неверен
+    """
     user = await get_user_by_identifier(user_in.identifier, session)
 
     if not PasswordUtils.verify_password(user.hashed_password, user_in.password):

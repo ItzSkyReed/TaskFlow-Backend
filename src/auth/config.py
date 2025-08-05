@@ -7,8 +7,8 @@ logger = getLogger(__name__)
 
 
 class AuthSettings(BaseSettings):
-    access_token_expires_in: int  # minutes
-    refresh_token_expires_in: int  # minutes
+    access_token_expires_in: int  # минуты
+    refresh_token_expires_in: int  # минуты
 
     jwt_algorithm: str
     jwt_secret: str
@@ -21,4 +21,7 @@ class AuthSettings(BaseSettings):
 # noinspection PyArgumentList
 @lru_cache
 def get_auth_settings() -> AuthSettings:
+    """
+    Получение конфига аутентификационных настроек
+    """
     return AuthSettings()

@@ -1,4 +1,4 @@
-from ..exceptions import InvalidRefreshToken
+from ..exceptions import RefreshTokenNotWhitelisted
 from ..schemas import TokenSchema
 from ..services import (
     add_new_refresh_token,
@@ -11,10 +11,16 @@ from ..utils import JWTUtils
 async def refresh_user_tokens(
     refresh_token: str,
 ) -> TokenSchema:
+    """
+    Логика обновления токенов пользователя
+    :param refresh_token: refresh токен пользователя
+    :return: Схема содержащая access и refresh токены
+    :raises RefreshTokenNotWhitelisted: Если refresh токен не в списке разрешенных
+    """
     refresh_token_payload = JWTUtils.decode_token(refresh_token)
 
     if not is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti):
-        raise InvalidRefreshToken()
+        raise RefreshTokenNotWhitelisted()
 
     new_tokens = JWTUtils.refresh_tokens(refresh_token_payload.sub)
 
