@@ -2,6 +2,7 @@ from logging import getLogger
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...user.services import get_user_by_id
 from ..exceptions import (
     InvalidOldPasswordException,
     PasswordsAreSameException,
@@ -9,7 +10,6 @@ from ..exceptions import (
 )
 from ..schemas import ChangePasswordSchema
 from ..services import (
-    get_user_by_id,
     is_refresh_jti_valid,
     remove_all_refresh_tokens_except,
 )

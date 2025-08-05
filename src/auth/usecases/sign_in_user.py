@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...user.services import get_user_by_identifier
 from ..exceptions import InvalidPasswordException
 from ..schemas import SignInSchema, TokenSchema
-from ..services import add_new_refresh_token, get_user_by_identifier
+from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
 
 
