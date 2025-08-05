@@ -2,7 +2,15 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import BIGINT, CheckConstraint, DateTime, ForeignKey, String, func
+from sqlalchemy import (
+    BIGINT,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    String,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.expression import text
@@ -22,7 +30,7 @@ class User(Base):
         server_default=text("uuid_generate_v4()"),
     )
     login: Mapped[str] = mapped_column(
-        String(64), unique=True, index=True, nullable=False
+        String(32), unique=True, index=True, nullable=False
     )
     email: Mapped[str] = mapped_column(
         String(319),  # RFC-validated max length
@@ -90,6 +98,18 @@ class UserProfile(Base):
         String(32),
         unique=False,
         nullable=True,  # Макс. длина ТГ юзернейма
+    )
+
+    show_discord: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+
+    show_telegram: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+
+    show_email: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
     )
 
     __table_args__ = (
