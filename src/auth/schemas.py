@@ -1,18 +1,53 @@
-import re
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from pydantic import (
     BaseModel,
+    ConfigDict,
     EmailStr,
     Field,
-    TypeAdapter,
+    StringConstraints,
     ValidationError,
     field_validator,
 )
 
+from ..user.constants import NAME_PATTERN
 from .constants import LOGIN_PATTERN, PASSWORD_PATTERN
+
+
+class TokenSchema(BaseModel):
+    access_token: Annotated[str, Field(...)]
+    refresh_token: Annotated[str, Field(...)]
+
+
+class RefreshTokenDataSchema(BaseModel):
+    token: Annotated[str, Field(...)]
+    jti: Annotated[UUID, Field(...)]
+
+
+class TokenRefreshSchema(BaseModel):
+    access_token: Annotated[str, Field(...)]
+    refresh_token: Annotated[RefreshTokenDataSchema, Field(...)]
+
+
+class AccessTokenSchema(BaseModel):
+    access_token: Annotated[str, Field(...)]
+    token_type: Annotated[str, Field(default="bearer")] = "bearer"
+
+
+class TokenPayloadSchema(BaseModel):
+    """
+    Поля Access/Refresh токена. JTI существует только у Refresh токена
+    """
+
+    sub: Annotated[UUID, Field(...)]
+    iat: Annotated[datetime, Field(...)]
+    exp: Annotated[datetime, Field(...)]
+    jti: Annotated[UUID | None, Field(default=None)]
+
+
+LoginStr = Annotated[str, StringConstraints(pattern=LOGIN_PATTERN)]
 
 
 class SignUpSchema(BaseModel):
@@ -94,8 +129,12 @@ class SignInSchema(BaseModel):
         except ValidationError:
             pass
 
-        if re.fullmatch(LOGIN_PATTERN, login_or_email):
+        try:
+            # noinspection PyUnresolvedReferences
+            LoginStr.validate(login_or_email)
             return login_or_email
+        except ValidationError:
+            pass
 
         raise ValueError(
             "Identifier must be a valid email or login (letters, digits, underscore)"
@@ -127,30 +166,3 @@ class ChangePasswordSchema(BaseModel):
             pattern=PASSWORD_PATTERN,
         ),
     ]
-
-
-class TokenSchema(BaseModel):
-    access_token: Annotated[str, Field(...)]
-    refresh_token: Annotated[str, Field(...)]
-
-
-class RefreshTokenDataSchema(BaseModel):
-    token: Annotated[str, Field(...)]
-    jti: Annotated[UUID, Field(...)]
-
-
-class TokenRefreshSchema(BaseModel):
-    access_token: Annotated[str, Field(...)]
-    refresh_token: Annotated[RefreshTokenDataSchema, Field(...)]
-
-
-class TokenPayloadSchema(BaseModel):
-    sub: Annotated[UUID, Field(...)]
-    iat: Annotated[datetime, Field(...)]
-    exp: Annotated[datetime, Field(...)]
-    jti: Annotated[UUID | None, Field(default=None)]
-
-
-class AccessTokenSchema(BaseModel):
-    access_token: Annotated[str, Field(...)]
-    token_type: Annotated[str, Field(default="bearer")] = "bearer"

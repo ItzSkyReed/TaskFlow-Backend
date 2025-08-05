@@ -136,7 +136,7 @@ class AccessTokenNotFound(BaseAPIException):
 
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             msg="Access token not found in headers",
             loc=["headers", "token"],
             err_type="token_error.access_token_not_found",

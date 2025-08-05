@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TypedDict
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
@@ -19,6 +19,7 @@ from .logging_config import LOGGING_CONFIG
 # To correctly load all models
 from .models import *  # noqa: F401, F403
 from .redis import redis_client
+from .user import profile_router
 
 # uvloop быстрее стандартного event loop
 if sys.platform != "win32":
@@ -73,4 +74,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
+api_router = APIRouter(prefix="/taskflow/api/v1/")
+
+api_router.include_router(auth_router)
+api_router.include_router(profile_router)
+
+app.include_router(api_router)

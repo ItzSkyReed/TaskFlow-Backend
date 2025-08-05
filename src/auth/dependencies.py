@@ -1,21 +1,14 @@
-from typing import Annotated
 
 from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from src.auth.schemas import TokenPayloadSchema
-
-from ..auth.schemas import SignUpSchema
 from ..database import get_async_session
 from ..user import User
 from .exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
-from .utils import CustomHTTPBearer, JWTUtils
-
-custom_http_bearer = CustomHTTPBearer()
+from .schemas import SignUpSchema
 
 
 async def user_exists_by_field(
@@ -67,15 +60,3 @@ async def validate_user_uniqueness(
     await check_email_unique(user_in.email, session)
     await check_login_unique(user_in.login, session)
     return user_in
-
-
-async def token_verification(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(custom_http_bearer)],
-) -> TokenPayloadSchema:
-    """
-    Верифицирует access токен
-    :param credentials: Заголовок авторизации
-    """
-    token = credentials.credentials
-    payload = JWTUtils.decode_token(token)
-    return payload

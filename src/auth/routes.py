@@ -10,7 +10,7 @@ from starlette.responses import Response
 from ..database import get_async_session
 from ..schemas import SuccessResponseModel
 from .config import get_auth_settings
-from .dependencies import token_verification, validate_user_uniqueness
+from .dependencies import validate_user_uniqueness
 from .exceptions import RefreshTokenNotFound
 from .schemas import (
     AccessTokenSchema,
@@ -18,6 +18,7 @@ from .schemas import (
     SignInSchema,
     SignUpSchema,
 )
+from .security import token_verification
 from .usecases import (
     change_user_password,
     logout_user,
@@ -49,8 +50,8 @@ auth_settings = get_auth_settings()
 )
 async def sign_up_user_route(
     response: Response,
-    user_in: SignUpSchema = Depends(validate_user_uniqueness),
-    session: AsyncSession = Depends(get_async_session),
+    user_in: Annotated[SignUpSchema, Depends(validate_user_uniqueness)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> AccessTokenSchema:
     register_result = await sign_up_user(user_in, session)
 
@@ -75,6 +76,7 @@ async def sign_up_user_route(
         200: {"description": "Успешный вход"},
         400: {"description": "Некорректные данные в запросе."},
         401: {"description": "Логин/Емаил/Пароль неверные или JWT токен поврежден"},
+        404: {"description": "Пользователь не найден"},
         422: {"description": "Некорректные данные в запросе (валидация схемы)."},
         429: {"description": "Превышены лимиты API."},
         500: {"description": "Внутренняя ошибка сервера."},
@@ -84,7 +86,7 @@ async def sign_up_user_route(
 async def sign_in_user_route(
     response: Response,
     user_in: Annotated[SignInSchema, Body(...)],
-    session: AsyncSession = Depends(get_async_session),
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> AccessTokenSchema:
     login_result = await sign_in_user(user_in, session)
 
@@ -147,6 +149,7 @@ async def refresh_tokens_route(
         400: {"description": "Некорректные данные в запросе."},
         401: {"description": "RefreshToken не найден, истек или некорректен"},
         403: {"description": "Старый пароль не верный"},
+        404: {"description": "Пользователь не найден"},
         422: {"description": "Некорректные данные в запросе (валидация схемы)."},
         429: {"description": "Превышены лимиты API."},
         500: {"description": "Внутренняя ошибка сервера."},
@@ -159,7 +162,7 @@ async def refresh_tokens_route(
 async def change_password_route(
     request: Request,
     passwords: Annotated[ChangePasswordSchema, Body(...)],
-    session: AsyncSession = Depends(get_async_session),
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> SuccessResponseModel:
     refresh_token = request.cookies.get("refresh_token")
 
