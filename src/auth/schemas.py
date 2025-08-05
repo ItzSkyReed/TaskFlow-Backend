@@ -20,6 +20,17 @@ class SignUpSchema(BaseModel):
     Схема регистрации пользователя
     """
 
+    name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            min_length=4,
+            max_length=32,
+            pattern=NAME_PATTERN,
+            examples=["Joe_Sardina", "Margaret' Kabina", "x-MarinaPro228"],
+            description="Публичное имя (при отсутствии будет совпадать с login)",
+        ),
+    ]
     login: Annotated[
         str,
         Field(
@@ -50,6 +61,7 @@ class SignUpSchema(BaseModel):
             pattern=PASSWORD_PATTERN,
         ),
     ]  # raw password
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class SignInSchema(BaseModel):

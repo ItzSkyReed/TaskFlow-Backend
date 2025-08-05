@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user import User
+from ...user import User, UserProfile
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
@@ -17,6 +17,7 @@ async def sign_up_user(
     :return: Схема содержащая access и refresh токены
     """
     hashed_password = PasswordUtils.hash_password(user_in.password)
+
     user = User(
         login=user_in.login,
         email=user_in.email,
@@ -24,8 +25,14 @@ async def sign_up_user(
     )
     session.add(user)
 
+    await (
+        session.flush()
+    )  # flush отправляет данные в БД, генерируется id, но транзакция не фиксируется
+
+    user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
+    session.add(user_profile)
+
     await session.commit()
-    await session.refresh(user)
 
     # Создание токенов
     access_token = JWTUtils.create_access_token(user.id)
