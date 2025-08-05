@@ -4,21 +4,14 @@ from uuid import UUID, uuid4
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import ExpiredSignatureError, JWTError, jwt
-from starlette.requests import Request
 
 from .config import get_auth_settings
 from .exceptions import (
-    AccessTokenNotFound,
     InvalidTokenException,
     TokenExpiredException,
 )
-from .schemas import (
-    RefreshTokenDataSchema,
-    TokenPayloadSchema,
-    TokenRefreshSchema,
-)
+from .schemas import RefreshTokenDataSchema, TokenPayloadSchema, TokenRefreshSchema
 
 logger = getLogger(__name__)
 
@@ -129,22 +122,3 @@ class JWTUtils:
         return TokenRefreshSchema(
             access_token=access_token, refresh_token=refresh_token
         )
-
-
-class CustomHTTPBearer(HTTPBearer):
-    def __init__(self):
-        super().__init__(
-            auto_error=False,
-            bearerFormat="JWT",
-            scheme_name="AccessToken",
-            description="JWT access token encoded using HS256",
-        )
-
-    async def __call__(self, request: Request) -> HTTPAuthorizationCredentials:
-        """
-        :raises AccessTokenNotFound: Если access token не найден в запросе
-        """
-        credentials = await super().__call__(request)
-        if not credentials:
-            raise AccessTokenNotFound()
-        return credentials
