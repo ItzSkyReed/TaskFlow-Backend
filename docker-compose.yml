@@ -108,5 +108,5 @@ volumes:
 
 networks:
   taskflow_net:
-    name: db
+    name: taskflow_net
     driver: bridge
