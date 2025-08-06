@@ -1,10 +1,12 @@
 from uuid import UUID
 
+from pydantic import EmailStr
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import InstrumentedAttribute, joinedload
 
 from ...user import User, UserNotFoundByIdentifierException, UserNotFoundByIdException
+from ..exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 
 
 async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User:
@@ -56,3 +58,40 @@ async def get_user_with_profile(user_id: UUID, session: AsyncSession) -> User | 
     if user is None:
         raise UserNotFoundByIdException()
     return user
+
+
+async def user_exists_by_field(
+    field: InstrumentedAttribute,
+    value: str,
+    session: AsyncSession,
+) -> bool:
+    """
+    Проверяет, существует ли уже пользователь с совпадающем значением в определенным полем
+    :param session: Сессия
+    :param field: Поле модели
+    :param value: Значение поля
+    """
+    result = await session.execute(select(User).where(field == value))
+    return result.scalar_one_or_none() is not None
+
+
+async def check_email_unique(email: EmailStr, session: AsyncSession) -> None:
+    """
+    Проверяет уникален ли Email.
+    :param email: Email пользователя
+    :param session: Сессия
+    :raises LoginAlreadyInUseException: Если такой email уже используется
+    """
+    if await user_exists_by_field(User.email, email, session):
+        raise EmailAlreadyInUseException()
+
+
+async def check_login_unique(login: str, session: AsyncSession) -> None:
+    """
+    Проверяет уникален ли Login.
+    :param login: Login пользователя
+    :param session: Сессия
+    :raises LoginAlreadyInUseException: Если такой login уже используется
+    """
+    if await user_exists_by_field(User.login, login, session):
+        raise LoginAlreadyInUseException()

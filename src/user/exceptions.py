@@ -1,7 +1,7 @@
 from starlette import status
 
-from .constants import MAX_AVATAR_SIZE
 from ..exceptions import BaseAPIException
+from .constants import MAX_AVATAR_SIZE
 
 
 class UserNotFoundByIdentifierException(BaseAPIException):
@@ -23,6 +23,7 @@ class UserNotFoundByIdException(BaseAPIException):
             err_type="value_error.invalid_sub",
         )
 
+
 class ExceededAvatarSizeException(BaseAPIException):
     def __init__(self):
         super().__init__(
@@ -31,6 +32,8 @@ class ExceededAvatarSizeException(BaseAPIException):
             loc=["body", "avatar"],
             err_type="avatar_error.avatar_too_large",
         )
+
+
 class InvalidAvatarFileException(BaseAPIException):
     def __init__(self):
         super().__init__(
@@ -40,6 +43,7 @@ class InvalidAvatarFileException(BaseAPIException):
             err_type="avatar_error.invalid_avatar",
         )
 
+
 class UnsupportedAvatarFormatException(BaseAPIException):
     def __init__(self):
         super().__init__(
@@ -47,4 +51,32 @@ class UnsupportedAvatarFormatException(BaseAPIException):
             msg="only WebP photos are allowed",
             loc=["body", "avatar"],
             err_type="avatar_error.invalid_avatar",
+        )
+
+
+class EmailAlreadyInUseException(BaseAPIException):
+    """
+    Вызывается если Email уже используется у какого-либо пользователя
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Email is already in use",
+            loc=["body", "email"],
+            err_type="value_error.email_in_use",
+        )
+
+
+class LoginAlreadyInUseException(BaseAPIException):
+    """
+    Вызывается если Login уже используется у какого-либо пользователя
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Login is already in use",
+            loc=["body", "email"],
+            err_type="value_error.login_in_use",
         )

@@ -1,9 +1,15 @@
-from fastapi import UploadFile, File
-
-from .constants import MAX_AVATAR_SIZE, ALLOWED_AVATAR_CONTENT_TYPES
-from .exceptions import ExceededAvatarSizeException, InvalidAvatarFileException, UnsupportedAvatarFormatException
-from PIL import Image, UnidentifiedImageError
 import io
+
+from fastapi import File, UploadFile
+from PIL import Image, UnidentifiedImageError
+
+from .constants import ALLOWED_AVATAR_CONTENT_TYPES, MAX_AVATAR_SIZE
+from .exceptions import (
+    ExceededAvatarSizeException,
+    InvalidAvatarFileException,
+    UnsupportedAvatarFormatException,
+)
+
 
 async def validate_avatar_file(file: UploadFile = File(...)) -> UploadFile:
     # Проверка по заголовкам
@@ -14,8 +20,8 @@ async def validate_avatar_file(file: UploadFile = File(...)) -> UploadFile:
 
     try:
         content = await file.read()
-    except Exception:
-        raise InvalidAvatarFileException()
+    except Exception as err:
+        raise InvalidAvatarFileException() from err
 
     if len(content) > MAX_AVATAR_SIZE:
         raise ExceededAvatarSizeException()
@@ -24,8 +30,8 @@ async def validate_avatar_file(file: UploadFile = File(...)) -> UploadFile:
         image = Image.open(io.BytesIO(content))
         if image.format != "WEBP":
             raise UnsupportedAvatarFormatException()
-    except UnidentifiedImageError:
-        raise InvalidAvatarFileException()
+    except UnidentifiedImageError as err:
+        raise InvalidAvatarFileException() from err
 
     # Возвращаемся к началу файла
     file.file.seek(0)
