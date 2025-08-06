@@ -19,7 +19,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - db
+      - taskflow_net
 
   redis:
     image: redis:8.0.3-alpine
@@ -34,7 +34,7 @@ services:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
-      - db
+      - taskflow_net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -53,6 +53,14 @@ services:
     env_file:
       - .env
     command: server /data --console-address ":${MINIO_WEB_PORT}" --address ":${MINIO_STORAGE_PORT}"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${MINIO_WEB_PORT}/minio/health/live" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - taskflow_net
 
   migrate:
     build: .
@@ -67,7 +75,7 @@ services:
       - .env
     command: alembic upgrade head
     networks:
-      - db
+      - taskflow_net
 
 
   web:
@@ -79,6 +87,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
     env_file:
@@ -89,7 +99,7 @@ services:
       - ./src:/fast_api/src
     command: [ "fastapi", "dev", "src/main.py", "--host", "0.0.0.0" ]
     networks:
-      - db
+      - taskflow_net
 
 volumes:
   postgres_data:
@@ -97,6 +107,6 @@ volumes:
   minio_data:
 
 networks:
-  db:
+  taskflow_net:
     name: db
     driver: bridge
