@@ -42,6 +42,18 @@ services:
       retries: 3
       start_period: 5s
 
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    ports:
+      - "${MINIO_OUT_STORAGE_PORT}:${MINIO_STORAGE_PORT}"   # S3 API
+      - "${MINIO_OUT_WEB_PORT}:${MINIO_WEB_PORT}"     # Web-интерфейс
+    volumes:
+      - minio_data:/data
+    env_file:
+      - .env
+    command: server /data --console-address ":${MINIO_WEB_PORT}" --address ":${MINIO_STORAGE_PORT}"
+
   migrate:
     build: .
     container_name: taskflow_migrate
@@ -82,6 +94,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
 
 networks:
   db:

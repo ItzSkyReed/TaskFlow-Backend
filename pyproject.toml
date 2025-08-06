@@ -19,7 +19,9 @@ dependencies = [
     "email-validator",
     "python-jose[cryptography]",
     "redis",
-    "fastapi-limiter"
+    "fastapi-limiter",
+    "aioboto3",
+    "pillow"
 ]
 
 [tool.ruff]

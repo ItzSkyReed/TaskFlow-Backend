@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     redis_port: int
     redis_out_port: int
 
+    minio_root_user: str
+    minio_root_password: str
+    minio_web_port: int
+    minio_out_web_port: int
+    minio_storage_port: int
+    minio_out_storage_port: int
+
     @property
     def database_url(self) -> URL:
         return URL.create(
