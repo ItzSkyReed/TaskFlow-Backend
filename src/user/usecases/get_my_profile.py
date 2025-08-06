@@ -18,9 +18,6 @@ async def get_my_profile(
     :param user_id: UUID профиля
     :param session: Сессия
     """
-    user = await get_user_with_profile(user_id, session)
-    logger.fatal(user)
-    logger.fatal("".join(["\n" for i in range(100)]))
     return UserSchema.model_validate(
         await get_user_with_profile(user_id, session), from_attributes=True
     )
