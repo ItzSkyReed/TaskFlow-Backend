@@ -6,6 +6,7 @@ from .. import get_settings
 
 settings = get_settings()
 
+
 async def get_minio_client() -> AsyncGenerator:
     """
     :return: Асинхронный S3 клиент для работы с minio
