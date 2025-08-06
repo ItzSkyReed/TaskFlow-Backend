@@ -74,7 +74,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-api_router = APIRouter(prefix="/taskflow/api/v1/")
+api_router = APIRouter(prefix="/taskflow/api/v1")
 
 api_router.include_router(auth_router)
 api_router.include_router(profile_router)
