@@ -13,11 +13,11 @@ async def get_minio_client() -> AsyncGenerator:
     """
     session = aioboto3.Session()
     async with session.client(
-            "s3",
-            endpoint_url=f"minio:{settings.minio_storage_port}",
-            aws_access_key_id=settings.minio_root_user,
-            aws_secret_access_key=settings.minio_root_key,
-            use_ssl=False,
-            verify=False,
+        service_name="s3",
+        endpoint_url=f"minio:{settings.minio_storage_port}",
+        aws_access_key_id=settings.minio_root_user,
+        aws_secret_access_key=settings.minio_root_key,
+        use_ssl=False,
+        verify=False,
     ) as client:
         yield client
