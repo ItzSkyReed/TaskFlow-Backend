@@ -81,7 +81,6 @@ class SignUpSchema(BaseModel):
         EmailStr,
         Field(
             ...,
-            max_length=320,
             examples=["johndoe@example.com", "nepoka@mail.ru"],
             description="Email адрес",
         ),
