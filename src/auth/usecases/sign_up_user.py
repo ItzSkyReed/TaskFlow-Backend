@@ -1,6 +1,9 @@
+from asyncpg.exceptions import UniqueViolationError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user import User, UserProfile
+from ...user import User, UserProfile, check_email_unique
+from ...user.exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
@@ -23,16 +26,23 @@ async def sign_up_user(
         email=user_in.email,
         hashed_password=hashed_password,
     )
-    session.add(user)
 
-    await (
-        session.flush()
-    )  # flush отправляет данные в БД, генерируется id, но транзакция не фиксируется
+    try:
+        session.add(user)
+        await session.flush()
 
-    user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
-    session.add(user_profile)
+        user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
+        session.add(user_profile)
 
-    await session.commit()
+        await session.commit()
+
+    except IntegrityError as err:
+        await session.rollback()
+        if isinstance(err.orig, UniqueViolationError):
+            if await check_email_unique(user_in.email, session):
+                raise EmailAlreadyInUseException() from err
+            raise LoginAlreadyInUseException() from err
+        raise
 
     # Создание токенов
     access_token = JWTUtils.create_access_token(user.id)
