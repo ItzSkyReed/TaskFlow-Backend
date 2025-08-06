@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -9,8 +9,8 @@ from starlette import status
 from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
-from .schemas import PublicUserSchema, UserSchema
-from .usecases import get_my_profile, get_public_user_profile
+from .schemas import PatchUserSchema, PublicUserSchema, UserSchema
+from .usecases import get_my_profile, get_public_user_profile, patch_my_profile
 
 profile_router = APIRouter(prefix="/profile", tags=["Profile"])
 
@@ -38,6 +38,33 @@ async def get_my_profile_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> UserSchema:
     return await get_my_profile(token_payload.sub, session)
+
+
+@profile_router.patch(
+    "/me",
+    name="Изменение информации о профиле",
+    status_code=status.HTTP_200_OK,
+    response_model=UserSchema,
+    description="Возможно изменять не все поля, нельзя отправлять пустые запросы",
+    responses={
+        200: {"description": "Успешное изменение профиля"},
+        400: {"description": "Некорректные данные в запросе."},
+        401: {"description": "Access token не найден, истек или некорректен"},
+        409: {"description": "Используется email который уже у кого-то указан"},
+        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
+        429: {"description": "Превышены лимиты API."},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[
+        Depends(RateLimiter(times=50, minutes=2)),
+    ],
+)
+async def patch_my_profile_route(
+    patch_schema: Annotated[PatchUserSchema, Body(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> UserSchema:
+    return await patch_my_profile(patch_schema, token_payload.sub, session)
 
 
 @profile_router.get(

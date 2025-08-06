@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from ..auth.constants import LOGIN_PATTERN
+from .constants import NAME_PATTERN
 
 
 class UserSchema(BaseModel):
@@ -19,9 +20,9 @@ class UserSchema(BaseModel):
     ]
     email: Annotated[EmailStr, Field(..., max_length=320)]
 
-    registered_at: Annotated[datetime, Field(..., alias="created_at")]
+    registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
 
-    profile: Annotated["ProfileSchema", Field(..., alias="user_profile")]
+    profile: Annotated["ProfileSchema", Field(..., validation_alias="user_profile")]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,18 +40,19 @@ class ProfileSchema(BaseModel):
 class PublicUserSchema(BaseModel):
     id: UUID
 
-    email: Annotated[EmailStr, Field(default=None, max_length=320)]
+    email: Annotated[EmailStr | None, Field(default=None, max_length=320)]
 
-    registered_at: Annotated[datetime, Field(..., alias="created_at")]
+    registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
 
-    profile: Annotated["PublicProfileSchema", Field(..., alias="user_profile")]
+    profile: Annotated[
+        "PublicProfileSchema", Field(..., validation_alias="user_profile")
+    ]
 
-    @classmethod
     @model_validator(mode="after")
-    def check_profile_visibility(cls, values):
-        if not values.profile.show_email:
-            values.email = None
-        return values
+    def check_profile_visibility(self):
+        if not self.profile.show_email:
+            self.email = None
+        return self
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -68,15 +70,78 @@ class PublicProfileSchema(BaseModel):
     show_discord: Annotated[bool, Field(default=False, exclude=True)]
     show_email: Annotated[bool, Field(default=False, exclude=True)]
 
-    @classmethod
     @model_validator(mode="after")
-    def check_visibility_and_fields(cls, values):
-        if not values.show_telegram:
-            values.telegram_username = None
+    def check_visibility_and_fields(self):
+        if not self.show_telegram:
+            self.telegram_username = None
 
-        if not values.show_discord:
-            values.discord_username = None
+        if not self.show_discord:
+            self.discord_username = None
 
-        return values
+        return self
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PatchUserSchema(BaseModel):
+    email: Annotated[
+        EmailStr,
+        Field(
+            ...,
+            examples=["johndoe@example.com", "nepoka@mail.ru"],
+            description="Email адрес",
+        ),
+    ]
+
+    profile: Annotated[
+        Optional["PatchProfileSchema"],
+        Field(default=None, serialization_alias="user_profile"),
+    ]
+
+    @model_validator(mode="after")
+    def at_least_one_field(self) -> Self:
+        if not any(
+            getattr(self, field) is not None for field in self.__class__.model_fields
+        ):
+            raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
+        return self
+
+
+class PatchProfileSchema(BaseModel):
+    name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            min_length=4,
+            max_length=32,
+            pattern=NAME_PATTERN,
+            examples=["Joe_Sardina", "Margaret' Kabina", "x-MarinaPro228"],
+            description="Публичное имя",
+        ),
+    ]
+    show_discord: Annotated[
+        bool | None,
+        Field(
+            default=None,
+            description="Показывать ли остальным пользователям discord username",
+        ),
+    ]
+    show_telegram: Annotated[
+        bool | None,
+        Field(
+            default=None,
+            description="Показывать ли остальным пользователям telegram username",
+        ),
+    ]
+    show_email: Annotated[
+        bool | None,
+        Field(default=None, description="Показывать ли остальным пользователям email"),
+    ]
+
+    @model_validator(mode="after")
+    def at_least_one_field(self) -> Self:
+        if not any(
+            getattr(self, field) is not None for field in self.__class__.model_fields
+        ):
+            raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
+        return self
