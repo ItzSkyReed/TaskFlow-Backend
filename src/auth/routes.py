@@ -7,6 +7,7 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
+from ..config import get_settings
 from ..database import get_async_session
 from ..schemas import SuccessResponseModel
 from .config import get_auth_settings
@@ -29,6 +30,7 @@ from .usecases import (
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentification"])
 
+settings = get_settings()
 auth_settings = get_auth_settings()
 
 
@@ -60,7 +62,7 @@ async def sign_up_user_route(
         value=register_result.refresh_token,
         httponly=True,
         max_age=auth_settings.refresh_token_expires_in,
-        path=auth_router.prefix,
+        path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
     return AccessTokenSchema(access_token=register_result.access_token)
@@ -95,7 +97,7 @@ async def sign_in_user_route(
         value=login_result.refresh_token,
         httponly=True,
         max_age=auth_settings.refresh_token_expires_in,
-        path=auth_router.prefix,
+        path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
     return AccessTokenSchema(access_token=login_result.access_token)
@@ -132,7 +134,7 @@ async def refresh_tokens_route(
         value=new_tokens.refresh_token,
         httponly=True,
         max_age=auth_settings.refresh_token_expires_in,
-        path=auth_router.prefix,
+        path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
     return AccessTokenSchema(access_token=new_tokens.access_token)
@@ -197,7 +199,7 @@ async def logout_user_route(request: Request, response: Response) -> None:
 
     response.delete_cookie(
         key="refresh_token",
-        path=auth_router.prefix,
+        path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
     return None
