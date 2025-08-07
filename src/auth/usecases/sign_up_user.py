@@ -2,7 +2,8 @@ from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user import User, UserProfile, check_email_unique
+from ...user import User, UserProfile
+from ...user.services import check_email_unique
 from ...user.exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token

@@ -6,7 +6,6 @@ from .exceptions import (
 )
 from .models import User, UserProfile
 from .routes import profile_router
-from .services import check_email_unique, check_login_unique
 
 __all__ = [
     "User",
@@ -15,7 +14,5 @@ __all__ = [
     "UserNotFoundByIdException",
     "EmailAlreadyInUseException",
     "LoginAlreadyInUseException",
-    "check_email_unique",
-    "check_login_unique",
     "profile_router",
 ]

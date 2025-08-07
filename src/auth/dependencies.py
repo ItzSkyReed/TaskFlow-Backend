@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_async_session
-from ..user import check_email_unique, check_login_unique
+from ..user.services import check_email_unique, check_login_unique
 from .schemas import SignUpSchema
 
 

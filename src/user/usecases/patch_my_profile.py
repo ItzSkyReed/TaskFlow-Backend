@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...utils import update_model_from_schema
 from .. import EmailAlreadyInUseException
-from ..dependencies import check_email_unique
+from ..services import check_email_unique
 from ..schemas import PatchUserSchema, UserSchema
 from ..services import get_user_with_profile
 
