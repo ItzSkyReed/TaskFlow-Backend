@@ -85,9 +85,9 @@ class PublicProfileSchema(BaseModel):
 
 class PatchUserSchema(BaseModel):
     email: Annotated[
-        EmailStr,
+        EmailStr | None,
         Field(
-            ...,
+            default=None,
             examples=["johndoe@example.com", "nepoka@mail.ru"],
             description="Email адрес",
         ),
