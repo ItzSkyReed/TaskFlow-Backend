@@ -41,7 +41,7 @@ async def get_user_by_id(user_id: UUID, session: AsyncSession) -> User:
     return user
 
 
-async def get_user_with_profile(user_id: UUID, session: AsyncSession) -> User | None:
+async def get_user_with_profile(user_id: UUID, session: AsyncSession) -> User:
     """
     Получение пользователя с загруженным UserProfile
     :param user_id: Id пользователя

@@ -100,6 +100,7 @@ class PatchUserSchema(BaseModel):
 
     @model_validator(mode="after")
     def at_least_one_field(self) -> Self:
+        # noinspection PyTypeChecker
         if not any(
             getattr(self, field) is not None for field in self.__class__.model_fields
         ):
@@ -140,6 +141,7 @@ class PatchProfileSchema(BaseModel):
 
     @model_validator(mode="after")
     def at_least_one_field(self) -> Self:
+        # noinspection PyTypeChecker
         if not any(
             getattr(self, field) is not None for field in self.__class__.model_fields
         ):

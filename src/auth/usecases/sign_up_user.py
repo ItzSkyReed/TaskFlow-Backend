@@ -40,8 +40,9 @@ async def sign_up_user(
     except IntegrityError as err:
         await session.rollback()
         if isinstance(err.orig, UniqueViolationError):
-            if await check_email_unique(user_in.email, session):
-                raise EmailAlreadyInUseException() from err
+            # если выбросит EmailAlreadyInUseException
+            await check_email_unique(user_in.email, session)
+            # если не выбросило, значит email свободен, ошибка по логину
             raise LoginAlreadyInUseException() from err
         raise
 

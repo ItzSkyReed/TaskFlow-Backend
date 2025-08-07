@@ -16,7 +16,7 @@ async def get_minio_client() -> AsyncGenerator:
         service_name="s3",
         endpoint_url=f"minio:{settings.minio_storage_port}",
         aws_access_key_id=settings.minio_root_user,
-        aws_secret_access_key=settings.minio_root_key,
+        aws_secret_access_key=settings.minio_root_password,
         use_ssl=False,
         verify=False,
     ) as client:

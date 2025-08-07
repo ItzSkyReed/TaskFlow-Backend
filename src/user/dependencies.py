@@ -13,7 +13,7 @@ from .exceptions import (
 
 async def validate_avatar_file(file: UploadFile = File(...)) -> UploadFile:
     # Проверка по заголовкам
-    if file.size > MAX_AVATAR_SIZE:
+    if file.size and file.size > MAX_AVATAR_SIZE:
         raise ExceededAvatarSizeException()
     if file.content_type not in ALLOWED_AVATAR_CONTENT_TYPES:
         raise UnsupportedAvatarFormatException()
