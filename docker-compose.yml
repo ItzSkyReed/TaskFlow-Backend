@@ -1,4 +1,18 @@
 services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - taskflow_net
+    depends_on:
+      web:
+        condition: service_healthy
+
   postgres:
     image: postgres:17.5-alpine3.22
     container_name: postgres
@@ -45,9 +59,9 @@ services:
   minio:
     image: quay.io/minio/minio:latest
     container_name: minio
-    ports:
-      - "${MINIO_OUT_STORAGE_PORT}:${MINIO_STORAGE_PORT}"   # S3 API
-      - "${MINIO_OUT_WEB_PORT}:${MINIO_WEB_PORT}"     # Web-интерфейс
+    expose:
+      - "${MINIO_WEB_PORT}"
+      - "${MINIO_STORAGE_PORT}"
     volumes:
       - minio_data:/data
     env_file:
@@ -93,13 +107,19 @@ services:
         condition: service_completed_successfully
     env_file:
       - .env
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
       - ./src:/fast_api/src
     command: [ "fastapi", "dev", "src/main.py", "--host", "0.0.0.0" ]
     networks:
       - taskflow_net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/task_flow/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:

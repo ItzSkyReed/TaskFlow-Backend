@@ -10,6 +10,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import PlainTextResponse
 
 from .auth import auth_router
 from .config import get_settings
@@ -59,6 +60,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
+    root_path="/task_flow",
     title=settings.project_name,
     version=settings.version,
     default_response_class=ORJSONResponse,
@@ -73,8 +75,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# For healthcheck
+@app.get("/health", include_in_schema=False)
+async def health_check():
+    return PlainTextResponse("OK")
 
-api_router = APIRouter(prefix="/taskflow/api/v1")
+api_router = APIRouter(prefix=settings.api_prefix)
 
 api_router.include_router(auth_router)
 api_router.include_router(profile_router)
