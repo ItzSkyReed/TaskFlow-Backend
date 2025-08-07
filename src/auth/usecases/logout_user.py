@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 
 
 async def logout_user(
-        refresh_token: str,
+    refresh_token: str,
 ) -> None:
     """
     Логика выхода пользователя с сайта (удаление refresh токена из списка разрешенных)

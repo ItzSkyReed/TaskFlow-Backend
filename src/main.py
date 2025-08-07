@@ -75,10 +75,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 # For healthcheck
 @app.get("/health", include_in_schema=False)
 async def health_check():
     return PlainTextResponse("OK")
+
 
 api_router = APIRouter(prefix=settings.api_prefix)
 

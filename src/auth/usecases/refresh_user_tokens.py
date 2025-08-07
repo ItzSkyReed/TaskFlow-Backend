@@ -19,7 +19,7 @@ async def refresh_user_tokens(
     """
     refresh_token_payload = JWTUtils.decode_token(refresh_token)
 
-    if not is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti): # type: ignore[arg-type]
+    if not is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti):  # type: ignore[arg-type]
         raise RefreshTokenNotWhitelisted()
 
     new_tokens = JWTUtils.refresh_tokens(refresh_token_payload.sub)

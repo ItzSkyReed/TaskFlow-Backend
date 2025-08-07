@@ -123,14 +123,14 @@ class SignInSchema(BaseModel):
         :raises ValueError: Если login_or_email не проходит обе проверки валидации
         """
         try:
-            EmailStr.validate(login_or_email) # type: ignore[attr-defined]
+            EmailStr.validate(login_or_email)  # type: ignore[attr-defined]
             return login_or_email
         except ValidationError:
             pass
 
         try:
             # noinspection PyUnresolvedReferences
-            LoginStr.validate(login_or_email) # type: ignore[attr-defined]
+            LoginStr.validate(login_or_email)  # type: ignore[attr-defined]
             return login_or_email
         except ValidationError:
             pass

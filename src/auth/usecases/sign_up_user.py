@@ -3,8 +3,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user import User, UserProfile
+from ...user.exceptions import LoginAlreadyInUseException
 from ...user.services import check_email_unique
-from ...user.exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils

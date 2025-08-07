@@ -7,9 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...utils import update_model_from_schema
 from ..exceptions import EmailAlreadyInUseException
-from ..services import check_email_unique
 from ..schemas import PatchUserSchema, UserSchema
-from ..services import get_user_with_profile
+from ..services import check_email_unique, get_user_with_profile
 
 logger = getLogger(__name__)
 
