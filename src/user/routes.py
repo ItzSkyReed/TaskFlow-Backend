@@ -68,7 +68,7 @@ async def patch_my_profile_route(
 
 
 @profile_router.get(
-    "/{uuid: UUID}",
+    "/{uuid}",
     name="Получение публичного профиля пользователя",
     status_code=status.HTTP_200_OK,
     response_model=PublicUserSchema,
