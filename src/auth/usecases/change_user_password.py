@@ -22,7 +22,7 @@ async def change_user_password(
     passwords: ChangePasswordSchema,
     refresh_token: str,
     session: AsyncSession,
-) -> None:
+):
     """
     Логика изменения пароля пользователя
     :param passwords: Схема с паролями пользователей
@@ -43,6 +43,7 @@ async def change_user_password(
 
     user = await get_user_by_id(refresh_token_payload.sub, session)
 
+    # noinspection PyTypeChecker
     if not PasswordUtils.verify_password(user.hashed_password, passwords.old_password):
         raise InvalidOldPasswordException()
 
