@@ -9,6 +9,7 @@ from starlette import status
 from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
+from ..schemas import ErrorResponseModel
 from .schemas import PatchUserSchema, PublicUserSchema, UserSchema
 from .usecases import get_my_profile, get_public_user_profile, patch_my_profile
 
@@ -22,11 +23,20 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
     response_model=UserSchema,
     description="Видны все поля",
     responses={
-        200: {"description": "Успешное получение профиля"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "Access token не найден, истек или некорректен"},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
-        429: {"description": "Превышены лимиты API."},
+        200: {"description": "Успешное получение профиля", "model": UserSchema},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[
@@ -47,16 +57,28 @@ async def get_my_profile_route(
     response_model=UserSchema,
     description="Возможно изменять не все поля, нельзя отправлять пустые запросы",
     responses={
-        200: {"description": "Успешное изменение профиля"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "Access token не найден, истек или некорректен"},
-        409: {"description": "Используется email который уже у кого-то указан"},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
-        429: {"description": "Превышены лимиты API."},
+        200: {"description": "Успешное изменение профиля", "model": UserSchema},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Используется email который уже у кого-то указан",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[
-        Depends(RateLimiter(times=50, minutes=2)),
+        Depends(RateLimiter(times=50, minutes=1)),
     ],
 )
 async def patch_my_profile_route(
@@ -74,11 +96,20 @@ async def patch_my_profile_route(
     response_model=PublicUserSchema,
     description="Видны только публичные поля",
     responses={
-        200: {"description": "Успешное получение профиля"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "Access token не найден, истек или некорректен"},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
-        429: {"description": "Превышены лимиты API."},
+        200: {"description": "Успешное получение профиля", "model": PublicUserSchema},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[

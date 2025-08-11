@@ -9,7 +9,7 @@ from starlette.responses import Response
 
 from ..config import get_settings
 from ..database import get_async_session
-from ..schemas import SuccessResponseModel
+from ..schemas import ErrorResponseModel, SuccessResponseModel
 from .config import get_auth_settings
 from .dependencies import validate_user_uniqueness
 from .exceptions import RefreshTokenNotFound
@@ -41,11 +41,20 @@ auth_settings = get_auth_settings()
     status_code=status.HTTP_201_CREATED,
     description="Регистрация нового пользователя",
     responses={
-        201: {"description": "Успешная регистрация"},
-        400: {"description": "Некорректные данные в запросе."},
-        409: {"description": "Пользователь с таким логином или email уже существует."},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
-        429: {"description": "Превышены лимиты API."},
+        201: {"description": "Успешная регистрация", "model": AccessTokenSchema},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Пользователь с таким логином или email уже существует.",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[Depends(RateLimiter(times=1000, minutes=5))],
@@ -75,12 +84,21 @@ async def sign_up_user_route(
     status_code=status.HTTP_200_OK,
     description="Вход пользователя в систему",
     responses={
-        200: {"description": "Успешный вход"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "Логин/Емаил/Пароль неверные или JWT токен поврежден"},
-        404: {"description": "Пользователь не найден"},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
-        429: {"description": "Превышены лимиты API."},
+        200: {"description": "Успешный вход", "model": AccessTokenSchema},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Логин/Емаил/Пароль неверные или JWT токен поврежден",
+            "model": ErrorResponseModel,
+        },
+        404: {"description": "Пользователь не найден", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[Depends(RateLimiter(times=3000, minutes=5))],
@@ -110,11 +128,20 @@ async def sign_in_user_route(
     status_code=status.HTTP_200_OK,
     description="Обновление токенов",
     responses={
-        200: {"description": "Успешное обновление токена"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "RefreshToken не найден, истек или некорректен"},
-        429: {"description": "Превышены лимиты API."},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
+        200: {"description": "Успешное обновление токена", "model": AccessTokenSchema},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "RefreshToken не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[Depends(RateLimiter(times=20, minutes=5))],
@@ -147,13 +174,22 @@ async def refresh_tokens_route(
     response_model=SuccessResponseModel,
     description="Изменение пароля на новый",
     responses={
-        200: {"description": "Успешная смена пароля"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "RefreshToken не найден, истек или некорректен"},
-        403: {"description": "Старый пароль не верный"},
-        404: {"description": "Пользователь не найден"},
-        422: {"description": "Некорректные данные в запросе (валидация схемы)."},
-        429: {"description": "Превышены лимиты API."},
+        200: {"description": "Успешная смена пароля", "model": SuccessResponseModel},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "RefreshToken не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {"description": "Старый пароль не верный", "model": ErrorResponseModel},
+        404: {"description": "Пользователь не найден", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[
@@ -183,13 +219,21 @@ async def change_password_route(
     status_code=status.HTTP_204_NO_CONTENT,
     description="При выходе будет удален refresh токен из куки + БД сервера",
     responses={
-        204: {"description": "Успешный выход"},
-        400: {"description": "Некорректные данные в запросе."},
-        401: {"description": "RefreshToken не найден, истек или некорректен"},
+        204: {"description": "Успешный выход", "model": None},
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "RefreshToken не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
         500: {"description": "Внутренняя ошибка сервера."},
     },
 )
-async def logout_user_route(request: Request, response: Response) -> None:
+async def logout_user_route(
+    request: Request, response: Response
+) -> SuccessResponseModel:
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:
