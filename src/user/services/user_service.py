@@ -1,12 +1,22 @@
+import io
 from uuid import UUID
 
+from fastapi import UploadFile
+from PIL import Image, UnidentifiedImageError
 from pydantic import EmailStr
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, joinedload
 
 from ...user import User, UserNotFoundByIdentifierException, UserNotFoundByIdException
-from ..exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
+from ..constants import ALLOWED_AVATAR_CONTENT_TYPES, MAX_AVATAR_SIZE
+from ..exceptions import (
+    EmailAlreadyInUseException,
+    ExceededAvatarSizeException,
+    InvalidAvatarFileException,
+    LoginAlreadyInUseException,
+    UnsupportedAvatarFormatException,
+)
 
 
 async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User:
@@ -95,3 +105,29 @@ async def check_login_unique(login: str, session: AsyncSession) -> None:
     """
     if await user_exists_by_field(User.login, login, session):
         raise LoginAlreadyInUseException()
+
+
+async def validate_avatar_file(file: UploadFile) -> None:
+    # Проверка по заголовкам
+    if file.size and file.size > MAX_AVATAR_SIZE:
+        raise ExceededAvatarSizeException()
+    if file.content_type not in ALLOWED_AVATAR_CONTENT_TYPES:
+        raise UnsupportedAvatarFormatException()
+
+    try:
+        content = await file.read()
+    except Exception as err:
+        raise InvalidAvatarFileException() from err
+
+    if len(content) > MAX_AVATAR_SIZE:
+        raise ExceededAvatarSizeException()
+
+    try:
+        image = Image.open(io.BytesIO(content))
+        if image.format != "WEBP":
+            raise UnsupportedAvatarFormatException()
+    except UnidentifiedImageError as err:
+        raise InvalidAvatarFileException() from err
+
+    # Возвращаемся к началу файла
+    file.file.seek(0)
