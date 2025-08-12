@@ -33,14 +33,22 @@
    > Пароль для Redis в `.env` и `redis.conf` должен совпадать
    
 4. **Запуск проекта**
-   В корневой папке проекта (где находится docker-compose.yml):
-   > `--build` необходим только при первом запуске
-   ```shell
-   docker-compose up --build
-   ```
+   
+    В корневой папке проекта (где находится docker-compose.yml):
+    > `--build` необходим только при первом запуске
+    ```shell
+    docker-compose up --build
+    ```
    
 5. **Доступ к приложению**
-   После запуска приложение будет доступно по адресу, указанному в конфигурации (обычно http://localhost:8000).
+    
+    После запуска приложение будет доступно по адресу, указанному в конфигурации 
+    
+    Стандартные пути:
+    - API: http://localhost/task_flow/api/v1/{route}
+    - CDN: http://localhost/task_flow/cdn/{route}
+    - Docs (swagger): http://localhost/task_flow/docs
+    - Redoc: http://localhost/task_flow/redoc
 
 
 ## Разработка
