@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Annotated, Optional, Self
+from typing import Annotated, Optional
 from uuid import UUID
 
 from pydantic import (
@@ -130,7 +132,7 @@ class PatchUserSchema(BaseModel):
     ]
 
     @model_validator(mode="after")
-    def at_least_one_field(self) -> Self:
+    def at_least_one_field(self) -> PatchUserSchema:
         # noinspection PyTypeChecker
         if not any(
             getattr(self, field) is not None for field in self.__class__.model_fields
@@ -171,7 +173,7 @@ class PatchProfileSchema(BaseModel):
     ]
 
     @model_validator(mode="after")
-    def at_least_one_field(self) -> Self:
+    def at_least_one_field(self) -> PatchProfileSchema:
         # noinspection PyTypeChecker
         if not any(
             getattr(self, field) is not None for field in self.__class__.model_fields

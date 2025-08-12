@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -50,7 +52,7 @@ class User(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время регистрации
 
-    created_groups: Mapped[list["Group"]] = relationship(
+    created_groups: Mapped[list[Group]] = relationship(
         back_populates="creator", cascade="all, delete-orphan"
     )
 
@@ -62,7 +64,7 @@ class User(Base):
         passive_deletes=True,
     )
 
-    group_memberships: Mapped[list["GroupMembers"]] = relationship(
+    group_memberships: Mapped[list[GroupMembers]] = relationship(
         back_populates="user"
     )
 
