@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, File, Path
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -9,9 +9,15 @@ from starlette import status
 from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
-from ..schemas import ErrorResponseModel
+from ..schemas import ErrorResponseModel, UploadFileSchema
 from .schemas import PatchUserSchema, PublicUserSchema, UserSchema
 from .usecases import get_my_profile, get_public_user_profile, patch_my_profile
+from .usecases import (
+    get_my_profile,
+    get_public_user_profile,
+    patch_my_profile,
+    patch_my_profile_avatar,
+)
 
 profile_router = APIRouter(prefix="/profile", tags=["Profile"])
 
@@ -87,6 +93,45 @@ async def patch_my_profile_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> UserSchema:
     return await patch_my_profile(patch_schema, token_payload.sub, session)
+
+
+@profile_router.patch(
+    "/me/avatar",
+    status_code=status.HTTP_200_OK,
+    name="Изменение аватарки пользователя",
+    response_model=UserSchema,
+    description="Загрузка аватарки, допустим только формат webp",
+    responses={
+        200: {"description": "Аватарка успешно загружена", "model": UserSchema},
+        400: {
+            "description": "Некорректный формат файла, должен быть webp",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        413: {
+            "description": "Аватар слишком большой (вес файла)",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[Depends(RateLimiter(times=20, minutes=1))],
+)
+async def patch_my_avatar_route(
+    file: Annotated[
+        UploadFileSchema, File(..., description="Файл аватарки в формате webp")
+    ],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> UserSchema:
+    return await patch_my_profile_avatar(file.file, token_payload.sub, session)
 
 
 @profile_router.get(

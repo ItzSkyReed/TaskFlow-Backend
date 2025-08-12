@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from fastapi import UploadFile
 from pydantic import BaseModel, Field
 
 
@@ -37,3 +38,7 @@ class SuccessResponseModel(BaseModel):
     """
 
     success: Annotated[bool, Field(default=True, frozen=True)] = True
+
+
+class UploadFileSchema(BaseModel):
+    file: UploadFile
