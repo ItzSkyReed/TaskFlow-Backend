@@ -2,7 +2,7 @@ from logging import getLogger
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user.services import get_user_by_id
+from ...user.services import get_user
 from ..exceptions import (
     InvalidOldPasswordException,
     PasswordsAreSameException,
@@ -41,7 +41,7 @@ async def change_user_password(
     if not is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti):  # type: ignore[arg-type]
         raise RefreshTokenNotWhitelisted()
 
-    user = await get_user_by_id(refresh_token_payload.sub, session)
+    user = await get_user(refresh_token_payload.sub, session)
 
     # noinspection PyTypeChecker
     if not PasswordUtils.verify_password(user.hashed_password, passwords.old_password):

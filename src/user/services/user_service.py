@@ -36,7 +36,7 @@ async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User
     return user
 
 
-async def get_user_by_id(user_id: UUID, session: AsyncSession) -> User:
+async def get_user(user_id: UUID, session: AsyncSession) -> User:
     """
     Получение пользователя по identifier
     :param user_id: UUID пользователя
