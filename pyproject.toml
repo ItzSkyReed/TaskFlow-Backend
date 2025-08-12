@@ -19,7 +19,8 @@ dependencies = [
     "redis",
     "fastapi-limiter",
     "aioboto3",
-    "pillow"
+    "pillow",
+    "types-aiobotocore-s3"
 ]
 
 [tool.ruff]
