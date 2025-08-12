@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     environment: Literal["DEV", "PROD"] = Field(
         "DEV", description="App environment: DEV or PROD"
     )
-    root_path: str = "/task_flow"
-    api_prefix: str = "/api/v1"
+    root_path: str
+    api_prefix: str
+    cdn_path: str
 
     debug: bool = False
     db_echo: bool = False

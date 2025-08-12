@@ -59,9 +59,10 @@ services:
   minio:
     image: quay.io/minio/minio:latest
     container_name: minio
+    ports:
+      - "${MINIO_OUT_WEB_PORT}:${MINIO_WEB_PORT}"
     expose:
-      - "${MINIO_WEB_PORT}"
-      - "${MINIO_STORAGE_PORT}"
+      - "${MINIO_STORAGE_PORT}"  # expose — только для внутренней сети Docker, не наружу
     volumes:
       - minio_data:/data
     env_file:

@@ -1,0 +1,9 @@
+{
+  "detail": [
+    {
+      "msg": "Ресурс не найден",
+      "type": "value_error.not_found",
+      "loc": ["path"]
+    }
+  ]
+}
