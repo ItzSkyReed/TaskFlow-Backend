@@ -2,10 +2,20 @@ from datetime import datetime
 from typing import Annotated, Optional, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    computed_field,
+    model_validator,
+)
 
 from ..auth.constants import LOGIN_PATTERN
+from ..config import get_settings
 from .constants import NAME_PATTERN
+
+settings = get_settings()
 
 
 class UserSchema(BaseModel):
@@ -24,7 +34,18 @@ class UserSchema(BaseModel):
 
     profile: Annotated["ProfileSchema", Field(..., validation_alias="user_profile")]
 
-    model_config = ConfigDict(from_attributes=True)
+    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
+
+    @computed_field
+    @property
+    def avatar_url(self) -> str | None:
+        # Проверяем наличие атрибута has_avatar и что он True
+        if getattr(self, "has_avatar", False):
+            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
+        return None
+
+
+model_config = ConfigDict(from_attributes=True)
 
 
 class ProfileSchema(BaseModel):
@@ -44,9 +65,19 @@ class PublicUserSchema(BaseModel):
 
     registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
 
+    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
+
     profile: Annotated[
         "PublicProfileSchema", Field(..., validation_alias="user_profile")
     ]
+
+    @computed_field
+    @property
+    def avatar_url(self) -> str | None:
+        # Проверяем наличие атрибута has_avatar и что он True
+        if getattr(self, "has_avatar", False):
+            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
+        return None
 
     @model_validator(mode="after")
     def check_profile_visibility(self):
