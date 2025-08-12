@@ -5,6 +5,7 @@ requires-python = ">=3.13"
 
 dependencies = [
     "fastapi[standard-no-fastapi-cloud-cli]",
+    "fastapi-limiter",
     "orjson",
     "uvicorn[standard]",
     "pydantic_settings",
@@ -17,10 +18,10 @@ dependencies = [
     "email-validator",
     "python-jose[cryptography]",
     "redis",
-    "fastapi-limiter",
     "aioboto3",
+    "types-aiobotocore-s3",
     "pillow",
-    "types-aiobotocore-s3"
+    "ty>=0.0.1a17",
 ]
 
 [tool.ruff]
@@ -34,11 +35,20 @@ quote-style = "double"
 line-ending = "auto"
 indent-style = "space"
 
-[tool.mypy]
-plugins = ["pydantic.mypy"]
-strict = false
-exclude = "alembic"
-ignore_missing_imports = true
+[tool.ty.environment]
+python-platform = "win32"
+python-version = "3.13"
+root = ["."]
+python = "./.venv"
+
+[tool.ty.src]
+exclude = [
+    "alembic",
+]
+include = [
+    "src"
+]
+
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

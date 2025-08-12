@@ -233,7 +233,7 @@ async def change_password_route(
 )
 async def logout_user_route(
     request: Request, response: Response
-) -> SuccessResponseModel:
+) -> None:
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:

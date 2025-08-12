@@ -69,4 +69,4 @@ class Settings(BaseSettings):
 # noinspection PyArgumentList
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings() # ty: ignore[missing-argument]
