@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
     ports:
       - "${REDIS_OUT_PORT}:${REDIS_PORT}"
     volumes:
@@ -50,7 +50,7 @@ services:
     networks:
       - taskflow_net
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -74,6 +74,19 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - taskflow_net
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./init-minio.sh:/init-minio.sh:ro
+    entrypoint: [ "/bin/sh", "/init-minio.sh" ]
     networks:
       - taskflow_net
 
