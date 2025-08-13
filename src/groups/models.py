@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -60,7 +58,7 @@ class Group(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время создания группы
 
-    creator: Mapped[User] = relationship(back_populates="created_groups")
+    creator: Mapped["User"] = relationship(back_populates="created_groups")
 
     members: Mapped[list["GroupMembers"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
@@ -103,7 +101,7 @@ class GroupMembers(Base):
     )  # Время входа пользователя в группу
 
     group: Mapped["Group"] = relationship(back_populates="members")
-    user: Mapped[User] = relationship(back_populates="group_memberships")
+    user: Mapped["User"] = relationship(back_populates="group_memberships")
 
     permission_objs: Mapped[list["GroupUserPermission"]] = relationship(
         "GroupUserPermission",
@@ -182,8 +180,8 @@ class GroupInvitation(Base):
     )  # Время изменения статуса приглашения (pending -> approved)
 
     group: Mapped["Group"] = relationship(back_populates="invitations")
-    inviter: Mapped[User] = relationship(foreign_keys=[inviter_id])
-    invitee: Mapped[User] = relationship(foreign_keys=[invitee_id])
+    inviter: Mapped["User"] = relationship(foreign_keys=[inviter_id])
+    invitee: Mapped["User"] = relationship(foreign_keys=[invitee_id])
 
     __table_args__ = (
         # Данный индекс позволяет иметь сколько угодно отклоненных и принятых приглашений, но только 1 ожидающее на уровне БД

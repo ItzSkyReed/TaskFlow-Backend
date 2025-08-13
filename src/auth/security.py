@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Annotated
 
 from fastapi import Depends
@@ -37,7 +35,7 @@ custom_http_bearer = CustomHTTPBearer()
 
 async def token_verification(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(custom_http_bearer)],
-) -> TokenPayloadSchema:
+) -> "TokenPayloadSchema":
     """
     Верифицирует access токен
     :param credentials: Заголовок авторизации
