@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, File, Path
+from fastapi import APIRouter, Body, Depends, File, Path, Query
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -17,9 +17,62 @@ from .usecases import (
     get_public_user_profile,
     patch_my_profile,
     patch_my_profile_avatar,
+    search_user_profiles,
 )
 
 profile_router = APIRouter(prefix="/profile", tags=["Profile"])
+
+
+@profile_router.get(
+    "/search",
+    name="Поиск пользователей по имени",
+    status_code=status.HTTP_200_OK,
+    response_model=list[PublicUserSchema],  # список публичных профилей
+    description="Возвращает список пользователей, чьё имя совпадает или содержит указанную подстроку",
+    responses={
+        200: {
+            "description": "Успешный поиск пользователей",
+            "model": list[PublicUserSchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[
+        Depends(RateLimiter(times=100, seconds=15)),
+        Depends(token_verification),
+    ],
+)
+async def search_profiles_route(
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    name: Annotated[
+        str,
+        Query(
+            max_length=32,
+            min_length=1,
+            description="Строка подразумевающее возможное имя пользователя",
+        ),
+    ],
+    limit: Annotated[
+        int, Query(ge=1, le=100, description="Максимальное количество результатов")
+    ] = 20,
+    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+) -> list[PublicUserSchema]:
+    pass
+    return await search_user_profiles(
+        name=name, limit=limit, offset=offset, session=session
+    )
 
 
 @profile_router.get(

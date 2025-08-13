@@ -8,6 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     String,
     func,
 )
@@ -62,7 +63,9 @@ class User(Base):
         passive_deletes=True,
     )
 
-    group_memberships: Mapped[list["GroupMembers"]] = relationship(back_populates="user")
+    group_memberships: Mapped[list["GroupMembers"]] = relationship(
+        back_populates="user"
+    )
 
 
 class UserProfile(Base):
@@ -74,9 +77,7 @@ class UserProfile(Base):
         primary_key=True,
         nullable=False,
     )
-    name: Mapped[str] = mapped_column(
-        String(32), unique=False, index=True, nullable=False
-    )
+    name: Mapped[str] = mapped_column(String(32), unique=False, nullable=False)
 
     discord_id: Mapped[int] = mapped_column(
         BIGINT,
@@ -131,6 +132,13 @@ class UserProfile(Base):
             (discord_id IS NOT NULL AND discord_username IS NOT NULL)
             """,
             name="ck_discord_fields_null_together",
+        ),
+        # GIN индекс для быстрого использования функции SIMILARITY()
+        Index(
+            "idx_users_username_trgm",
+            "name",
+            postgresql_using="gin",
+            postgresql_ops={"name": "gin_trgm_ops"},
         ),
     )
 
