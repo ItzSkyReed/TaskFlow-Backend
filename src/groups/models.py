@@ -199,59 +199,120 @@ class GroupInvitation(Base):
     )
 
 
-# Идея с запросами в группу
+class JoinRequestStatus(str, Enum):
+    """
+    Статусы ответов на входящие заявки
+    """
 
-# class JoinRequestStatus(str, Enum):
-#     PENDING = "PENDING"
-#     APPROVED = "APPROVED"
-#     REJECTED = "REJECTED"
-#
-# class GroupJoinRequest(Base):
-#     __tablename__ = "group_join_requests"
-#
-#     id: Mapped[UUID] = mapped_column(
-#         pgUUID(as_uuid=True),
-#         primary_key=True,
-#         server_default=text("uuid_generate_v4()"),
-#     )
-#
-#     group_id: Mapped[UUID] = mapped_column(
-#         pgUUID(as_uuid=True),
-#         ForeignKey("groups.id", ondelete="CASCADE"),
-#         nullable=False,
-#     )  # Группа, куда хочет вступить пользователь
-#
-#     requester_id: Mapped[UUID] = mapped_column(
-#         pgUUID(as_uuid=True),
-#         ForeignKey("users.id", ondelete="CASCADE"),
-#         nullable=False,
-#     )  # Пользователь, подавший заявку
-#
-#     status: Mapped[JoinRequestStatus] = mapped_column(
-#         PgEnum(JoinRequestStatus, name="join_request_status"),
-#         server_default=text(f"'{JoinRequestStatus.PENDING.name}'::join_request_status"),
-#         nullable=False,
-#     )
-#
-#     created_at: Mapped[datetime] = mapped_column(
-#         DateTime, server_default=func.now(), nullable=False
-#     )
-#
-#     updated_at: Mapped[datetime] = mapped_column(
-#         DateTime, nullable=False, server_default=func.now(), onupdate=datetime.now
-#     )
-#
-#     group: Mapped["Group"] = relationship()
-#     requester: Mapped["User"] = relationship()
-#
-#     __table_args__ = (
-#         Index(
-#             "uq_group_join_request_pending",
-#             "group_id",
-#             "requester_id",
-#             unique=True,
-#             postgresql_where=text(
-#                 f"status = '{JoinRequestStatus.PENDING.name}'::join_request_status"
-#             ),
-#         ),
-#     )
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class GroupJoinRequest(Base):
+    __tablename__ = "group_join_requests"
+
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("uuid_generate_v4()"),
+    )
+
+    group_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+    )  # Группа, куда хочет вступить пользователь
+
+    requester_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )  # Пользователь, подавший заявку
+
+    status: Mapped[JoinRequestStatus] = mapped_column(
+        PgEnum(JoinRequestStatus, name="join_request_status"),
+        server_default=text(f"'{JoinRequestStatus.PENDING.name}'::join_request_status"),
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), nullable=False
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now(), onupdate=datetime.now
+    )
+
+    group: Mapped["Group"] = relationship()
+    requester: Mapped["User"] = relationship()
+
+    __table_args__ = (
+        Index(
+            "uq_group_join_request_pending",
+            "group_id",
+            "requester_id",
+            unique=True,
+            postgresql_where=text(
+                f"status = '{JoinRequestStatus.PENDING.name}'::join_request_status"
+            ),
+        ),
+    )
+
+
+class GroupPermission(str, Enum):
+    INVITE_MEMBERS = "INVITE_MEMBERS"  # Позволяет приглашать участников в группу
+    KICK_MEMBERS = "BAN_MEMBERS"  # Позволяет исключать пользователей из группы
+    ACCEPT_JOIN_REQUESTS = "ACCEPT_JOIN_REQUESTS"  # Позволяет принимать от участников запросы на вступление в группу
+    MANAGE_GROUP = "EDIT_GROUP"  # Позволяет изменять name, avatar группы
+    MANAGE_MEMBERS = "CONTROL_MEMBERS"  # Позволяет изменять права пользователей (кроме MANAGE_MEMBERS)
+    MANAGE_TASKS = "MANAGE_TASKS"  # Позволяет создавать/изменять/удалять задачи
+    FULL_ACCESS = "FULL_ACCESS"  # Полный доступ (включая добавление MANAGE_MEMBERS другим пользователям)
+
+
+class GroupUserPermission(Base):
+    """
+    Содержит записи о правах пользователей
+    """
+
+    __tablename__ = "group_user_permissions"
+
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("uuid_generate_v4()"),
+    )
+
+    group_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    permission: Mapped[GroupPermission] = mapped_column(
+        PgEnum(GroupPermission, name="group_permission"), nullable=False
+    )
+
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), nullable=False
+    )
+    granted_by: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        # Гарантирует, что нет дублированных прав.
+        UniqueConstraint(
+            "group_id", "user_id", "permission", name="uq_group_user_permission"
+        ),
+    )
