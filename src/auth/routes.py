@@ -231,9 +231,7 @@ async def change_password_route(
         500: {"description": "Внутренняя ошибка сервера."},
     },
 )
-async def logout_user_route(
-    request: Request, response: Response
-) -> None:
+async def logout_user_route(request: Request, response: Response) -> None:
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:

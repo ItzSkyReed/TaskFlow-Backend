@@ -24,4 +24,4 @@ def get_auth_settings() -> AuthSettings:
     """
     Получение конфига аутентификационных настроек
     """
-    return AuthSettings() # ty: ignore[missing-argument]
+    return AuthSettings()  # ty: ignore[missing-argument]
