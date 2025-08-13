@@ -105,6 +105,19 @@ class GroupMembers(Base):
     group: Mapped["Group"] = relationship(back_populates="members")
     user: Mapped[User] = relationship(back_populates="group_memberships")
 
+    permission_objs: Mapped[list["GroupUserPermission"]] = relationship(
+        "GroupUserPermission",
+        primaryjoin="and_(GroupMembers.user_id == foreign(GroupUserPermission.user_id),"
+        "GroupMembers.group_id == foreign(GroupUserPermission.group_id))",
+        viewonly=True,
+        lazy="selectin",
+    )
+
+    @property
+    def permissions(self) -> list[str]:
+        """Список строк прав"""
+        return [perm.permission.value for perm in self.permission_objs]
+
     __table_args__ = (
         UniqueConstraint("group_id", "user_id", name="uq_group_members_group_user"),
     )
