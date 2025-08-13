@@ -34,9 +34,9 @@ class Group(Base):
         String(50), nullable=False, index=True
     )  # Название группы
 
-    description: Mapped[str] = mapped_column(
-        String(5000), nullable=True
-    )  # Описание группы
+    has_avatar: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
 
     creator_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
