@@ -5,7 +5,15 @@ from enum import Enum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -47,6 +55,10 @@ class Group(Base):
         nullable=False,
         index=True,
     )  # UUID пользователя создавшего группу (владелец)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), nullable=False
+    )  # Время создания группы
 
     creator: Mapped[User] = relationship(back_populates="created_groups")
 
