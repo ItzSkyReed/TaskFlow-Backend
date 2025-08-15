@@ -44,7 +44,6 @@ class UserSchema(BaseModel):
             return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
         return None
 
-
     model_config = ConfigDict(from_attributes=True)
 
 

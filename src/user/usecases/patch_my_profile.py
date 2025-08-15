@@ -1,4 +1,3 @@
-from logging import getLogger
 from uuid import UUID
 
 from asyncpg import UniqueViolationError
@@ -9,6 +8,7 @@ from ...utils import update_model_from_schema
 from ..exceptions import EmailAlreadyInUseException
 from ..schemas import PatchUserSchema, UserSchema
 from ..services import check_email_unique, get_user_with_profile
+
 
 async def patch_my_profile(
     patch_schema: PatchUserSchema,
