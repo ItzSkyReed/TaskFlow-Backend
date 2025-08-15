@@ -10,9 +10,6 @@ from ..exceptions import EmailAlreadyInUseException
 from ..schemas import PatchUserSchema, UserSchema
 from ..services import check_email_unique, get_user_with_profile
 
-logger = getLogger(__name__)
-
-
 async def patch_my_profile(
     patch_schema: PatchUserSchema,
     user_id: UUID,
