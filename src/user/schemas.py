@@ -45,7 +45,7 @@ class UserSchema(BaseModel):
         return None
 
 
-model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProfileSchema(BaseModel):
