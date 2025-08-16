@@ -15,6 +15,7 @@ from starlette.responses import PlainTextResponse
 from .auth import auth_router
 from .config import get_settings
 from .exceptions import rate_limit_default_callback
+from .groups import group_router
 from .logging_config import LOGGING_CONFIG
 
 # To correctly load all models
@@ -88,4 +89,5 @@ api_router = APIRouter(prefix=settings.api_prefix)
 api_router.include_router(auth_router)
 api_router.include_router(profile_router)
 
+api_router.include_router(group_router)
 app.include_router(api_router)
