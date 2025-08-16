@@ -8,18 +8,15 @@ from typing import TypedDict
 
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import ORJSONResponse
-from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
 from .auth import auth_router
 from .config import get_settings
-from .exceptions import rate_limit_default_callback
 from .logging_config import LOGGING_CONFIG
 
 # To correctly load all models
 from .models import *  # noqa: F401, F403
-from .redis import redis_client
 from .user import profile_router
 
 # uvloop быстрее стандартного event loop
@@ -52,19 +49,11 @@ if settings.environment != "PROD":
         "openapi_url": "/openapi.json",
     }
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await FastAPILimiter.init(redis_client, http_callback=rate_limit_default_callback)
-    yield
-
-
 app = FastAPI(
     root_path="/task_flow",
     title=settings.project_name,
     version=settings.version,
     default_response_class=ORJSONResponse,
-    lifespan=lifespan,
     **docs_settings,
 )
 

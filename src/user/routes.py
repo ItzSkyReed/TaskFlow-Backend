@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, File, Path, Query
-from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -50,7 +49,6 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
         500: {"description": "Внутренняя ошибка сервера."},
     },
     dependencies=[
-        Depends(RateLimiter(times=100, seconds=15)),
         Depends(token_verification),
     ],
 )
@@ -98,9 +96,6 @@ async def search_profiles_route(
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[
-        Depends(RateLimiter(times=100, seconds=30)),
-    ],
 )
 async def get_my_profile_route(
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
@@ -136,9 +131,6 @@ async def get_my_profile_route(
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[
-        Depends(RateLimiter(times=50, minutes=1)),
-    ],
 )
 async def patch_my_profile_route(
     patch_schema: Annotated[PatchUserSchema, Body(...)],
@@ -163,7 +155,6 @@ async def patch_my_profile_route(
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[Depends(RateLimiter(times=50, minutes=1))],
 )
 async def delete_my_avatar_route(
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
@@ -199,8 +190,7 @@ async def delete_my_avatar_route(
         },
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
-    },
-    dependencies=[Depends(RateLimiter(times=20, minutes=1))],
+    }
 )
 async def patch_my_avatar_route(
     file: Annotated[
@@ -237,7 +227,6 @@ async def patch_my_avatar_route(
     },
     dependencies=[
         Depends(token_verification),
-        Depends(RateLimiter(times=100, seconds=30)),
     ],
 )
 async def get_public_user_profile_route(

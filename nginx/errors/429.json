@@ -1,0 +1,8 @@
+{
+  "detail": [
+    {
+      "msg": "Лимит API (слишком много запросов)",
+      "type": "api_error.too_many_requests"
+    }
+  ]
+}
