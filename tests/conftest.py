@@ -25,10 +25,17 @@ def app():
 
 
 @pytest.fixture(scope="session")
-async def client(app):
-    """HTTP-клиент для тестов с привязкой к loop теста"""
+async def client_session(app):
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url=f"http://localhost{settings.root_path}{settings.api_prefix}",
     ) as ac:
         yield ac
+
+
+@pytest.fixture
+async def client(client_session):
+    """Чистый HTTP-клиент для каждого теста, на основе session-клиента"""
+    client_session.cookies.clear()
+    client_session.headers.clear()
+    return client_session

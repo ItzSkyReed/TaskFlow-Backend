@@ -1,11 +1,9 @@
-import pytest
 from fastapi import status
 
 from src.auth import auth_router
 from tests.integration.helpers import register_and_login
 
 
-@pytest.mark.asyncio
 async def test_refresh_no_cookie(client):
     """
     Проверяет поведение эндпоинта /refresh,
@@ -18,7 +16,6 @@ async def test_refresh_no_cookie(client):
     assert data["detail"] is not None
 
 
-@pytest.mark.asyncio
 async def test_refresh_invalid_token(client):
     """
     Проверяет поведение эндпоинта /refresh,
@@ -32,7 +29,6 @@ async def test_refresh_invalid_token(client):
     assert data["detail"] is not None
 
 
-@pytest.mark.asyncio
 async def test_refresh_success(client):
     """
     Проверяет успешное обновление access_token по refresh_token

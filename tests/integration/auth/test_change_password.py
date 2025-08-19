@@ -48,7 +48,7 @@ async def test_change_password_same_password(client):
         },
     )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     data = response.json()
     assert data["detail"] is not None
 
@@ -68,7 +68,7 @@ async def test_change_password_wrong_old(client):
         },
     )
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     data = response.json()
     assert data["detail"] is not None
 
@@ -82,7 +82,6 @@ async def test_change_password_success(client):
     old_password = user["payload"]["password"]
     new_password = old_password + "_new"
 
-    # Меняем пароль
     client.cookies.set("refresh_token", user["refresh_token"])
     response = await client.post(
         f"{auth_router.prefix}/change_password",
@@ -99,7 +98,7 @@ async def test_change_password_success(client):
     response = await client.post(
         f"{auth_router.prefix}/sign_in",
         json={
-            "login": user["payload"]["login"],
+            "identifier": user["payload"]["login"],
             "password": old_password,
         },
     )
@@ -108,7 +107,7 @@ async def test_change_password_success(client):
     response = await client.post(
         f"{auth_router.prefix}/sign_in",
         json={
-            "login": user["payload"]["login"],
+            "identifier": user["payload"]["login"],
             "password": new_password,
         },
     )
