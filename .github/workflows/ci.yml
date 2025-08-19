@@ -34,10 +34,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: lint
-    services:
-      docker:
-        image: docker:24.0.5
-        options: --privileged
 
     steps:
       - name: Checkout code
