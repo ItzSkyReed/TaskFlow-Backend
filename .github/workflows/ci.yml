@@ -45,6 +45,7 @@ jobs:
       - name: Run tests with Docker Compose
         working-directory: ${{ github.workspace }}
         run: |
+          ls -la
           docker compose -p taskflow_test -f docker-compose.test.yml --env-file .env.test up -d --build
 
           # Ждем завершения web-test
