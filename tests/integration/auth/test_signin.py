@@ -65,6 +65,8 @@ async def test_sign_in_invalid_password(client):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json()["detail"] is not None
+
+
 async def test_sign_in_user_not_found(client):
     # Логинимся под несуществующим пользователем
     signin_payload = {"identifier": "NoSuchUser", "password": "somepassword"}
@@ -73,11 +75,24 @@ async def test_sign_in_user_not_found(client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] is not None
 
-async def test_sign_in_invalid_schema(client):
+
+async def test_sign_in_invalid_identifier_schema(client):
     # Передаем некорректный payload
     signin_payload = {
-        "identifier": 123,  # должен быть str
-        "password": 456,  # должен быть str
+        "identifier": 123,
+        "password": "RANDOM_STRING",
+    }
+    response = await client.post(f"{auth_router.prefix}/sign_in", json=signin_payload)
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.json()["detail"] is not None
+
+
+async def test_sign_in_invalid_password_schema(client):
+    # Передаем некорректный payload
+    signin_payload = {
+        "identifier": "helloworld",
+        "password": "+++++151еёёё43 6 24ыпвап",
     }
     response = await client.post(f"{auth_router.prefix}/sign_in", json=signin_payload)
 

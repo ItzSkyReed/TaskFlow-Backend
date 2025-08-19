@@ -67,6 +67,7 @@ async def test_conflict_sign_up(client):
 
     assert response2.json()["detail"] is not None
 
+
 async def test_conflict_sign_up_email_only(client):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
@@ -86,6 +87,8 @@ async def test_conflict_sign_up_email_only(client):
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload2)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] is not None
+
+
 async def test_conflict_sign_up_login_only(client):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
@@ -105,6 +108,7 @@ async def test_conflict_sign_up_login_only(client):
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload2)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] is not None
+
 
 async def test_invalid_schema_sign_up(client):
     payload = {"name": "A", "login": "ab", "email": "not-an-email", "password": "123"}
