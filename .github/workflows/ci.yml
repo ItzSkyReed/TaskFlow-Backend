@@ -32,8 +32,6 @@ jobs:
         run: ruff check .
 
   test:
-    env_file:
-      - .env.test
     runs-on: ubuntu-latest
     needs: lint
     services:
