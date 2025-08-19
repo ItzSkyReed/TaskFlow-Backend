@@ -80,9 +80,11 @@ async def test_change_password_success(client):
     user = await register_and_login(client)
 
     old_password = user["payload"]["password"]
-    new_password = old_password + "_new"
+    new_password = old_password + "!new"
 
     client.cookies.set("refresh_token", user["refresh_token"])
+    client.headers["Authorization"] = f"Bearer {user["access_token"]}"
+
     response = await client.post(
         f"{auth_router.prefix}/change_password",
         json={
@@ -102,7 +104,7 @@ async def test_change_password_success(client):
             "password": old_password,
         },
     )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     response = await client.post(
         f"{auth_router.prefix}/sign_in",
