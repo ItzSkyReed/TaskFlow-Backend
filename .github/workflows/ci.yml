@@ -60,15 +60,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Запускаем все сервисы в фоне
           docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up --build -d
 
-          # Ждём пока тестовый контейнер появится и перейдёт в состояние running (или уже exited)
           echo "Waiting for test container ($TEST_CONTAINER) to appear..."
           SECONDS_WAITED=0
           START_TIMEOUT=${STARTUP_TIMEOUT}
           while true; do
-            # пробуем получить статус контейнера
+
             STATUS=$(docker inspect -f '{{.State.Status}}' "$TEST_CONTAINER" 2>/dev/null || echo "missing")
             if [ "$STATUS" = "running" ] || [ "$STATUS" = "exited" ]; then
               echo "Container status: $STATUS"
@@ -80,7 +78,7 @@ jobs:
               docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps -a
               echo "docker compose logs (last 200 lines):"
               docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --no-color --tail 200 || true
-              # принудительно опускаем down и завершаем с ошибкой
+
               docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down --volumes --remove-orphans || true
               exit 1
             fi
@@ -88,18 +86,15 @@ jobs:
             SECONDS_WAITED=$((SECONDS_WAITED+2))
           done
 
-          # Дождёмся, пока контейнер завершится, и получим его exit code
           echo "Waiting for $TEST_CONTAINER to finish (docker wait)..."
           EXIT_CODE=$(docker wait "$TEST_CONTAINER" 2>/dev/null || echo "127")
           echo "Test container exit code: $EXIT_CODE"
 
-          # Для удобства: покажем полные логи web-test (или по сервису)
           echo "==== docker compose logs for web-test ===="
           docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --no-color --timestamps web-test || true
           echo "==== docker logs (container) ===="
           docker logs --timestamps "$TEST_CONTAINER" || true
 
-          # Останавливаем все сервисы и чистим тома/orphans
           docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down --volumes --remove-orphans || true
 
           # Выходим с тем же кодом, что и тестовый контейнер
