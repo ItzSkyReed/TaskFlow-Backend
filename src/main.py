@@ -48,7 +48,7 @@ def create_app() -> FastAPI:
             "openapi_url": "/openapi.json",
         }
 
-    app = FastAPI(
+    fast_api_app = FastAPI(
         root_path="/task_flow",
         title=settings.project_name,
         version=settings.version,
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
     )
 
     # CORS
-    app.add_middleware(
+    fast_api_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_allowed_origins,
         allow_credentials=True,
@@ -66,7 +66,7 @@ def create_app() -> FastAPI:
     )
 
     # Healthcheck
-    @app.get("/health", include_in_schema=False)
+    @fast_api_app.get("/health", include_in_schema=False)
     async def health_check():
         return PlainTextResponse("OK")
 
@@ -74,10 +74,8 @@ def create_app() -> FastAPI:
     api_router = APIRouter(prefix=settings.api_prefix)
     api_router.include_router(auth_router)
     api_router.include_router(profile_router)
-    app.include_router(api_router)
+    fast_api_app.include_router(api_router)
 
-    return app
+    return fast_api_app
 
-
-if __name__ == "__main__":
-    app = create_app()
+app = create_app()
