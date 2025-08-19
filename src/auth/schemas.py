@@ -112,7 +112,9 @@ class SignInSchema(BaseModel):
             examples=["johndoe@example.com", "srun4ikPRO"],
         ),
     ]
-    password: Annotated[str, Field(..., min_length=8, max_length=128, pattern=PASSWORD_PATTERN)]
+    password: Annotated[
+        str, Field(..., min_length=8, max_length=128, pattern=PASSWORD_PATTERN)
+    ]
 
     @classmethod
     @field_validator("identifier", mode="after")

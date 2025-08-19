@@ -38,7 +38,10 @@ async def change_user_password(
 
     refresh_token_payload = JWTUtils.decode_token(refresh_token)
 
-    if not await is_refresh_jti_valid(refresh_token_payload.sub, refresh_token_payload.jti):  # type: ignore[arg-type]
+    if not await is_refresh_jti_valid(
+        refresh_token_payload.sub,
+        refresh_token_payload.jti,  # ty: ignore[invalid-argument-type]
+    ):
         raise RefreshTokenNotWhitelisted()
 
     user = await get_user(refresh_token_payload.sub, session)
@@ -54,5 +57,5 @@ async def change_user_password(
 
     await remove_all_refresh_tokens_except(
         user_id=refresh_token_payload.sub,
-        except_token_jti=refresh_token_payload.jti,  # type: ignore[arg-type]
+        except_token_jti=refresh_token_payload.jti,  # ty: ignore[invalid-argument-type]
     )

@@ -52,6 +52,7 @@ async def test_change_password_same_password(client):
     data = response.json()
     assert data["detail"] is not None
 
+
 async def test_change_password_wrong_old(client):
     """
     Передан неверный старый пароль
@@ -70,6 +71,7 @@ async def test_change_password_wrong_old(client):
     assert response.status_code == status.HTTP_403_FORBIDDEN
     data = response.json()
     assert data["detail"] is not None
+
 
 async def test_change_password_success(client):
     """
