@@ -119,6 +119,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    command: [ "fastapi", "dev", "src/main.py", "--host", "0.0.0.0" ]
 
   nginx:
     image: nginx:stable-alpine

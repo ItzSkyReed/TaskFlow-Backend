@@ -13,5 +13,3 @@ COPY ./alembic.ini /fast_api/alembic.ini
 COPY ./alembic /fast_api/alembic
 
 EXPOSE 8000
-
-CMD ["fastapi", "dev", "app/main.py", "--host", "0.0.0.0"]
