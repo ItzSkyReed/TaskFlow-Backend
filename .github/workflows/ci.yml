@@ -31,31 +31,76 @@ jobs:
       - name: Ruff - check style
         run: ruff check .
 
-#  test:
-#    runs-on: ubuntu-latest
-#    needs: lint
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#
-#      - name: Check .env.test file
-#        run: ls -la
-#
-#      - name: Run tests with Docker Compose
-#        working-directory: ${{ github.workspace }}
-#        run: |
-#          ls -la
-#          docker compose -p taskflow_test -f docker-compose.test.yml --env-file .env.test up -d --build
-#
-#          # Ждем завершения web-test
-#          docker wait taskflow_web_test
-#
-#          # Получаем exit code тестов
-#          EXIT_CODE=$(docker inspect taskflow_web_test --format='{{.State.ExitCode}}')
-#
-#          # Выключаем и удаляем все контейнеры и тома
-#          docker compose -f docker-compose.test.yml down --volumes --remove-orphans
-#
-#          # Выходим с кодом тестов
-#          exit $EXIT_CODE
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ensure docker & compose available
+        run: |
+          docker --version
+          if ! docker compose version >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y docker-compose-plugin
+          fi
+          docker compose version
+
+      - name: Start services (detached) and run tests
+        env:
+          COMPOSE_HTTP_TIMEOUT: '200'
+          PROJECT_NAME: "taskflow_test"
+          COMPOSE_FILE: "docker-compose.test.yml"
+          ENV_FILE: ".env.test"
+          TEST_CONTAINER: "taskflow_web_test"
+          STARTUP_TIMEOUT: "120"
+        run: |
+          set -euo pipefail
+
+          # Запускаем все сервисы в фоне
+          docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up --build -d
+
+          # Ждём пока тестовый контейнер появится и перейдёт в состояние running (или уже exited)
+          echo "Waiting for test container ($TEST_CONTAINER) to appear..."
+          SECONDS_WAITED=0
+          START_TIMEOUT=${STARTUP_TIMEOUT}
+          while true; do
+            # пробуем получить статус контейнера
+            STATUS=$(docker inspect -f '{{.State.Status}}' "$TEST_CONTAINER" 2>/dev/null || echo "missing")
+            if [ "$STATUS" = "running" ] || [ "$STATUS" = "exited" ]; then
+              echo "Container status: $STATUS"
+              break
+            fi
+            if [ "$SECONDS_WAITED" -ge "$START_TIMEOUT" ]; then
+              echo "ERROR: test container did not appear within ${START_TIMEOUT}s."
+              echo "docker compose ps:"
+              docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps -a
+              echo "docker compose logs (last 200 lines):"
+              docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --no-color --tail 200 || true
+              # принудительно опускаем down и завершаем с ошибкой
+              docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down --volumes --remove-orphans || true
+              exit 1
+            fi
+            sleep 2
+            SECONDS_WAITED=$((SECONDS_WAITED+2))
+          done
+
+          # Дождёмся, пока контейнер завершится, и получим его exit code
+          echo "Waiting for $TEST_CONTAINER to finish (docker wait)..."
+          EXIT_CODE=$(docker wait "$TEST_CONTAINER" 2>/dev/null || echo "127")
+          echo "Test container exit code: $EXIT_CODE"
+
+          # Для удобства: покажем полные логи web-test (или по сервису)
+          echo "==== docker compose logs for web-test ===="
+          docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --no-color --timestamps web-test || true
+          echo "==== docker logs (container) ===="
+          docker logs --timestamps "$TEST_CONTAINER" || true
+
+          # Останавливаем все сервисы и чистим тома/orphans
+          docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down --volumes --remove-orphans || true
+
+          # Выходим с тем же кодом, что и тестовый контейнер
+          exit $EXIT_CODE
