@@ -190,7 +190,7 @@ async def delete_my_avatar_route(
         },
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
-    }
+    },
 )
 async def patch_my_avatar_route(
     file: Annotated[

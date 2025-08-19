@@ -111,7 +111,6 @@ services:
       - "8000"
     volumes:
       - ./src:/fast_api/src
-    command: [ "fastapi", "dev", "src/main.py", "--host", "0.0.0.0" ]
     networks:
       - taskflow_net
     healthcheck:

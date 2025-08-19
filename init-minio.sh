@@ -1,12 +1,12 @@
 #!/bin/sh
 set -e
 
-until mc alias set local "http://minio:${MINIO_STORAGE_PORT}" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+until mc alias set local "http://${MINIO_HOST}:${MINIO_STORAGE_PORT}" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
     echo "MinIO не доступен, ожидание..."
     sleep 1
 done
 
-mc alias set local "http://minio:${MINIO_STORAGE_PORT}" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+mc alias set local "http://${MINIO_HOST}:${MINIO_STORAGE_PORT}" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
 
 if mc ls local/avatars >/dev/null 2>&1; then
     echo "Бакет avatars уже существует."

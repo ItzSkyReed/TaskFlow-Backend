@@ -1,0 +1,16 @@
+FROM python:3.13-slim
+
+# Установим uv
+RUN pip install --no-cache-dir uv
+
+WORKDIR /fast_api
+
+COPY pyproject.toml .
+COPY requirements-dev.txt .
+COPY uv.lock .
+
+RUN uv pip install -r pyproject.toml --system
+RUN uv pip install -r requirements-dev.txt --system
+
+COPY ./src /fast_api/src
+COPY ./tests /fast_api/tests

@@ -1,0 +1,112 @@
+services:
+  postgres-test:
+    image: postgres:17.5-alpine3.22
+    container_name: postgres_test
+    restart: unless-stopped
+    env_file:
+      - .env.test
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    expose:
+      - "${POSTGRES_PORT}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - taskflow_net_test
+
+  redis-test:
+    image: redis:8.0.3-alpine
+    container_name: redis_test
+    restart: unless-stopped
+    env_file:
+      - .env.test
+    command: [ "redis-server", "--save", "" ]
+    expose:
+      - "${REDIS_PORT}"
+    networks:
+      - taskflow_net_test
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+
+  minio-test:
+    image: quay.io/minio/minio:latest
+    container_name: minio_test
+    env_file:
+      - .env.test
+    expose:
+      - "${MINIO_STORAGE_PORT}"
+      - "${MINIO_WEB_PORT}"
+    command: server /data --console-address ":${MINIO_WEB_PORT}" --address ":${MINIO_STORAGE_PORT}"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${MINIO_WEB_PORT}/minio/health/live" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - taskflow_net_test
+
+  minio-init-test:
+    image: minio/mc
+    depends_on:
+      minio-test:
+        condition: service_healthy
+    volumes:
+      - ./init-minio.sh:/init-minio.sh:ro
+    env_file:
+      - .env.test
+    entrypoint: [ "/bin/sh", "/init-minio.sh" ]
+    networks:
+      - taskflow_net_test
+
+  migrate-test:
+    build: .
+    container_name: taskflow_migrate_test
+    restart: "no"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    env_file:
+      - .env.test
+    environment:
+      MIGRATION_INSIDE_DOCKER: 1
+    command: alembic upgrade head
+    networks:
+      - taskflow_net_test
+
+  web-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: taskflow_web_test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      minio-test:
+        condition: service_healthy
+      migrate-test:
+        condition: service_completed_successfully
+    env_file:
+      - .env.test
+    volumes:
+      - ./src:/fast_api/src
+    networks:
+      - taskflow_net_test
+    command: [ "pytest", "-s"]
+
+networks:
+  taskflow_net_test:
+    name: taskflow_net_test
+    driver: bridge

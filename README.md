@@ -90,5 +90,5 @@
 
    > Запускать из корня проекта
    ```shell
-   python -m pytest src/tests
+   docker compose -p taskflow_test -f docker-compose.test.yml --env-file .env.test up --build
    ```

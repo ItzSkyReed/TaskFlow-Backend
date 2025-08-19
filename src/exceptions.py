@@ -1,10 +1,6 @@
 # Global exceptions
-from math import ceil
 
 from fastapi import HTTPException
-from starlette import status
-from starlette.requests import Request
-from starlette.responses import Response
 
 
 class BaseAPIException(HTTPException):
