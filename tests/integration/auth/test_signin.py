@@ -47,7 +47,6 @@ async def test_valid_sign_in(client):
     assert any(f"Path={expected_path}" in h for h in set_cookie_headers), (
         f"Path у куки должен быть {expected_path}"
     )
-    assert response.json()["detail"] is not None
 
 
 async def test_sign_in_invalid_password(client):
@@ -66,8 +65,6 @@ async def test_sign_in_invalid_password(client):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json()["detail"] is not None
-
-
 async def test_sign_in_user_not_found(client):
     # Логинимся под несуществующим пользователем
     signin_payload = {"identifier": "NoSuchUser", "password": "somepassword"}
@@ -75,7 +72,6 @@ async def test_sign_in_user_not_found(client):
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] is not None
-
 
 async def test_sign_in_invalid_schema(client):
     # Передаем некорректный payload

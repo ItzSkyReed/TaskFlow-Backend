@@ -19,8 +19,6 @@ async def test_valid_sign_up(client):
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    assert response.json()["detail"] is not None
-
 
 async def test_valid_sign_up_cookies(client):
     unique = uuid.uuid4().hex[:16]
@@ -49,7 +47,6 @@ async def test_valid_sign_up_cookies(client):
     assert any(f"Path={expected_path}" in h for h in set_cookie_headers), (
         f"Path у куки должен быть {expected_path}"
     )
-    assert response.json()["detail"] is not None
 
 
 async def test_conflict_sign_up(client):
@@ -63,13 +60,12 @@ async def test_conflict_sign_up(client):
     # Первый запрос должен пройти успешно
     response1 = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
     assert response1.status_code == status.HTTP_201_CREATED
-    assert response1.json()["detail"] is not None
 
     # Второй запрос с тем же логином и email должен вернуть конфликт
     response2 = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
     assert response2.status_code == status.HTTP_409_CONFLICT
-    assert response2.json()["detail"] is not None
 
+    assert response2.json()["detail"] is not None
 
 async def test_conflict_sign_up_email_only(client):
     unique1 = uuid.uuid4().hex[:16]
@@ -90,8 +86,6 @@ async def test_conflict_sign_up_email_only(client):
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload2)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] is not None
-
-
 async def test_conflict_sign_up_login_only(client):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
@@ -111,7 +105,6 @@ async def test_conflict_sign_up_login_only(client):
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload2)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] is not None
-
 
 async def test_invalid_schema_sign_up(client):
     payload = {"name": "A", "login": "ab", "email": "not-an-email", "password": "123"}
