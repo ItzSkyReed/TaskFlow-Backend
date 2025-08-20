@@ -15,7 +15,6 @@ from .config import get_settings
 
 from .exceptions import rate_limit_default_callback
 from .groups import group_router
-
 from .logging_config import LOGGING_CONFIG
 
 # To correctly load all models
@@ -38,6 +37,7 @@ class ExtraAppConfig(TypedDict, total=False):
 
 if sys.platform != "win32" and settings.environment != "TEST":
     import uvloop
+
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     logger.info("uvloop enabled")
 
@@ -81,5 +81,6 @@ def create_app() -> FastAPI:
     fast_api_app.include_router(api_router)
 
     return fast_api_app
+
 
 app = create_app()

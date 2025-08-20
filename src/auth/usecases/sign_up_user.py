@@ -37,7 +37,7 @@ async def sign_up_user(
 
         await session.commit()
 
-    except IntegrityError as err: # pragma: no cover
+    except IntegrityError as err:  # pragma: no cover
         await session.rollback()
         if isinstance(err.orig, UniqueViolationError):
             # если выбросит EmailAlreadyInUseException

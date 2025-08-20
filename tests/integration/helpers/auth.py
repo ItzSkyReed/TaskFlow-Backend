@@ -6,7 +6,9 @@ from starlette import status
 from src.auth import auth_router
 
 
-async def register_and_login(client: AsyncClient, unique=None) -> dict[str, str | dict[str, str]]:
+async def register_and_login(
+    client: AsyncClient, unique=None
+) -> dict[str, str | dict[str, str]]:
     if unique is None:
         unique = uuid.uuid4().hex[:16]
 
