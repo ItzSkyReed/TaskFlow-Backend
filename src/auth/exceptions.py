@@ -24,7 +24,7 @@ class InvalidOldPasswordException(BaseAPIException):
 
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             msg="Incorrect old password",
             loc=["body", "password"],
             err_type="value_error.invalid_old_password",
@@ -39,7 +39,7 @@ class PasswordsAreSameException(BaseAPIException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
-            msg="Incorrect old password",
+            msg="New password must be different from old password",
             loc=["body", "password"],
             err_type="value_error.old_password_is_same_as_new",
         )

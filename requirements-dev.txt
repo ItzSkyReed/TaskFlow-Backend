@@ -3,5 +3,6 @@ ty
 pre-commit
 pytest
 pytest-cov
+coverage[toml]
 httpx
 anyio

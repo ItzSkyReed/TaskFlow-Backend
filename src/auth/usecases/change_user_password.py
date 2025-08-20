@@ -46,13 +46,10 @@ async def change_user_password(
 
     user = await get_user(refresh_token_payload.sub, session)
 
-    # noinspection PyTypeChecker
     if not PasswordUtils.verify_password(user.hashed_password, passwords.old_password):
         raise InvalidOldPasswordException()
 
-    new_hashed_password = PasswordUtils.hash_password(passwords.new_password)
-
-    user.hashed_password = new_hashed_password
+    user.hashed_password = PasswordUtils.hash_password(passwords.new_password)
     await session.commit()
 
     await remove_all_refresh_tokens_except(

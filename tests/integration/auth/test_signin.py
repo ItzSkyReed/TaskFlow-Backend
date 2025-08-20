@@ -7,7 +7,6 @@ from tests.conftest import settings
 
 
 async def test_valid_sign_in(client):
-    # Сначала регистрируем пользователя
     unique = uuid.uuid4().hex[:16]
     payload = {
         "name": f"User{unique}",
@@ -17,7 +16,6 @@ async def test_valid_sign_in(client):
     }
     await client.post(f"{auth_router.prefix}/sign_up", json=payload)
 
-    # Теперь логинимся
     signin_payload = {
         "identifier": payload["login"],
         "password": payload["password"],

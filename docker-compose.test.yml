@@ -99,8 +99,9 @@ services:
       migrate-test:
         condition: service_completed_successfully
     env_file:
-      - .env.test
+      - .env.test   # монтируем папку для отчёта
     volumes:
+      - ./htmlcov:/fast_api/htmlcov
       - ./src:/fast_api/src
     networks:
       - taskflow_net_test
