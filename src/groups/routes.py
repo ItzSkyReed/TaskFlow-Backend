@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
-from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -30,7 +29,6 @@ group_router = APIRouter(prefix="/group", tags=["Group"])
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[Depends(RateLimiter(times=30, minutes=1))],
 )
 async def create_group_route(
     created_group: Annotated[

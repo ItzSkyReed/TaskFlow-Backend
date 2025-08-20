@@ -12,8 +12,6 @@ from starlette.responses import PlainTextResponse
 
 from .auth import auth_router
 from .config import get_settings
-
-from .exceptions import rate_limit_default_callback
 from .groups import group_router
 from .logging_config import LOGGING_CONFIG
 
