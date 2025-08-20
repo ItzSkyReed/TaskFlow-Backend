@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
-from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
@@ -57,7 +56,6 @@ auth_settings = get_auth_settings()
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[Depends(RateLimiter(times=1000, minutes=5))],
 )
 async def sign_up_user_route(
     response: Response,
@@ -101,7 +99,6 @@ async def sign_up_user_route(
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[Depends(RateLimiter(times=3000, minutes=5))],
 )
 async def sign_in_user_route(
     response: Response,
@@ -144,7 +141,6 @@ async def sign_in_user_route(
         },
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[Depends(RateLimiter(times=20, minutes=5))],
 )
 async def refresh_tokens_route(
     request: Request, response: Response
@@ -194,7 +190,6 @@ async def refresh_tokens_route(
     },
     dependencies=[
         Depends(token_verification),
-        Depends(RateLimiter(times=20, minutes=5)),
     ],
 )
 async def change_password_route(
