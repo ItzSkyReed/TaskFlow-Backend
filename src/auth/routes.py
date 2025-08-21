@@ -225,6 +225,9 @@ async def change_password_route(
         },
         500: {"description": "Внутренняя ошибка сервера."},
     },
+    dependencies=[
+        Depends(token_verification),
+    ],
 )
 async def logout_user_route(request: Request, response: Response) -> None:
     refresh_token = request.cookies.get("refresh_token")
