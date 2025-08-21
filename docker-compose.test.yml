@@ -57,7 +57,7 @@ services:
       - taskflow_net_test
 
   minio-init-test:
-    image: minio/mc
+    image: minio/mc:latest
     depends_on:
       minio-test:
         condition: service_healthy
