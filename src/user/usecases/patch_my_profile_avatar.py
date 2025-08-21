@@ -1,4 +1,3 @@
-from logging import getLogger
 from uuid import UUID
 
 from fastapi import UploadFile

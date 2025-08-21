@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...minio import get_minio_client, AVATARS_BUCKET_NAME
+from ...minio import AVATARS_BUCKET_NAME, get_minio_client
 from ...utils import validate_avatar_file
 from ..exceptions import NotEnoughPermissionsException
 from ..models import GroupPermission
