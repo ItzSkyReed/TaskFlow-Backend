@@ -10,7 +10,7 @@ from ..auth.security import token_verification
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
 from .schemas import CreateGroupSchema, GroupSchema
-from .usecases import create_group, patch_group_avatar, delete_group_avatar
+from .usecases import create_group, delete_group_avatar, patch_group_avatar
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
 
@@ -128,10 +128,10 @@ async def patch_group_avatar_route(
         500: {"description": "Внутренняя ошибка сервера."},
     },
 )
-async def patch_group_avatar_route(
-        group_id: Annotated[UUID, Path(...)],
-        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
+async def delete_group_avatar_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     await delete_group_avatar(
         group_id=group_id,
