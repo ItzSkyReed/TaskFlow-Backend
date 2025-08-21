@@ -173,7 +173,7 @@ async def delete_my_avatar_route(
     responses={
         200: {"description": "Аватарка успешно загружена", "model": UserSchema},
         400: {
-            "description": "Некорректный формат файла, должен быть webp",
+            "description": "Некорректный формат файла, или сам файл не фото",
             "model": ErrorResponseModel,
         },
         401: {
