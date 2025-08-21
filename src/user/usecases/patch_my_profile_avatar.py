@@ -5,11 +5,9 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...minio import AVATARS_BUCKET_NAME, get_minio_client
+from ...utils import validate_avatar_file
 from ..schemas import UserSchema
 from ..services import get_user_with_profile
-from ..services.user_service import validate_avatar_file
-
-logger = getLogger(__name__)
 
 
 async def patch_my_profile_avatar(
