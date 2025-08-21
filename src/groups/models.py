@@ -60,7 +60,7 @@ class Group(Base):
 
     creator: Mapped["User"] = relationship(back_populates="created_groups")
 
-    members: Mapped[list["GroupMembers"]] = relationship(
+    members: Mapped[list["GroupMember"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
     )
 
@@ -69,7 +69,7 @@ class Group(Base):
     )
 
 
-class GroupMembers(Base):
+class GroupMember(Base):
     """
     Хранение участников групп
     """
@@ -105,8 +105,8 @@ class GroupMembers(Base):
 
     permission_objs: Mapped[list["GroupUserPermission"]] = relationship(
         "GroupUserPermission",
-        primaryjoin="and_(GroupMembers.user_id == foreign(GroupUserPermission.user_id),"
-        "GroupMembers.group_id == foreign(GroupUserPermission.group_id))",
+        primaryjoin="and_(GroupMember.user_id == foreign(GroupUserPermission.user_id),"
+        "GroupMember.group_id == foreign(GroupUserPermission.group_id))",
         viewonly=True,
         lazy="selectin",
     )

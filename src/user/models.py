@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import text
 from ..database import Base
 
 if TYPE_CHECKING:
-    from ..groups import Group, GroupMembers
+    from ..groups import Group, GroupMember
 
 
 class User(Base):
@@ -63,9 +63,7 @@ class User(Base):
         passive_deletes=True,
     )
 
-    group_memberships: Mapped[list["GroupMembers"]] = relationship(
-        back_populates="user"
-    )
+    group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
 
 
 class UserProfile(Base):

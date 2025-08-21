@@ -1,9 +1,9 @@
-from .models import Group, GroupInvitation, GroupMembers, InvitationStatus
+from .models import Group, GroupInvitation, GroupMember, InvitationStatus
 from .routes import group_router
 
 __all__ = [
     "Group",
-    "GroupMembers",
+    "GroupMember",
     "GroupInvitation",
     "InvitationStatus",
     "group_router",
