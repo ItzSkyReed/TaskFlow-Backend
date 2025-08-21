@@ -3,13 +3,13 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ...user import User, UserNotFoundByIdException
 from ..constants import MAX_CREATED_GROUPS
 from ..exceptions import TooManyCreatedGroupsException
-from ..models import Group, GroupInvitation, GroupMembers, InvitationStatus
+from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
 from ..schemas import CreateGroupSchema, GroupSchema
+from ..services.group_service import get_group_with_members
 
 
 async def create_group(
@@ -63,16 +63,6 @@ async def create_group(
         await session.execute(stmt)
     await session.commit()
 
-    group = (
-        await session.execute(
-            select(Group)
-            .where(Group.id == group.id)
-            .options(
-                selectinload(Group.members)
-                .selectinload(GroupMembers.user)
-                .selectinload(User.user_profile)
-            )
-        )
-    ).scalar_one()
+    group = await get_group_with_members(group.id, session)
 
     return GroupSchema.model_validate(group, from_attributes=True)
