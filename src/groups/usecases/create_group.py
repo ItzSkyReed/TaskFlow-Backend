@@ -40,7 +40,7 @@ async def create_group(
     group = Group(name=created_group.name, creator_id=user.id)
     session.add(group)
 
-    creator_membership = GroupMembers(user=user, group=group)
+    creator_membership = GroupMember(user=user, group=group)
     session.add(creator_membership)
 
     await session.flush()
@@ -61,6 +61,7 @@ async def create_group(
             where=(GroupInvitation.status == InvitationStatus.PENDING),
         )
         await session.execute(stmt)
+    await session.commit()
 
     group = (
         await session.execute(
