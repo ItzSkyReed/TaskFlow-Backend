@@ -50,6 +50,7 @@ class UserSchema(BaseModel):
 class ProfileSchema(BaseModel):
     name: Annotated[str, Field(max_length=32)]
     discord_username: Annotated[str | None, Field(default=None, max_length=32)]
+    discord_id: Annotated[int | None, Field(default=None)]
     telegram_username: Annotated[str | None, Field(default=None, max_length=32)]
 
     show_discord: Annotated[bool, Field(...)]
@@ -95,6 +96,7 @@ class PublicProfileSchema(BaseModel):
     discord_username: Annotated[
         str | None, Field(default=None, min_length=4, max_length=64)
     ]
+    discord_id: Annotated[int | None, Field(default=None)]
 
     show_telegram: Annotated[bool, Field(default=False, exclude=True)]
     show_discord: Annotated[bool, Field(default=False, exclude=True)]
@@ -107,6 +109,7 @@ class PublicProfileSchema(BaseModel):
 
         if not self.show_discord:
             self.discord_username = None
+            self.discord_id = None
 
         return self
 
