@@ -196,3 +196,30 @@ async def invite_user_to_group_route(
         invitee_id=user_id.user_id,
         session=session,
     )
+
+@group_router.get(
+    "/{group_id}",
+    status_code=status.HTTP_200_OK,
+    name="Создание группы пользователем",
+    response_model=GroupDetailSchema,
+    description="Создает группу, в которой пользователь будет являться владельцем",
+    responses={
+        200: {"description": "Группа успешно найдена", "model": None},
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {"description": "Группы не существует", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[Depends(token_verification)],
+)
+async def get_group_route(
+        group_id: Annotated[UUID, Path(...)],
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await get_group(group_id, session)
