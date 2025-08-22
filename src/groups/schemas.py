@@ -20,6 +20,7 @@ class CreateGroupSchema(BaseModel):
             min_length=6,
             max_length=50,
             description="Публичное название группы",
+            examples=["MegaGroup", "НевероятнаяГруппа123"]
         ),
     ]
     invitations: Annotated[

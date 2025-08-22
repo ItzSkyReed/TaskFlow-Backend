@@ -93,6 +93,7 @@ class SignUpSchema(BaseModel):
             max_length=128,
             description="Пароль",
             pattern=PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123"]
         ),
     ]  # raw password
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -113,7 +114,7 @@ class SignInSchema(BaseModel):
         ),
     ]
     password: Annotated[
-        str, Field(..., min_length=8, max_length=128, pattern=PASSWORD_PATTERN)
+        str, Field(..., min_length=8, max_length=128, pattern=PASSWORD_PATTERN, examples=["MEGAPASSWORD", "123123123"])
     ]
 
     @classmethod
@@ -155,6 +156,7 @@ class ChangePasswordSchema(BaseModel):
             max_length=128,
             description="Старый пароль",
             pattern=PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123"]
         ),
     ]
     new_password: Annotated[
@@ -165,5 +167,6 @@ class ChangePasswordSchema(BaseModel):
             max_length=128,
             description="Новый пароль",
             pattern=PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123"]
         ),
     ]
