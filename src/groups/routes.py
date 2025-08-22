@@ -151,3 +151,48 @@ async def delete_group_avatar_route(
         session=session,
     )
     return None
+
+@group_router.post(
+    "/{group_id}/invitations",
+    status_code=status.HTTP_201_CREATED,
+    name="Приглашение пользователя в группу",
+    response_model=InvitationSchema,
+    description="Позволяет владельцу группы или пользователям с правами пригласить человека в группу, если такое приглашение уже существовало, вернется ранее сделанное",
+    responses={
+        201: {"description": "Приглашение пользователя в группу (новое или старое)", "model": InvitationSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для приглашения пользователя в группу",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def invite_user_to_group_route(
+        group_id: Annotated[UUID, Path(...)],
+        user_id: Annotated[InviteUserToGroupSchema, Body(...)],
+        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> InvitationSchema:
+    return await invite_user_to_group(
+        group_id=group_id,
+        inviter_id=token_payload.sub,
+        invitee_id=user_id.user_id,
+        session=session,
+    )

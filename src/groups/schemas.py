@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from ..models import InvitationStatus
 from ..config import get_settings
 from ..user.schemas import PublicUserSchema
 from .constants import NAME_PATTERN
@@ -87,5 +88,19 @@ class GroupMemberSchema(BaseModel):
     joined_at: Annotated[datetime, Field(...)]
 
     permissions: Annotated[list[str] | None, Field(...)]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class InviteUserToGroupSchema(BaseModel):
+    user_id: UUID
+
+class InvitationSchema(BaseModel):
+    invitation_id: Annotated[UUID, Field(...)]
+    group_id: Annotated[UUID, Field(...)]
+    inviter_id: Annotated[UUID, Field(...)]
+    invitee_id: Annotated[UUID, Field(...)]
+    status: Annotated[InvitationStatus, Field(...)]
+    created_at: Annotated[datetime, Field(...)]
+    updated_at: Annotated[datetime, Field(...)]
 
     model_config = ConfigDict(from_attributes=True)
