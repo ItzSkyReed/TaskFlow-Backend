@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user import User, UserNotFoundByIdException
+from ...user import User
 from ..constants import MAX_CREATED_GROUPS
 from ..exceptions import TooManyCreatedGroupsException
 from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
@@ -25,9 +25,7 @@ async def create_group(
     """
     user = (
         await session.execute(select(User).where(User.id == user_id).with_for_update())
-    ).scalar_one_or_none()
-    if user is None:
-        raise UserNotFoundByIdException()
+    ).scalar_one()
 
     created_count = (
         await session.execute(
@@ -37,7 +35,7 @@ async def create_group(
     if created_count >= MAX_CREATED_GROUPS:
         raise TooManyCreatedGroupsException()
 
-    group = Group(name=created_group.name, creator_id=user.id)
+    group = Group(name=created_group.name, creator_id=user.id, max_members=created_group.max_members)
     session.add(group)
 
     creator_membership = GroupMember(user=user, group=group)

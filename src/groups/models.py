@@ -10,7 +10,7 @@ from sqlalchemy import (
     Index,
     String,
     UniqueConstraint,
-    func,
+    func, SMALLINT, CheckConstraint,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
@@ -40,6 +40,10 @@ class Group(Base):
         String(50), nullable=False, index=True
     )  # Название группы
 
+    max_members: Mapped[int] = mapped_column(
+        SMALLINT(), nullable=False, server_default=text("100")
+    )
+
     has_avatar: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false")
     )
@@ -66,6 +70,15 @@ class Group(Base):
 
     invitations: Mapped[list["GroupInvitation"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
+    )
+    __table_args__ = (
+        Index(
+            "ix_groups_name_trgm",
+            "name",
+            postgresql_using="gin",
+            postgresql_ops={"name": "gin_trgm_ops"}
+        ),
+        CheckConstraint("max_members BETWEEN 2 AND 100", name="ck_group_max_members"),
     )
 
 
@@ -176,7 +189,7 @@ class GroupInvitation(Base):
     )  # Время отправки приглашения
 
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=datetime.now
+        DateTime, nullable=False, server_default=func.now(), server_onupdate=func.now()
     )  # Время изменения статуса приглашения (pending -> approved)
 
     group: Mapped["Group"] = relationship(back_populates="invitations")
@@ -262,7 +275,7 @@ class GroupPermission(str, Enum):
     INVITE_MEMBERS = "INVITE_MEMBERS"  # Позволяет приглашать участников в группу
     KICK_MEMBERS = "BAN_MEMBERS"  # Позволяет исключать пользователей из группы
     ACCEPT_JOIN_REQUESTS = "ACCEPT_JOIN_REQUESTS"  # Позволяет принимать от участников запросы на вступление в группу
-    MANAGE_GROUP = "EDIT_GROUP"  # Позволяет изменять name, avatar группы
+    MANAGE_GROUP = "EDIT_GROUP"  # Позволяет изменять name, avatar, max численность группы
     MANAGE_MEMBERS = "CONTROL_MEMBERS"  # Позволяет изменять права пользователей (кроме MANAGE_MEMBERS)
     MANAGE_TASKS = "MANAGE_TASKS"  # Позволяет создавать/изменять/удалять задачи
     FULL_ACCESS = "FULL_ACCESS"  # Полный доступ (включая добавление MANAGE_MEMBERS другим пользователям)

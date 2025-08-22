@@ -9,8 +9,8 @@ from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
-from .schemas import CreateGroupSchema, GroupSchema
-from .usecases import create_group, delete_group_avatar, patch_group_avatar
+from .schemas import CreateGroupSchema, GroupDetailSchema, InvitationSchema, InviteUserToGroupSchema
+from .usecases import create_group, delete_group_avatar, patch_group_avatar, invite_user_to_group, get_group
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
 
@@ -19,7 +19,7 @@ group_router = APIRouter(prefix="/group", tags=["Group"])
     "",
     status_code=status.HTTP_201_CREATED,
     name="Создание группы пользователем",
-    response_model=GroupSchema,
+    response_model=GroupDetailSchema,
     description="Создает группу, в которой пользователь будет являться владельцем",
     responses={
         204: {"description": "Аватарка успешно удалена", "model": None},
@@ -52,7 +52,7 @@ async def create_group_route(
     ],
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> GroupSchema:
+) -> GroupDetailSchema:
     return await create_group(created_group, token_payload.sub, session)
 
 
@@ -60,10 +60,10 @@ async def create_group_route(
     "/{group_id}/avatar",
     status_code=status.HTTP_200_OK,
     name="Обновление аватарки группы",
-    response_model=GroupSchema,
+    response_model=GroupDetailSchema,
     description="Позволяет владельцу группы или пользователям с правами обновить аватарку группы",
     responses={
-        200: {"description": "Аватарка успешно изменена", "model": GroupSchema},
+        200: {"description": "Аватарка успешно изменена", "model": GroupDetailSchema},
         400: {
             "description": "Некорректный формат файла, или сам файл не фото",
             "model": ErrorResponseModel,
@@ -99,7 +99,7 @@ async def patch_group_avatar_route(
     ],
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> GroupSchema:
+) -> GroupDetailSchema:
     return await patch_group_avatar(
         file=file.file,
         group_id=group_id,

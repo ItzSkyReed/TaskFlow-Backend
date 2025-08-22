@@ -23,6 +23,11 @@ class CreateGroupSchema(BaseModel):
             examples=["MegaGroup", "НевероятнаяГруппа123"]
         ),
     ]
+    max_members: Annotated[
+        int,
+        Field(ge=2, le=100, default=100)
+    ]
+
     invitations: Annotated[
         list[UUID] | None,
         Field(
