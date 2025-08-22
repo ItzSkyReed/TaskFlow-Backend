@@ -27,6 +27,18 @@ group_router = APIRouter(prefix="/group", tags=["Group"])
             "description": "Access token не найден, истек или некорректен",
             "model": ErrorResponseModel,
         },
+        403: {
+            "description": "Превышено количество возможных созданных пользователем групп",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Пользователь не найден",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
