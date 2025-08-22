@@ -8,15 +8,15 @@ from ...user import User, UserNotFoundByIdException
 from ..constants import MAX_CREATED_GROUPS
 from ..exceptions import TooManyCreatedGroupsException
 from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
-from ..schemas import CreateGroupSchema, GroupSchema
-from ..services.group_service import get_group_with_members
+from ..schemas import CreateGroupSchema, GroupDetailSchema
+from ..services import get_group_with_members
 
 
 async def create_group(
     created_group: CreateGroupSchema,
     user_id: UUID,
     session: AsyncSession,
-) -> GroupSchema:
+) -> GroupDetailSchema:
     """
     Обновление своего профиля
     :param created_group: Создаваемая группа
@@ -65,4 +65,4 @@ async def create_group(
 
     group = await get_group_with_members(group.id, session)
 
-    return GroupSchema.model_validate(group, from_attributes=True)
+    return GroupDetailSchema.model_validate(group, from_attributes=True)

@@ -7,7 +7,7 @@ from ...minio import AVATARS_BUCKET_NAME, get_minio_client
 from ...utils import validate_avatar_file
 from ..exceptions import NotEnoughPermissionsException
 from ..models import GroupPermission
-from ..schemas import GroupSchema
+from ..schemas import GroupDetailSchema
 from ..services import get_group_with_members, group_member_has_permission
 
 
@@ -16,7 +16,7 @@ async def patch_group_avatar(
     group_id: UUID,
     initiator_id: UUID,
     session: AsyncSession,
-) -> GroupSchema:
+) -> GroupDetailSchema:
     """
     Обновление аватарки профиля группы
     :param file: Содержит данные о самом аватаре группы
@@ -50,4 +50,4 @@ async def patch_group_avatar(
     session.add(group)
     await session.commit()
 
-    return GroupSchema.model_validate(group, from_attributes=True)
+    return GroupDetailSchema.model_validate(group, from_attributes=True)
