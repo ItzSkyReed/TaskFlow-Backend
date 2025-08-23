@@ -27,7 +27,7 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
     name="Поиск пользователей по имени",
     status_code=status.HTTP_200_OK,
     response_model=list[PublicUserSchema],  # список публичных профилей
-    description="Возвращает список пользователей, чьё имя совпадает или содержит указанную подстроку",
+    description="Возвращает список пользователей, чьи имена максимально похожи на введенный текст",
     responses={
         200: {
             "description": "Успешный поиск пользователей",
@@ -67,7 +67,6 @@ async def search_profiles_route(
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
 ) -> list[PublicUserSchema]:
-    pass
     return await search_user_profiles(
         name=name, limit=limit, offset=offset, session=session
     )
