@@ -1,4 +1,4 @@
-from sqlalchemy import desc, func, literal, select, case
+from sqlalchemy import desc, func, literal, select, case, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Group
@@ -36,10 +36,11 @@ async def search_groups(
             literal(True, literal_execute=True),
         )
         .where(
+            or_(
                 Group.name.op("%")(name),  # поиск через триграммы
                 Group.name.ilike(f"{name}%"),  # начинается с
                 Group.name.ilike(f"%{name}%")  # содержит
-        )
+        ))
         .order_by(desc(ilike_priority), desc(similarity_score))
         .limit(limit)
         .offset(offset)

@@ -1,4 +1,4 @@
-from sqlalchemy import desc, func, literal, select, case
+from sqlalchemy import desc, func, literal, select, case, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -39,10 +39,11 @@ async def search_user_profiles(
         )
         .options(joinedload(User.user_profile))
         .where(
+            or_(
                 UserProfile.name.op("%")(name),
                 UserProfile.name.ilike(f"{name}%"),
                 UserProfile.name.ilike(f"%{name}%")
-        )
+        ))
         .order_by(desc(ilike_priority), desc(similarity_score))
         .limit(limit)
         .offset(offset)
