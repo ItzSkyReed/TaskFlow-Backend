@@ -1,4 +1,4 @@
-from sqlalchemy import desc, func, literal, select
+from sqlalchemy import desc, func, literal, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -22,6 +22,12 @@ async def search_user_profiles(
 
     similarity_score = func.similarity(UserProfile.name, name)
 
+    ilike_priority = case(
+            (UserProfile.name.ilike(f"{name}%"), 2),
+            (UserProfile.name.ilike(f"%{name}%"), 1),
+        else_=0
+    )
+
     query = (
         select(User, similarity_score.label("score"))
         .join(User.user_profile)
@@ -32,8 +38,12 @@ async def search_user_profiles(
             literal(True, literal_execute=True),
         )
         .options(joinedload(User.user_profile))
-        .where(UserProfile.name.op("%")(name))
-        .order_by(desc(similarity_score))
+        .where(
+                UserProfile.name.op("%")(name),
+                UserProfile.name.ilike(f"{name}%"),
+                UserProfile.name.ilike(f"%{name}%")
+        )
+        .order_by(desc(ilike_priority), desc(similarity_score))
         .limit(limit)
         .offset(offset)
     )

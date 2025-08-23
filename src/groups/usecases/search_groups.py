@@ -1,4 +1,4 @@
-from sqlalchemy import desc, func, literal, select
+from sqlalchemy import desc, func, literal, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Group
@@ -6,10 +6,10 @@ from ..schemas import GroupSummarySchema
 
 
 async def search_groups(
-    name: str,
-    limit: int,
-    offset: int,
-    session: AsyncSession,
+        name: str,
+        limit: int,
+        offset: int,
+        session: AsyncSession,
 ) -> list[GroupSummarySchema]:
     """
     Поиск групп по имени
@@ -21,6 +21,12 @@ async def search_groups(
 
     similarity_score = func.similarity(Group.name, name)
 
+    ilike_priority = case(
+        (Group.name.ilike(f"{name}%"), 2),  # начинается с name
+        (Group.name.ilike(f"%{name}%"), 1),  # содержит name
+        else_=0
+    )
+
     query = (
         select(Group, similarity_score.label("score"))
         .join(
@@ -29,8 +35,12 @@ async def search_groups(
             ),
             literal(True, literal_execute=True),
         )
-        .where(Group.name.op("%")(name))
-        .order_by(desc(similarity_score))
+        .where(
+                Group.name.op("%")(name),  # поиск через триграммы
+                Group.name.ilike(f"{name}%"),  # начинается с
+                Group.name.ilike(f"%{name}%")  # содержит
+        )
+        .order_by(desc(ilike_priority), desc(similarity_score))
         .limit(limit)
         .offset(offset)
     )
