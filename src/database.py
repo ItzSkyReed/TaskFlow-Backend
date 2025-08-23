@@ -1,6 +1,7 @@
 # db connection related stuff
 from typing import Any, AsyncGenerator
 
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -8,7 +9,7 @@ from .config import get_settings
 
 settings = get_settings()
 
-engine = create_async_engine(settings.database_url, echo=settings.db_echo)
+engine = create_async_engine(settings.database_url, echo=settings.db_echo, dialect=postgresql.dialect())
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
