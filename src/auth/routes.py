@@ -68,7 +68,7 @@ async def sign_up_user_route(
         key="refresh_token",
         value=register_result.refresh_token,
         httponly=True,
-        max_age=auth_settings.refresh_token_expires_in,
+        max_age=auth_settings.refresh_token_expires_in * 60,
         path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
@@ -111,7 +111,7 @@ async def sign_in_user_route(
         key="refresh_token",
         value=login_result.refresh_token,
         httponly=True,
-        max_age=auth_settings.refresh_token_expires_in,
+        max_age=auth_settings.refresh_token_expires_in * 60,
         path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
@@ -156,7 +156,7 @@ async def refresh_tokens_route(
         key="refresh_token",
         value=new_tokens.refresh_token,
         httponly=True,
-        max_age=auth_settings.refresh_token_expires_in,
+        max_age=auth_settings.refresh_token_expires_in * 60,
         path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 

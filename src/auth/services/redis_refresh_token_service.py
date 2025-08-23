@@ -20,7 +20,7 @@ async def add_new_refresh_token(user_id: UUID, token_jti: UUID) -> None:
         pipe = redis_client.pipeline()
         pipe.zadd(key, {str(token_jti): int(time.time())})
         pipe.zcard(key)
-        pipe.expire(key, auth_settings.refresh_token_expires_in)
+        pipe.expire(key, auth_settings.refresh_token_expires_in * 60)
 
         results = await pipe.execute()
         _, count, _ = results
