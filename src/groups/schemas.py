@@ -105,3 +105,13 @@ class InvitationSummarySchema(BaseModel):
     updated_at: Annotated[datetime, Field(...)]
 
     model_config = ConfigDict(from_attributes=True)
+
+class ReceivedInvitationSchema(BaseModel):
+    id: Annotated[UUID, Field(...)]
+    group: Annotated[GroupSummarySchema, Field(...)]
+    inviter: Annotated[PublicUserSchema, Field(...)]
+    status: Annotated[InvitationStatus, Field(...)]
+    created_at: Annotated[datetime, Field(...)]
+    updated_at: Annotated[datetime, Field(...)]
+
+    model_config = ConfigDict(from_attributes=True)

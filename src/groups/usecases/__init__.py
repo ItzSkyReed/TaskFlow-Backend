@@ -4,7 +4,7 @@ from .get_group import get_group
 from .invite_user_to_group import invite_user_to_group
 from .patch_group_avatar import patch_group_avatar
 from .search_groups import search_groups
-
+from .get_received_invitations import get_received_invitations
 __all__ = [
     "create_group",
     "patch_group_avatar",
@@ -12,4 +12,5 @@ __all__ = [
     "invite_user_to_group",
     "get_group",
     "search_groups",
+    "get_received_invitations"
 ]
