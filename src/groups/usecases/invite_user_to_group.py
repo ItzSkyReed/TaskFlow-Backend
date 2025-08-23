@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..exceptions import GroupNotFoundByIdException, NotEnoughPermissionsException
 from ..models import Group, GroupInvitation, GroupPermission, InvitationStatus
-from ..schemas import InvitationSchema
+from ..schemas import InvitationSummarySchema
 from ..services import group_member_has_permission
 
 
@@ -15,7 +15,7 @@ async def invite_user_to_group(
     inviter_id: UUID,
     invitee_id: UUID,
     session: AsyncSession,
-) -> InvitationSchema:
+) -> InvitationSummarySchema:
     """
     Отправка приглашения пользователю в группу, если ранее его не было (или возврат ранее созданного, если было)
     :param invitee_id: ID приглашенного пользователя
@@ -64,4 +64,4 @@ async def invite_user_to_group(
 
     await session.commit()
 
-    return InvitationSchema.model_validate(invitation, from_attributes=True)
+    return InvitationSummarySchema.model_validate(invitation, from_attributes=True)

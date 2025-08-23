@@ -95,8 +95,8 @@ class InviteUserToGroupSchema(BaseModel):
     user_id: UUID
 
 
-class InvitationSchema(BaseModel):
-    invitation_id: Annotated[UUID, Field(...)]
+class InvitationSummarySchema(BaseModel):
+    id: Annotated[UUID, Field(...)]
     group_id: Annotated[UUID, Field(...)]
     inviter_id: Annotated[UUID, Field(...)]
     invitee_id: Annotated[UUID, Field(...)]

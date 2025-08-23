@@ -13,7 +13,7 @@ from .schemas import (
     CreateGroupSchema,
     GroupDetailSchema,
     GroupSummarySchema,
-    InvitationSchema,
+    InvitationSummarySchema,
     InviteUserToGroupSchema,
 )
 from .usecases import (
@@ -254,7 +254,7 @@ async def invite_user_to_group_route(
     user_id: Annotated[InviteUserToGroupSchema, Body(...)],
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> InvitationSchema:
+) -> InvitationSummarySchema:
     return await invite_user_to_group(
         group_id=group_id,
         inviter_id=token_payload.sub,
