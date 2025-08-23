@@ -35,7 +35,11 @@ async def create_group(
     if created_count >= MAX_CREATED_GROUPS:
         raise TooManyCreatedGroupsException()
 
-    group = Group(name=created_group.name, creator_id=user.id, max_members=created_group.max_members)
+    group = Group(
+        name=created_group.name,
+        creator_id=user.id,
+        max_members=created_group.max_members,
+    )
     session.add(group)
 
     creator_membership = GroupMember(user=user, group=group)

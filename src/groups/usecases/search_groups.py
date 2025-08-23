@@ -6,10 +6,10 @@ from ..schemas import GroupSummarySchema
 
 
 async def search_groups(
-        name: str,
-        limit: int,
-        offset: int,
-        session: AsyncSession,
+    name: str,
+    limit: int,
+    offset: int,
+    session: AsyncSession,
 ) -> list[GroupSummarySchema]:
     """
     Поиск групп по имени

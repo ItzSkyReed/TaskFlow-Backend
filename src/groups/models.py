@@ -3,13 +3,15 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import (
+    SMALLINT,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
     String,
     UniqueConstraint,
-    func, SMALLINT, CheckConstraint,
+    func,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
@@ -17,7 +19,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.expression import text
 
 from ..database import Base
-from .enums import GroupPermission, JoinRequestStatus, InvitationStatus
+from .enums import GroupPermission, InvitationStatus, JoinRequestStatus
 
 if TYPE_CHECKING:
     from ..user import User
@@ -76,7 +78,7 @@ class Group(Base):
             "ix_groups_name_trgm",
             "name",
             postgresql_using="gin",
-            postgresql_ops={"name": "gin_trgm_ops"}
+            postgresql_ops={"name": "gin_trgm_ops"},
         ),
         CheckConstraint("max_members BETWEEN 2 AND 100", name="ck_group_max_members"),
     )
@@ -198,6 +200,7 @@ class GroupInvitation(Base):
             ),
         ),
     )
+
 
 class GroupJoinRequest(Base):
     __tablename__ = "group_join_requests"

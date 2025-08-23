@@ -1,4 +1,3 @@
-from logging import getLogger
 from typing import Annotated
 from uuid import UUID
 
@@ -10,8 +9,21 @@ from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
-from .schemas import CreateGroupSchema, GroupDetailSchema, InvitationSchema, InviteUserToGroupSchema, GroupSummarySchema
-from .usecases import create_group, delete_group_avatar, patch_group_avatar, invite_user_to_group, get_group, search_groups
+from .schemas import (
+    CreateGroupSchema,
+    GroupDetailSchema,
+    GroupSummarySchema,
+    InvitationSchema,
+    InviteUserToGroupSchema,
+)
+from .usecases import (
+    create_group,
+    delete_group_avatar,
+    get_group,
+    invite_user_to_group,
+    patch_group_avatar,
+    search_groups,
+)
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
 
@@ -47,23 +59,22 @@ group_router = APIRouter(prefix="/group", tags=["Group"])
     ],
 )
 async def search_groups_route(
-        session: Annotated[AsyncSession, Depends(get_async_session)],
-        name: Annotated[
-            str,
-            Query(
-                max_length=50,
-                min_length=1,
-                description="Строка подразумевающее возможное название группы",
-            ),
-        ],
-        limit: Annotated[
-            int, Query(ge=1, le=100, description="Максимальное количество результатов")
-        ] = 20,
-        offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    name: Annotated[
+        str,
+        Query(
+            max_length=50,
+            min_length=1,
+            description="Строка подразумевающее возможное название группы",
+        ),
+    ],
+    limit: Annotated[
+        int, Query(ge=1, le=100, description="Максимальное количество результатов")
+    ] = 20,
+    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
 ) -> list[GroupSummarySchema]:
-    return await search_groups(
-        name=name, limit=limit, offset=offset, session=session
-    )
+    return await search_groups(name=name, limit=limit, offset=offset, session=session)
+
 
 @group_router.post(
     "",
@@ -202,6 +213,7 @@ async def delete_group_avatar_route(
     )
     return None
 
+
 @group_router.post(
     "/{group_id}/invitations",
     status_code=status.HTTP_201_CREATED,
@@ -209,7 +221,10 @@ async def delete_group_avatar_route(
     response_model=InvitationSchema,
     description="Позволяет владельцу группы или пользователям с правами пригласить человека в группу, если такое приглашение уже существовало, вернется ранее сделанное",
     responses={
-        201: {"description": "Приглашение пользователя в группу (новое или старое)", "model": InvitationSchema},
+        201: {
+            "description": "Приглашение пользователя в группу (новое или старое)",
+            "model": InvitationSchema,
+        },
         400: {
             "description": "Некорректный запрос",
             "model": ErrorResponseModel,
@@ -235,10 +250,10 @@ async def delete_group_avatar_route(
     },
 )
 async def invite_user_to_group_route(
-        group_id: Annotated[UUID, Path(...)],
-        user_id: Annotated[InviteUserToGroupSchema, Body(...)],
-        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[InviteUserToGroupSchema, Body(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> InvitationSchema:
     return await invite_user_to_group(
         group_id=group_id,
@@ -246,6 +261,7 @@ async def invite_user_to_group_route(
         invitee_id=user_id.user_id,
         session=session,
     )
+
 
 @group_router.get(
     "/{group_id}",
@@ -269,7 +285,7 @@ async def invite_user_to_group_route(
     dependencies=[Depends(token_verification)],
 )
 async def get_group_route(
-        group_id: Annotated[UUID, Path(...)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
+    group_id: Annotated[UUID, Path(...)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> GroupDetailSchema:
     return await get_group(group_id, session)

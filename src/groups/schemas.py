@@ -4,10 +4,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from .enums import InvitationStatus
 from ..config import get_settings
 from ..user.schemas import PublicUserSchema
 from .constants import NAME_PATTERN
+from .enums import InvitationStatus
 
 settings = get_settings()
 
@@ -21,13 +21,10 @@ class CreateGroupSchema(BaseModel):
             min_length=6,
             max_length=50,
             description="Публичное название группы",
-            examples=["MegaGroup", "НевероятнаяГруппа123"]
+            examples=["MegaGroup", "НевероятнаяГруппа123"],
         ),
     ]
-    max_members: Annotated[
-        int,
-        Field(ge=2, le=100, default=100)
-    ]
+    max_members: Annotated[int, Field(ge=2, le=100, default=100)]
 
     invitations: Annotated[
         list[UUID] | None,
@@ -36,6 +33,7 @@ class CreateGroupSchema(BaseModel):
             description="Приглашения участников (приглашения будут отосланы сразу после создания)",
         ),
     ]
+
 
 class GroupSummarySchema(BaseModel):
     id: UUID
@@ -57,6 +55,7 @@ class GroupSummarySchema(BaseModel):
         return None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class GroupDetailSchema(BaseModel):
     id: UUID
@@ -91,8 +90,10 @@ class GroupMemberSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class InviteUserToGroupSchema(BaseModel):
     user_id: UUID
+
 
 class InvitationSchema(BaseModel):
     invitation_id: Annotated[UUID, Field(...)]
