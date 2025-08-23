@@ -4,8 +4,19 @@ from sqlalchemy import exists, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..exceptions import GroupNotFoundByIdException, NotEnoughPermissionsException, CannotInviteYourselfException, CannotUserThatIsAlreadyInThatGroupException
-from ..models import Group, GroupInvitation, GroupPermission, InvitationStatus, GroupMember
+from ..exceptions import (
+    CannotInviteYourselfException,
+    CannotUserThatIsAlreadyInThatGroupException,
+    GroupNotFoundByIdException,
+    NotEnoughPermissionsException,
+)
+from ..models import (
+    Group,
+    GroupInvitation,
+    GroupMember,
+    GroupPermission,
+    InvitationStatus,
+)
 from ..schemas import InvitationSummarySchema
 from ..services import group_member_has_permission
 
@@ -38,7 +49,7 @@ async def invite_user_to_group(
             .where(
                 GroupMember.user_id == invitee_id,
                 GroupMember.group_id == group_id,
-                )
+            )
             .with_for_update()
         )
     ).scalar()

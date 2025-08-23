@@ -2,6 +2,7 @@ from starlette import status
 
 from src.exceptions import BaseAPIException
 
+
 class CannotInviteYourselfException(BaseAPIException):
     def __init__(self):
         super().__init__(
@@ -10,6 +11,7 @@ class CannotInviteYourselfException(BaseAPIException):
             loc=["groups"],
             err_type="value_error.invite_self",
         )
+
 
 class CannotUserThatIsAlreadyInThatGroupException(BaseAPIException):
     def __init__(self):

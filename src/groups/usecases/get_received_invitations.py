@@ -4,18 +4,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from ..enums import InvitationStatus
-from ..models import  GroupInvitation
-from ..schemas import ReceivedInvitationSchema
 from ...user import User
+from ..enums import InvitationStatus
+from ..models import GroupInvitation
+from ..schemas import ReceivedInvitationSchema
 
 
 async def get_received_invitations(
-        invitation_status: list[InvitationStatus] | None,
-        limit: int,
-        offset: int,
-        invitee_id: UUID,
-        session: AsyncSession,
+    invitation_status: list[InvitationStatus] | None,
+    limit: int,
+    offset: int,
+    invitee_id: UUID,
+    session: AsyncSession,
 ) -> list[ReceivedInvitationSchema]:
     """
     Получение списка приглашений с фильтрацией
@@ -30,7 +30,7 @@ async def get_received_invitations(
         select(GroupInvitation)
         .options(
             joinedload(GroupInvitation.group),
-            joinedload(GroupInvitation.inviter).joinedload(User.user_profile)
+            joinedload(GroupInvitation.inviter).joinedload(User.user_profile),
         )
         .where(GroupInvitation.invitee_id == invitee_id)
         .order_by(GroupInvitation.created_at.desc())
@@ -43,5 +43,8 @@ async def get_received_invitations(
     result = (await session.execute(stmt)).scalars().all()
 
     # Преобразуем в Pydantic-схему
-    invitations = [ReceivedInvitationSchema.model_validate(inv, from_attributes=True) for inv in result]
+    invitations = [
+        ReceivedInvitationSchema.model_validate(inv, from_attributes=True)
+        for inv in result
+    ]
     return invitations

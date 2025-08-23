@@ -68,7 +68,9 @@ class Group(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время создания группы
 
-    creator: Mapped["User"] = relationship(back_populates="created_groups")  # Создатель группы
+    creator: Mapped["User"] = relationship(
+        back_populates="created_groups"
+    )  # Создатель группы
 
     members: Mapped[list["GroupMember"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
@@ -85,7 +87,9 @@ class Group(Base):
             postgresql_using="gin",
             postgresql_ops={"name": "gin_trgm_ops"},
         ),  # Индекс для быстрого поиска по названию группы
-        CheckConstraint("max_members BETWEEN 2 AND 100", name="ck_group_max_members"),  # Ограничивает кол-во участников группы от 2 до 100 чел.
+        CheckConstraint(
+            "max_members BETWEEN 2 AND 100", name="ck_group_max_members"
+        ),  # Ограничивает кол-во участников группы от 2 до 100 чел.
     )
 
 
@@ -120,13 +124,17 @@ class GroupMember(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время входа пользователя в группу
 
-    group: Mapped["Group"] = relationship(back_populates="members")  # Группа, участником которой является пользователь
-    user: Mapped["User"] = relationship(back_populates="group_memberships")  # Пользователь
+    group: Mapped["Group"] = relationship(
+        back_populates="members"
+    )  # Группа, участником которой является пользователь
+    user: Mapped["User"] = relationship(
+        back_populates="group_memberships"
+    )  # Пользователь
 
     permission_objs: Mapped[list["GroupUserPermission"]] = relationship(
         "GroupUserPermission",
         primaryjoin="and_(GroupMember.user_id == foreign(GroupUserPermission.user_id),"
-                    "GroupMember.group_id == foreign(GroupUserPermission.group_id))",
+        "GroupMember.group_id == foreign(GroupUserPermission.group_id))",
         viewonly=True,
         lazy="selectin",
     )  # Список прав пользователя в данной группе как колонок таблиц
@@ -134,11 +142,14 @@ class GroupMember(Base):
     @property
     def permissions(self) -> list[GroupPermission]:
         """Список строк прав"""
-        return [perm.permission for perm in self.permission_objs]  # Список прав пользователя в данной группе как enum-ов прав
+        return [
+            perm.permission for perm in self.permission_objs
+        ]  # Список прав пользователя в данной группе как enum-ов прав
 
     __table_args__ = (
-        UniqueConstraint("group_id", "user_id", name="uq_group_members_group_user"),  # Гарантирует что пользователь не добавлен в группу дважды
-
+        UniqueConstraint(
+            "group_id", "user_id", name="uq_group_members_group_user"
+        ),  # Гарантирует что пользователь не добавлен в группу дважды
     )
 
 
@@ -244,7 +255,9 @@ class GroupJoinRequest(Base):
     )  # Время обновления заявки
 
     group: Mapped["Group"] = relationship()  # Группа в которую отправлена заявка
-    requester: Mapped["User"] = relationship()  # Пользователь отправивший заявку в группу
+    requester: Mapped["User"] = (
+        relationship()
+    )  # Пользователь отправивший заявку в группу
 
     __table_args__ = (
         # Гарантирует, что пользователь не сможет второй раз отправить заявку со статусом PENDING, пока 1 есть

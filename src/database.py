@@ -9,7 +9,9 @@ from .config import get_settings
 
 settings = get_settings()
 
-engine = create_async_engine(settings.database_url, echo=settings.db_echo, dialect=postgresql.dialect())
+engine = create_async_engine(
+    settings.database_url, echo=settings.db_echo, dialect=postgresql.dialect()
+)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
