@@ -1,7 +1,8 @@
+from logging import getLogger
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, File, Path
+from fastapi import APIRouter, Body, Depends, File, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -9,11 +10,60 @@ from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
-from .schemas import CreateGroupSchema, GroupDetailSchema, InvitationSchema, InviteUserToGroupSchema
-from .usecases import create_group, delete_group_avatar, patch_group_avatar, invite_user_to_group, get_group
+from .schemas import CreateGroupSchema, GroupDetailSchema, InvitationSchema, InviteUserToGroupSchema, GroupSummarySchema
+from .usecases import create_group, delete_group_avatar, patch_group_avatar, invite_user_to_group, get_group, search_groups
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
 
+
+@group_router.get(
+    "/search",
+    name="Поиск групп по имени",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GroupSummarySchema],  # список публичных групп (summary)
+    description="Возвращает список групп, чьи имена максимально похожи на введенный текст",
+    responses={
+        200: {
+            "description": "Успешный поиск групп",
+            "model": list[GroupSummarySchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[
+        Depends(token_verification),
+    ],
+)
+async def search_groups_route(
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+        name: Annotated[
+            str,
+            Query(
+                max_length=50,
+                min_length=1,
+                description="Строка подразумевающее возможное название группы",
+            ),
+        ],
+        limit: Annotated[
+            int, Query(ge=1, le=100, description="Максимальное количество результатов")
+        ] = 20,
+        offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+) -> list[GroupSummarySchema]:
+    return await search_groups(
+        name=name, limit=limit, offset=offset, session=session
+    )
 
 @group_router.post(
     "",
@@ -200,7 +250,7 @@ async def invite_user_to_group_route(
 @group_router.get(
     "/{group_id}",
     status_code=status.HTTP_200_OK,
-    name="Создание группы пользователем",
+    name="Получение информации о группе по ID",
     response_model=GroupDetailSchema,
     description="Создает группу, в которой пользователь будет являться владельцем",
     responses={
