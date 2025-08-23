@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from ..models import InvitationStatus
+from .enums import InvitationStatus
 from ..config import get_settings
 from ..user.schemas import PublicUserSchema
 from .constants import NAME_PATTERN

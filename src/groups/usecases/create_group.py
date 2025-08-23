@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...user import User
+from ...user.models import User
 from ..constants import MAX_CREATED_GROUPS
 from ..exceptions import TooManyCreatedGroupsException
 from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
