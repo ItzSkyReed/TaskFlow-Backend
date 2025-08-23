@@ -23,8 +23,8 @@ async def search_groups(
 
     ilike_priority = case(
         (Group.name.ilike(f"{name}%"), 2),  # начинается с name
-        (Group.name.ilike(f"%{name}%"), 1),  # содержит name
-        else_=0
+        (Group.name.ilike(f"%{name}%"), 0),  # содержит name
+        else_=1
     )
 
     query = (

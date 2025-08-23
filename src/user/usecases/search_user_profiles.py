@@ -24,8 +24,8 @@ async def search_user_profiles(
 
     ilike_priority = case(
             (UserProfile.name.ilike(f"{name}%"), 2),
-            (UserProfile.name.ilike(f"%{name}%"), 1),
-        else_=0
+            (UserProfile.name.ilike(f"%{name}%"), 0),
+        else_=1
     )
 
     query = (
