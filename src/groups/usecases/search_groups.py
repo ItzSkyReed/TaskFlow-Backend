@@ -19,6 +19,10 @@ async def search_groups(
     :param session: Сессия
     """
 
+    await session.execute(
+        select(func.set_config("pg_trgm.similarity_threshold", "0.1", True))
+    )
+
     similarity_score = func.similarity(Group.name, name)
 
     ilike_priority = case(
@@ -29,18 +33,13 @@ async def search_groups(
 
     query = (
         select(Group, similarity_score.label("score"))
-        .join(
-            select(func.set_config("pg_trgm.similarity_threshold", "0.1", True)).cte(
-                "set_threshold"
-            ),
-            literal(True, literal_execute=True),
-        )
         .where(
             or_(
-                Group.name.op("%")(name),  # поиск через триграммы
+                Group.name.op("%")(name),      # поиск через триграммы
                 Group.name.ilike(f"{name}%"),  # начинается с
                 Group.name.ilike(f"%{name}%")  # содержит
-        ))
+            )
+        )
         .order_by(desc(ilike_priority), desc(similarity_score))
         .limit(limit)
         .offset(offset)

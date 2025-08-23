@@ -1,10 +1,14 @@
+from logging import getLogger
+
 from sqlalchemy import desc, func, literal, select, case, or_
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, contains_eager
 
 from .. import User, UserProfile
 from ..schemas import PublicUserSchema
 
+logger = getLogger(__name__)
 
 async def search_user_profiles(
     name: str,
@@ -20,6 +24,10 @@ async def search_user_profiles(
     :param session: Сессия
     """
 
+    await session.execute(
+        select(func.set_config("pg_trgm.similarity_threshold", "0.1", True))
+    )
+
     similarity_score = func.similarity(UserProfile.name, name)
 
     ilike_priority = case(
@@ -31,23 +39,20 @@ async def search_user_profiles(
     query = (
         select(User, similarity_score.label("score"))
         .join(User.user_profile)
-        .join(
-            select(func.set_config("pg_trgm.similarity_threshold", "0.1", True)).cte(
-                "set_threshold"
-            ),
-            literal(True, literal_execute=True),
-        )
-        .options(joinedload(User.user_profile))
+        .options(contains_eager(User.user_profile))
         .where(
             or_(
                 UserProfile.name.op("%")(name),
                 UserProfile.name.ilike(f"{name}%"),
-                UserProfile.name.ilike(f"%{name}%")
-        ))
+                UserProfile.name.ilike(f"%{name}%"),
+            )
+        )
         .order_by(desc(ilike_priority), desc(similarity_score))
         .limit(limit)
         .offset(offset)
     )
+
+    logger.info(query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
 
     result = await session.execute(query)
     users_with_scores = result.all()
