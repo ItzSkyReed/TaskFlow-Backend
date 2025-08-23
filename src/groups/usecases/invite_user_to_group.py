@@ -23,10 +23,28 @@ async def invite_user_to_group(
     :param group_id: ID группы куда приглашается пользователь
     :param session: Сессия
     """
+
+    if invitee_id == inviter_id:
+        raise CannotInviteYourselfException()
+
     if not (
         await session.execute(select(exists().where(Group.id == group_id)))
     ).scalar():
         raise GroupNotFoundByIdException()
+
+    member_exists = (
+        await session.execute(
+            select(GroupMember)
+            .where(
+                GroupMember.user_id == invitee_id,
+                GroupMember.group_id == group_id,
+                )
+            .with_for_update()
+        )
+    ).scalar()
+
+    if member_exists:
+        raise CannotUserThatIsAlreadyInThatGroupException()
 
     if not group_member_has_permission(
         group_id,
@@ -46,7 +64,7 @@ async def invite_user_to_group(
         )
         .on_conflict_do_nothing(
             index_elements=["group_id", "invitee_id"],
-            where=(GroupInvitation.status == InvitationStatus.PENDING),
+            index_where=(GroupInvitation.status == InvitationStatus.PENDING),
         )
     )
 
