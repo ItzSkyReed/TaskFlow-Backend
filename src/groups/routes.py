@@ -250,10 +250,10 @@ async def delete_group_avatar_route(
     },
 )
 async def invite_user_to_group_route(
-    group_id: Annotated[UUID, Path(...)],
-    user_id: Annotated[InviteUserToGroupSchema, Body(...)],
-    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+        group_id: Annotated[UUID, Path(...)],
+        user_id: Annotated[InviteUserToGroupSchema, Body(...)],
+        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+        session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> InvitationSummarySchema:
     return await invite_user_to_group(
         group_id=group_id,

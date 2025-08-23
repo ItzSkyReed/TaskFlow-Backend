@@ -60,7 +60,7 @@ async def create_group(
         stmt = insert(GroupInvitation).values(invitations_to_add)
         stmt = stmt.on_conflict_do_nothing(
             index_elements=["group_id", "invitee_id"],
-            where=(GroupInvitation.status == InvitationStatus.PENDING),
+            index_where=(GroupInvitation.status == InvitationStatus.PENDING),
         )
         await session.execute(stmt)
     await session.commit()
