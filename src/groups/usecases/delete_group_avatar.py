@@ -14,7 +14,7 @@ async def delete_group_avatar(
     session: AsyncSession,
 ) -> None:
     """
-    Обновление аватарки профиля группы
+    Удаление аватарки профиля группы
     :param group_id: UUID группы
     :param initiator_id: UUID человека, который меняет аватарку
     :param session: Сессия

@@ -18,7 +18,7 @@ async def create_group(
     session: AsyncSession,
 ) -> GroupDetailSchema:
     """
-    Обновление своего профиля
+    Создание группы
     :param created_group: Создаваемая группа
     :param user_id: UUID профиля
     :param session: Сессия

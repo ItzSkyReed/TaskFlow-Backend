@@ -42,13 +42,17 @@ class Group(Base):
         String(50), nullable=False, index=True
     )  # Название группы
 
+    description: Mapped[str] = mapped_column(
+        String(2000), nullable=True
+    )  # Описание группы
+
     max_members: Mapped[int] = mapped_column(
         SMALLINT(), nullable=False, server_default=text("100")
-    )
+    )  # максимальное кол-во пользователей в группе, если не указано, то 100
 
     has_avatar: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false")
-    )
+    )  # флаг указывающий наличие аватара у группы, путь к аватару генерируется внутри схемы
 
     creator_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
@@ -64,23 +68,24 @@ class Group(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время создания группы
 
-    creator: Mapped["User"] = relationship(back_populates="created_groups")
+    creator: Mapped["User"] = relationship(back_populates="created_groups")  # Создатель группы
 
     members: Mapped[list["GroupMember"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
-    )
+    )  # Участники группы
 
     invitations: Mapped[list["GroupInvitation"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
-    )
+    )  # Приглашения в группу
+
     __table_args__ = (
         Index(
             "ix_groups_name_trgm",
             "name",
             postgresql_using="gin",
             postgresql_ops={"name": "gin_trgm_ops"},
-        ),
-        CheckConstraint("max_members BETWEEN 2 AND 100", name="ck_group_max_members"),
+        ),  # Индекс для быстрого поиска по названию группы
+        CheckConstraint("max_members BETWEEN 2 AND 100", name="ck_group_max_members"),  # Ограничивает кол-во участников группы от 2 до 100 чел.
     )
 
 
@@ -115,24 +120,25 @@ class GroupMember(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время входа пользователя в группу
 
-    group: Mapped["Group"] = relationship(back_populates="members")
-    user: Mapped["User"] = relationship(back_populates="group_memberships")
+    group: Mapped["Group"] = relationship(back_populates="members")  # Группа, участником которой является пользователь
+    user: Mapped["User"] = relationship(back_populates="group_memberships")  # Пользователь
 
     permission_objs: Mapped[list["GroupUserPermission"]] = relationship(
         "GroupUserPermission",
         primaryjoin="and_(GroupMember.user_id == foreign(GroupUserPermission.user_id),"
-        "GroupMember.group_id == foreign(GroupUserPermission.group_id))",
+                    "GroupMember.group_id == foreign(GroupUserPermission.group_id))",
         viewonly=True,
         lazy="selectin",
-    )
+    )  # Список прав пользователя в данной группе как колонок таблиц
 
     @property
-    def permissions(self) -> list[str]:
+    def permissions(self) -> list[GroupPermission]:
         """Список строк прав"""
-        return [perm.permission.value for perm in self.permission_objs]
+        return [perm.permission for perm in self.permission_objs]  # Список прав пользователя в данной группе как enum-ов прав
 
     __table_args__ = (
-        UniqueConstraint("group_id", "user_id", name="uq_group_members_group_user"),
+        UniqueConstraint("group_id", "user_id", name="uq_group_members_group_user"),  # Гарантирует что пользователь не добавлен в группу дважды
+
     )
 
 
@@ -227,20 +233,21 @@ class GroupJoinRequest(Base):
         PgEnum(JoinRequestStatus, name="join_request_status"),
         server_default=text(f"'{JoinRequestStatus.PENDING.name}'::join_request_status"),
         nullable=False,
-    )
+    )  # Статус заявки на присоединение в группу
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
-    )
+    )  # Время создания заявки
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now(), onupdate=datetime.now
-    )
+    )  # Время обновления заявки
 
-    group: Mapped["Group"] = relationship()
-    requester: Mapped["User"] = relationship()
+    group: Mapped["Group"] = relationship()  # Группа в которую отправлена заявка
+    requester: Mapped["User"] = relationship()  # Пользователь отправивший заявку в группу
 
     __table_args__ = (
+        # Гарантирует, что пользователь не сможет второй раз отправить заявку со статусом PENDING, пока 1 есть
         Index(
             "uq_group_join_request_pending",
             "group_id",
@@ -271,27 +278,27 @@ class GroupUserPermission(Base):
         ForeignKey("groups.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )
+    )  # ID группы
 
     user_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )
+    )  # ID пользователя
 
     permission: Mapped[GroupPermission] = mapped_column(
         PgEnum(GroupPermission, name="group_permission"), nullable=False
-    )
+    )  # Право
 
     granted_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
-    )
+    )  # Время выдачи права
     granted_by: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
-    )
+    )  # Кем право выдано
 
     __table_args__ = (
         # Гарантирует, что нет дублированных прав.
