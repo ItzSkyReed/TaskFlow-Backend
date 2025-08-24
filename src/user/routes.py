@@ -9,7 +9,7 @@ from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
-from .schemas import PatchUserSchema, PublicUserSchema, UserSchema
+from .schemas import PatchUserSchema, PublicUserSchema, UserSchema, UserSearchSchema
 from .usecases import (
     delete_my_profile_avatar,
     get_my_profile,
@@ -26,12 +26,12 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
     "/search",
     name="Поиск пользователей по имени",
     status_code=status.HTTP_200_OK,
-    response_model=list[PublicUserSchema],  # список публичных профилей
+    response_model=list[UserSearchSchema],  # список публичных профилей
     description="Возвращает список пользователей, чьи имена максимально похожи на введенный текст",
     responses={
         200: {
             "description": "Успешный поиск пользователей",
-            "model": list[PublicUserSchema],
+            "model": list[UserSearchSchema],
         },
         400: {
             "description": "Некорректные данные в запросе.",
@@ -66,9 +66,9 @@ async def search_profiles_route(
         int, Query(ge=1, le=100, description="Максимальное количество результатов")
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> list[PublicUserSchema]:
+) -> list[UserSearchSchema]:
     return await search_user_profiles(
-        name=name, limit=limit, offset=offset, session=session
+        login=name, limit=limit, offset=offset, session=session
     )
 
 

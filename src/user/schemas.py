@@ -25,9 +25,11 @@ class UserSchema(BaseModel):
     """
 
     id: UUID
+
     login: Annotated[
         str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
     ]
+
     email: Annotated[EmailStr, Field(..., max_length=320)]
 
     registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
@@ -59,6 +61,10 @@ class ProfileSchema(BaseModel):
 
 class PublicUserSchema(BaseModel):
     id: UUID
+
+    login: Annotated[
+        str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
+    ]
 
     email: Annotated[EmailStr | None, Field(default=None, max_length=320)]
 
@@ -177,3 +183,34 @@ class PatchProfileSchema(BaseModel):
         ):
             raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
         return self
+
+class UserSearchSchema(BaseModel):
+    """
+    Модель пользователя с профилем
+
+    """
+
+    id: UUID
+
+    login: Annotated[
+        str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
+    ]
+
+    profile: Annotated["UserSearchProfileSchema", Field(..., validation_alias="user_profile")]
+
+    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
+
+    @computed_field
+    @property
+    def avatar_url(self) -> str | None:
+        # Проверяем наличие атрибута has_avatar и что он True
+        if getattr(self, "has_avatar", False):
+            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
+        return None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserSearchProfileSchema(BaseModel):
+    name: Annotated[str, Field(max_length=32)]
+
+    model_config = ConfigDict(from_attributes=True)

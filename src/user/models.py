@@ -65,6 +65,14 @@ class User(Base):
 
     group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
 
+    __table_args__ = (
+        Index(
+            "idx_users_login_trgm",
+            "login",
+            postgresql_using="gin",
+            postgresql_ops={"login": "gin_trgm_ops"},
+        ),
+    )
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"
@@ -130,14 +138,7 @@ class UserProfile(Base):
             (discord_id IS NOT NULL AND discord_username IS NOT NULL)
             """,
             name="ck_discord_fields_null_together",
-        ),
-        # GIN индекс для быстрого использования функции SIMILARITY()
-        Index(
-            "idx_users_username_trgm",
-            "name",
-            postgresql_using="gin",
-            postgresql_ops={"name": "gin_trgm_ops"},
-        ),
+        )
     )
 
     user: Mapped["User"] = relationship(
