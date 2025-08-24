@@ -17,8 +17,18 @@ from .constants import NAME_PATTERN
 
 settings = get_settings()
 
+class UserAvatarMixin(BaseModel):
 
-class UserSchema(BaseModel):
+    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
+
+    @computed_field
+    @property
+    def avatar_url(self) -> str | None:
+        if getattr(self, "has_avatar", False):
+            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
+        return None
+
+class UserSchema(UserAvatarMixin, BaseModel):
     """
     Модель пользователя с профилем
 
@@ -36,16 +46,6 @@ class UserSchema(BaseModel):
 
     profile: Annotated["ProfileSchema", Field(..., validation_alias="user_profile")]
 
-    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
-
-    @computed_field
-    @property
-    def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
-        if getattr(self, "has_avatar", False):
-            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
-        return None
-
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -59,7 +59,7 @@ class ProfileSchema(BaseModel):
     show_email: Annotated[bool, Field(...)]
 
 
-class PublicUserSchema(BaseModel):
+class PublicUserSchema(UserAvatarMixin, BaseModel):
     id: UUID
 
     login: Annotated[
@@ -70,19 +70,9 @@ class PublicUserSchema(BaseModel):
 
     registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
 
-    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
-
     profile: Annotated[
         "PublicProfileSchema", Field(..., validation_alias="user_profile")
     ]
-
-    @computed_field
-    @property
-    def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
-        if getattr(self, "has_avatar", False):
-            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
-        return None
 
     @model_validator(mode="after")
     def check_profile_visibility(self):
@@ -184,7 +174,7 @@ class PatchProfileSchema(BaseModel):
             raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
         return self
 
-class UserSearchSchema(BaseModel):
+class UserSearchSchema(UserAvatarMixin, BaseModel):
     """
     Модель пользователя с профилем
 
@@ -197,16 +187,6 @@ class UserSearchSchema(BaseModel):
     ]
 
     profile: Annotated["UserSearchProfileSchema", Field(..., validation_alias="user_profile")]
-
-    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
-
-    @computed_field
-    @property
-    def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
-        if getattr(self, "has_avatar", False):
-            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
-        return None
 
     model_config = ConfigDict(from_attributes=True)
 
