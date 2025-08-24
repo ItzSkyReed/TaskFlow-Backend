@@ -95,10 +95,6 @@ async def search_groups_route(
             "description": "Превышено количество возможных созданных пользователем групп",
             "model": ErrorResponseModel,
         },
-        404: {
-            "description": "Пользователь не найден",
-            "model": ErrorResponseModel,
-        },
         409: {
             "description": "Группа с таким названием уже создана",
             "model": ErrorResponseModel,
