@@ -1,12 +1,14 @@
 from uuid import UUID
 
+from asyncpg import UniqueViolationError
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user.models import User
 from ..constants import MAX_CREATED_GROUPS
-from ..exceptions import TooManyCreatedGroupsException
+from ..exceptions import TooManyCreatedGroupsException, GroupWithSuchNameAlreadyExistsException
 from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
 from ..schemas import CreateGroupSchema, GroupDetailSchema
 from ..services import get_group_with_members
@@ -42,6 +44,14 @@ async def create_group(
         description=created_group.description,
     )
     session.add(group)
+
+    try:
+        await session.flush()
+    except IntegrityError as err:
+        await session.rollback()
+        if isinstance(err.orig, UniqueViolationError):
+            raise GroupWithSuchNameAlreadyExistsException(group_name=created_group.name) from err
+        raise
 
     creator_membership = GroupMember(user=user, group=group)
     session.add(creator_membership)

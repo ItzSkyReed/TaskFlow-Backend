@@ -22,6 +22,14 @@ class CannotUserThatIsAlreadyInThatGroupException(BaseAPIException):
             err_type="value_error.invited_user_already_in_group",
         )
 
+class GroupWithSuchNameAlreadyExistsException(BaseAPIException):
+    def __init__(self, group_name: str):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg=f"Cannot create group \"{group_name}\" because group with such name already exists",
+            loc=["groups", "body", "name"],
+            err_type="value_error.group_name_already_exists",
+        )
 
 class TooManyCreatedGroupsException(BaseAPIException):
     def __init__(self):

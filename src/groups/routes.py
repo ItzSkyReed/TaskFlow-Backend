@@ -99,6 +99,10 @@ async def search_groups_route(
             "description": "Пользователь не найден",
             "model": ErrorResponseModel,
         },
+        409: {
+            "description": "Группа с таким названием уже создана",
+            "model": ErrorResponseModel,
+        },
         422: {
             "description": "Некорректные данные в запросе (валидация схемы).",
             "model": ErrorResponseModel,

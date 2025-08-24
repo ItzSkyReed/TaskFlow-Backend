@@ -39,7 +39,7 @@ class Group(Base):
     )
 
     name: Mapped[str] = mapped_column(
-        String(50), nullable=False, index=True
+        String(50), nullable=False, unique=True, index=True
     )  # Название группы
 
     description: Mapped[str] = mapped_column(
