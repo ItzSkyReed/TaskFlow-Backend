@@ -22,6 +22,7 @@ dependencies = [
     "types-aiobotocore-s3",
     "pillow",
     "ty>=0.0.1a17",
+    "pytest-order"
 ]
 
 [tool.ruff]
@@ -58,6 +59,10 @@ omit = [
     "*/tests/*",
     "alembic/*",
     "*/config.py",
+]
+concurrency = [
+    "greenlet",
+    "thread"
 ]
 
 [tool.coverage.report]
