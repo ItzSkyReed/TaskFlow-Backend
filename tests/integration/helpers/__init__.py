@@ -1,3 +1,3 @@
-from .auth import register_and_login
+from .user import register_and_login
 
 __all__ = ["register_and_login"]
