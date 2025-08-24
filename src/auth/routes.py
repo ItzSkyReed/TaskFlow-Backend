@@ -10,7 +10,6 @@ from ..config import get_settings
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, SuccessResponseModel
 from .config import get_auth_settings
-from .dependencies import validate_user_uniqueness
 from .exceptions import RefreshTokenNotFound
 from .schemas import (
     AccessTokenSchema,
@@ -59,7 +58,7 @@ auth_settings = get_auth_settings()
 )
 async def sign_up_user_route(
     response: Response,
-    user_in: Annotated[SignUpSchema, Depends(validate_user_uniqueness)],
+    user_in: Annotated[SignUpSchema, Body(...)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> AccessTokenSchema:
     register_result = await sign_up_user(user_in, session)
