@@ -1,11 +1,12 @@
 import uuid
 
+import pytest
 from starlette import status
 
 from src.auth import auth_router
 from tests.conftest import settings
 
-
+@pytest.mark.order(1)
 async def test_valid_sign_up(client):
     unique = uuid.uuid4().hex[:16]
     payload = {
@@ -19,7 +20,7 @@ async def test_valid_sign_up(client):
 
     assert response.status_code == status.HTTP_201_CREATED
 
-
+@pytest.mark.order(1)
 async def test_valid_sign_up_cookies(client):
     unique = uuid.uuid4().hex[:16]
     payload = {
@@ -48,7 +49,7 @@ async def test_valid_sign_up_cookies(client):
         f"Path у куки должен быть {expected_path}"
     )
 
-
+@pytest.mark.order(1)
 async def test_conflict_sign_up(client):
     unique = uuid.uuid4().hex[:16]
     payload = {
@@ -67,7 +68,7 @@ async def test_conflict_sign_up(client):
 
     assert response2.json()["detail"] is not None
 
-
+@pytest.mark.order(1)
 async def test_conflict_sign_up_email_only(client):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
@@ -88,7 +89,7 @@ async def test_conflict_sign_up_email_only(client):
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] is not None
 
-
+@pytest.mark.order(1)
 async def test_conflict_sign_up_login_only(client):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
@@ -109,7 +110,7 @@ async def test_conflict_sign_up_login_only(client):
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] is not None
 
-
+@pytest.mark.order(1)
 async def test_invalid_schema_sign_up(client):
     payload = {"name": "A", "login": "ab", "email": "not-an-email", "password": "123"}
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
