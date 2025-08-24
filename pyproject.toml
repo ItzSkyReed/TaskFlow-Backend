@@ -21,8 +21,7 @@ dependencies = [
     "aioboto3",
     "types-aiobotocore-s3",
     "pillow",
-    "ty>=0.0.1a17",
-    "pytest-order"
+    "ty>=0.0.1a17"
 ]
 
 [tool.ruff]

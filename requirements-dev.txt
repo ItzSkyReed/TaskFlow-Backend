@@ -6,3 +6,4 @@ pytest-cov
 coverage[toml]
 httpx
 anyio
+pytest-order
