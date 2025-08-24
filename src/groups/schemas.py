@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, StringConstraints
 
 from ..config import get_settings
 from ..user.schemas import PublicUserSchema
@@ -11,19 +11,34 @@ from .enums import InvitationStatus
 
 settings = get_settings()
 
-
 class CreateGroupSchema(BaseModel):
     name: Annotated[
         str,
+        StringConstraints(
+            strip_whitespace=True,
+            max_length=50,
+            min_length=6),
         Field(
             ...,
             pattern=NAME_PATTERN,
-            min_length=6,
-            max_length=50,
             description="Публичное название группы",
             examples=["MegaGroup", "НевероятнаяГруппа123"],
         ),
     ]
+
+    description: Annotated[
+        str | None,
+        StringConstraints(
+            strip_whitespace=True,
+            max_length=2000,
+        ),
+        Field(
+            default=None,
+            description="Публичное название группы",
+            examples=["MegaGroup", "НевероятнаяГруппа123"],
+        ),
+    ]
+
     max_members: Annotated[int, Field(ge=2, le=100, default=100)]
 
     invitations: Annotated[
@@ -61,6 +76,11 @@ class GroupDetailSchema(BaseModel):
     id: UUID
 
     name: Annotated[str, Field(max_length=50)]
+
+    description: Annotated[
+        str | None,
+        Field(default=None),
+    ]
 
     has_avatar: Annotated[bool, Field(default=False, exclude=True)]
 

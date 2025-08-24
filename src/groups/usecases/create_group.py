@@ -39,6 +39,7 @@ async def create_group(
         name=created_group.name,
         creator_id=user.id,
         max_members=created_group.max_members,
+        description=created_group.description,
     )
     session.add(group)
 
