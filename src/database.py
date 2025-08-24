@@ -24,7 +24,7 @@ class Base(DeclarativeBase):
     pass
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}"
+        return f"<{self.__class__.__name__}>"
 
 
 # with get_async_session()...
