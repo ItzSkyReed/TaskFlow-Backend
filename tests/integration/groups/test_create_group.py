@@ -1,10 +1,13 @@
 from httpx import AsyncClient
 from starlette import status
 
-from src.groups.constants import MAX_CREATED_GROUPS
 from src.groups import group_router
-
-from tests.integration.helpers import register_and_login, get_random_symbols, get_token_payload
+from src.groups.constants import MAX_CREATED_GROUPS
+from tests.integration.helpers import (
+    get_random_symbols,
+    get_token_payload,
+    register_and_login,
+)
 
 
 async def test_create_group_success(client: AsyncClient):
@@ -105,12 +108,13 @@ async def test_create_group_no_name(client: AsyncClient):
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+
 async def test_create_group_with_invitations(client: AsyncClient):
     """Успешное создание группы с приглашениями"""
     owner = await register_and_login(client)
     invitee = await register_and_login(client)  # другой пользователь
 
-    invitee_id = (await get_token_payload(invitee['refresh_token']))["sub"]
+    invitee_id = (await get_token_payload(invitee["refresh_token"]))["sub"]
 
     client.cookies.set("refresh_token", owner["refresh_token"])
     client.headers["Authorization"] = f"Bearer {owner['access_token']}"
@@ -126,6 +130,7 @@ async def test_create_group_with_invitations(client: AsyncClient):
     )
 
     assert response.status_code == status.HTTP_201_CREATED
+
 
 async def test_create_group_limit_exceeded(client: AsyncClient):
     """Превышен лимит создания групп"""

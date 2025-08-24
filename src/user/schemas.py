@@ -10,12 +10,14 @@ from pydantic import (
     computed_field,
     model_validator,
 )
+
 from ..config import get_settings
-from ..constants import USER_NAME_PATTERN, USER_LOGIN_PATTERN
+from ..constants import USER_LOGIN_PATTERN, USER_NAME_PATTERN
+
 settings = get_settings()
 
-class UserAvatarMixin(BaseModel):
 
+class UserAvatarMixin(BaseModel):
     has_avatar: Annotated[bool, Field(default=False, exclude=True)]
 
     @computed_field
@@ -25,10 +27,10 @@ class UserAvatarMixin(BaseModel):
             return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
         return None
 
+
 class UserSchema(UserAvatarMixin, BaseModel):
     """
     Модель пользователя с профилем
-
     """
 
     id: UUID
@@ -171,6 +173,7 @@ class PatchProfileSchema(BaseModel):
             raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
         return self
 
+
 class UserSearchSchema(UserAvatarMixin, BaseModel):
     """
     Модель пользователя с профилем
@@ -183,9 +186,12 @@ class UserSearchSchema(UserAvatarMixin, BaseModel):
         str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
     ]
 
-    profile: Annotated["UserSearchProfileSchema", Field(..., validation_alias="user_profile")]
+    profile: Annotated[
+        "UserSearchProfileSchema", Field(..., validation_alias="user_profile")
+    ]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class UserSearchProfileSchema(BaseModel):
     name: Annotated[str, Field(max_length=32)]

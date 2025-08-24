@@ -74,6 +74,7 @@ class User(Base):
         ),
     )
 
+
 class UserProfile(Base):
     __tablename__ = "user_profiles"
 
@@ -138,7 +139,7 @@ class UserProfile(Base):
             (discord_id IS NOT NULL AND discord_username IS NOT NULL)
             """,
             name="ck_discord_fields_null_together",
-        )
+        ),
     )
 
     user: Mapped["User"] = relationship(

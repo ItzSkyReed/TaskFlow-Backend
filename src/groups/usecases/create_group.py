@@ -1,6 +1,5 @@
 from uuid import UUID
 
-from asyncpg import UniqueViolationError
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user.models import User
 from ..constants import MAX_CREATED_GROUPS
-from ..exceptions import TooManyCreatedGroupsException, GroupWithSuchNameAlreadyExistsException
+from ..exceptions import (
+    GroupWithSuchNameAlreadyExistsException,
+    TooManyCreatedGroupsException,
+)
 from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
 from ..schemas import CreateGroupSchema, GroupDetailSchema
 from ..services import get_group_with_members
@@ -51,13 +53,14 @@ async def create_group(
         await session.flush()
     except IntegrityError as err:
         await session.rollback()
-        if getattr(err.orig, 'pgcode', None) == '23505':
-            uq_err = err.orig.__cause__  # asyncpg UniqueViolationError
-            if uq_err.constraint_name == "ix_groups_name":
+        if getattr(err.orig, "pgcode", None) == "23505":
+            # asyncpg UniqueViolationError;
+            uq_err = err.orig.__cause__  # ty: ignore[possibly-unbound-attribute]
+            if uq_err.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
                 raise GroupWithSuchNameAlreadyExistsException(
-                group_name=created_group.name
-            ) from err
-        raise # pragma: no cover
+                    group_name=created_group.name
+                ) from err
+        raise  # pragma: no cover
 
     creator_membership = GroupMember(user=user, group=group)
     session.add(creator_membership)

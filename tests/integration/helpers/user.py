@@ -2,8 +2,8 @@ import base64
 import uuid
 from typing import TypedDict
 
+import orjson
 from httpx import AsyncClient
-from orjson import orjson
 from starlette import status
 
 from src.auth import auth_router
@@ -45,6 +45,7 @@ async def register_and_login(client: AsyncClient, unique=None) -> AuthResult:
         "refresh_token": refresh_token,
         "access_token": access_token,
     }
+
 
 async def get_token_payload(token: str) -> dict:
     return orjson.loads(base64.urlsafe_b64decode(token.split(".")[1] + "=="))

@@ -6,6 +6,7 @@ from starlette import status
 from src.auth import auth_router
 from tests.conftest import settings
 
+
 @pytest.mark.order(2)
 async def test_valid_sign_in(client):
     unique = uuid.uuid4().hex[:16]
@@ -47,6 +48,7 @@ async def test_valid_sign_in(client):
         f"Path у куки должен быть {expected_path}"
     )
 
+
 @pytest.mark.order(2)
 async def test_sign_in_invalid_password(client):
     unique = uuid.uuid4().hex[:16]
@@ -65,6 +67,7 @@ async def test_sign_in_invalid_password(client):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json()["detail"] is not None
 
+
 @pytest.mark.order(2)
 async def test_sign_in_user_not_found(client):
     # Логинимся под несуществующим пользователем
@@ -73,6 +76,7 @@ async def test_sign_in_user_not_found(client):
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] is not None
+
 
 @pytest.mark.order(2)
 async def test_sign_in_invalid_identifier_schema(client):
@@ -85,6 +89,7 @@ async def test_sign_in_invalid_identifier_schema(client):
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert response.json()["detail"] is not None
+
 
 @pytest.mark.order(2)
 async def test_sign_in_invalid_password_schema(client):

@@ -1,13 +1,12 @@
 from logging import getLogger
-from typing import Any, Coroutine
 
 from sqlalchemy import case, desc, func, or_, select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import contains_eager, joinedload, load_only
+from sqlalchemy.orm import contains_eager, load_only
 
 from .. import User, UserProfile
-from ..schemas import PublicUserSchema, UserSearchSchema
+from ..schemas import UserSearchSchema
 
 logger = getLogger(__name__)
 
