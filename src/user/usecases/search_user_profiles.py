@@ -39,7 +39,7 @@ async def search_user_profiles(
     )
 
     query = (
-        select(User, similarity_score.label("score"))
+        select(User)
         .join(User.user_profile)
         .options(
             load_only(User.id, User.login, User.has_avatar),
@@ -68,5 +68,5 @@ async def search_user_profiles(
 
     return [
         UserSearchSchema.model_validate(user, from_attributes=True)
-        for user, _ in users_with_scores
+        for user in users_with_scores
     ]

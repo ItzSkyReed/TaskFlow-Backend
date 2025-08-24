@@ -1,8 +1,11 @@
+import logging
+
 from sqlalchemy import case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
 
 from ..models import Group
-from ..schemas import GroupSummarySchema
+from ..schemas import GroupSearchSchema
 
 
 async def search_groups(
@@ -10,7 +13,7 @@ async def search_groups(
     limit: int,
     offset: int,
     session: AsyncSession,
-) -> list[GroupSummarySchema]:
+) -> list[GroupSearchSchema]:
     """
     Поиск групп по имени
     :param name: Строка для поиска по имени
@@ -32,12 +35,17 @@ async def search_groups(
     )
 
     query = (
-        select(Group, similarity_score.label("score"))
+        select(
+            Group
+        )
+        .options(
+            load_only(Group.id, Group.name, Group.max_members, Group.has_avatar),
+        )
         .where(
             or_(
-                Group.name.op("%")(name),  # поиск через триграммы
-                Group.name.ilike(f"{name}%"),  # начинается с
-                Group.name.ilike(f"%{name}%"),  # содержит
+                Group.name.op("%")(name),  # триграммы
+                Group.name.ilike(f"{name}%"),
+                Group.name.ilike(f"%{name}%"),
             )
         )
         .order_by(desc(ilike_priority), desc(similarity_score))
@@ -46,9 +54,9 @@ async def search_groups(
     )
 
     result = await session.execute(query)
-    groups_with_scores = result.all()
-
+    groups_with_scores = result.scalars().all()
+    logging.warning(f"{groups_with_scores, groups_with_scores[0]}")
     return [
-        GroupSummarySchema.model_validate(group, from_attributes=True)
-        for group, _ in groups_with_scores
+        GroupSearchSchema.model_validate(group, from_attributes=True)
+        for group in groups_with_scores
     ]

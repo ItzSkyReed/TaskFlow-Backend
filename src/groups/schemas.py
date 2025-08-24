@@ -71,8 +71,16 @@ class GroupSummarySchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class GroupSearchSchema(AvatarMixin, BaseModel):
+    id: UUID
+
+    name: Annotated[str, Field(max_length=50)]
 
 class GroupDetailSchema(BaseModel):
+    max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
+
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
 
     name: Annotated[str, Field(max_length=50)]

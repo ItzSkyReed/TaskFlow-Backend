@@ -13,10 +13,10 @@ from .enums import InvitationStatus
 from .schemas import (
     CreateGroupSchema,
     GroupDetailSchema,
-    GroupSummarySchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
     ReceivedInvitationSchema,
+    GroupSearchSchema,
 )
 from .usecases import (
     create_group,
@@ -35,12 +35,12 @@ group_router = APIRouter(prefix="/group", tags=["Group"])
     "/search",
     name="Поиск групп по имени",
     status_code=status.HTTP_200_OK,
-    response_model=list[GroupSummarySchema],  # список публичных групп (summary)
+    response_model=list[GroupSearchSchema],  # список публичных групп (summary)
     description="Возвращает список групп, чьи имена максимально похожи на введенный текст",
     responses={
         200: {
             "description": "Успешный поиск групп",
-            "model": list[GroupSummarySchema],
+            "model": list[GroupSearchSchema],
         },
         400: {
             "description": "Некорректные данные в запросе.",
@@ -75,7 +75,7 @@ async def search_groups_route(
         int, Query(ge=1, le=100, description="Максимальное количество результатов")
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> list[GroupSummarySchema]:
+) -> list[GroupSearchSchema]:
     return await search_groups(name=name, limit=limit, offset=offset, session=session)
 
 
