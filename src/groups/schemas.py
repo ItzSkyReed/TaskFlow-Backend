@@ -11,6 +11,17 @@ from .enums import InvitationStatus
 
 settings = get_settings()
 
+class GroupAvatarMixin(BaseModel):
+
+    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
+
+    @computed_field
+    @property
+    def avatar_url(self) -> str | None:
+        if getattr(self, "has_avatar", False):
+            return f"{settings.cdn_path}/avatars/groups/{self.id}.webp"
+        return None
+
 class CreateGroupSchema(BaseModel):
     name: Annotated[
         str,
@@ -39,7 +50,7 @@ class CreateGroupSchema(BaseModel):
         ),
     ]
 
-    max_members: Annotated[int, Field(ge=2, le=100, default=100)]
+    max_members_count: Annotated[int, Field(ge=2, le=100, default=100, serialization_alias="max_members")]
 
     invitations: Annotated[
         list[UUID] | None,
@@ -50,37 +61,30 @@ class CreateGroupSchema(BaseModel):
     ]
 
 
-class GroupSummarySchema(BaseModel):
+class GroupSummarySchema(GroupAvatarMixin, BaseModel):
     id: UUID
 
     name: Annotated[str, Field(max_length=50)]
 
-    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
 
     creator_id: UUID
 
     created_at: Annotated[datetime, Field(...)]
 
-    @computed_field
-    @property
-    def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
-        if getattr(self, "has_avatar", False):
-            return f"{settings.cdn_path}/avatars/groups/{self.id}.webp"
-        return None
-
-    model_config = ConfigDict(from_attributes=True)
-
-class GroupSearchSchema(AvatarMixin, BaseModel):
-    id: UUID
-
-    name: Annotated[str, Field(max_length=50)]
-
-class GroupDetailSchema(BaseModel):
     max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
 
     model_config = ConfigDict(from_attributes=True)
 
+class GroupSearchSchema(GroupAvatarMixin, BaseModel):
+    id: UUID
+
+    name: Annotated[str, Field(max_length=50)]
+
+    max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class GroupDetailSchema(GroupAvatarMixin, BaseModel):
     id: UUID
 
     name: Annotated[str, Field(max_length=50)]
@@ -90,21 +94,13 @@ class GroupDetailSchema(BaseModel):
         Field(default=None),
     ]
 
-    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
-
     creator_id: UUID
 
     created_at: Annotated[datetime, Field(...)]
 
-    members: Annotated[list["GroupMemberSchema"], Field(...)]
+    max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
 
-    @computed_field
-    @property
-    def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
-        if getattr(self, "has_avatar", False):
-            return f"{settings.cdn_path}/avatars/groups/{self.id}.webp"
-        return None
+    members: Annotated[list["GroupMemberSchema"], Field(...)]
 
     model_config = ConfigDict(from_attributes=True)
 
