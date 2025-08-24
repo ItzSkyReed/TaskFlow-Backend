@@ -10,11 +10,8 @@ from pydantic import (
     computed_field,
     model_validator,
 )
-
-from ..auth.constants import LOGIN_PATTERN
 from ..config import get_settings
-from .constants import NAME_PATTERN
-
+from ..constants import USER_NAME_PATTERN, USER_LOGIN_PATTERN
 settings = get_settings()
 
 class UserAvatarMixin(BaseModel):
@@ -37,7 +34,7 @@ class UserSchema(UserAvatarMixin, BaseModel):
     id: UUID
 
     login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
+        str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
     ]
 
     email: Annotated[EmailStr, Field(..., max_length=320)]
@@ -63,7 +60,7 @@ class PublicUserSchema(UserAvatarMixin, BaseModel):
     id: UUID
 
     login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
+        str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
     ]
 
     email: Annotated[EmailStr | None, Field(default=None, max_length=320)]
@@ -141,7 +138,7 @@ class PatchProfileSchema(BaseModel):
             default=None,
             min_length=4,
             max_length=32,
-            pattern=NAME_PATTERN,
+            pattern=USER_NAME_PATTERN,
             examples=["Joe_Sardina", "Margaret' Kabina", "x-MarinaPro228"],
             description="Публичное имя",
         ),
@@ -183,7 +180,7 @@ class UserSearchSchema(UserAvatarMixin, BaseModel):
     id: UUID
 
     login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
+        str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
     ]
 
     profile: Annotated["UserSearchProfileSchema", Field(..., validation_alias="user_profile")]

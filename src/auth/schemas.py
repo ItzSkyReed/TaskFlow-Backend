@@ -12,8 +12,8 @@ from pydantic import (
     field_validator,
 )
 
-from ..user.constants import NAME_PATTERN
-from .constants import LOGIN_PATTERN, PASSWORD_PATTERN
+from ..constants import USER_NAME_PATTERN, USER_LOGIN_PATTERN
+from .constants import PASSWORD_PATTERN
 
 
 class TokenSchema(BaseModel):
@@ -47,7 +47,7 @@ class TokenPayloadSchema(BaseModel):
     jti: Annotated[UUID | None, Field(default=None)]
 
 
-LoginStr = Annotated[str, StringConstraints(pattern=LOGIN_PATTERN)]
+LoginStr = Annotated[str, StringConstraints(pattern=USER_LOGIN_PATTERN)]
 
 
 class SignUpSchema(BaseModel):
@@ -61,7 +61,7 @@ class SignUpSchema(BaseModel):
             default=None,
             min_length=4,
             max_length=32,
-            pattern=NAME_PATTERN,
+            pattern=USER_NAME_PATTERN,
             examples=["Joe_Sardina", "Margaret' Kabina", "x-MarinaPro228"],
             description="Публичное имя (при отсутствии будет совпадать с login)",
         ),
@@ -72,7 +72,7 @@ class SignUpSchema(BaseModel):
             ...,
             min_length=4,
             max_length=64,
-            pattern=LOGIN_PATTERN,
+            pattern=USER_LOGIN_PATTERN,
             examples=["SuperUniqueLogin", "Login12345", "Login_megalogin"],
             description="Login",
         ),
