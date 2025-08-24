@@ -13,7 +13,7 @@ from pydantic import (
 )
 
 from ..constants import USER_NAME_PATTERN, USER_LOGIN_PATTERN
-from .constants import PASSWORD_PATTERN
+from .constants import USER_PASSWORD_PATTERN
 
 
 class TokenSchema(BaseModel):
@@ -92,7 +92,7 @@ class SignUpSchema(BaseModel):
             min_length=8,
             max_length=128,
             description="Пароль",
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
             examples=["MEGAPASSWORD", "123123123"],
         ),
     ]  # raw password
@@ -119,7 +119,7 @@ class SignInSchema(BaseModel):
             ...,
             min_length=8,
             max_length=128,
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
             examples=["MEGAPASSWORD", "123123123"],
         ),
     ]
@@ -162,7 +162,7 @@ class ChangePasswordSchema(BaseModel):
             min_length=8,
             max_length=128,
             description="Старый пароль",
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
             examples=["MEGAPASSWORD", "123123123"],
         ),
     ]
@@ -173,7 +173,7 @@ class ChangePasswordSchema(BaseModel):
             min_length=8,
             max_length=128,
             description="Новый пароль",
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
             examples=["MEGAPASSWORD", "123123123"],
         ),
     ]
