@@ -12,7 +12,7 @@ from pydantic import (
     field_validator,
 )
 
-from ..constants import USER_NAME_PATTERN, USER_LOGIN_PATTERN
+from ..constants import USER_LOGIN_PATTERN, USER_NAME_PATTERN
 from .constants import USER_PASSWORD_PATTERN
 
 

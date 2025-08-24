@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user import User, UserProfile
-from ...user.exceptions import LoginAlreadyInUseException, EmailAlreadyInUseException
+from ...user.exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
@@ -32,15 +32,15 @@ async def sign_up_user(
 
     except IntegrityError as err:
         await session.rollback()
-        if getattr(err.orig, 'pgcode', None) == '23505':
-            uq_err = err.orig.__cause__  # asyncpg UniqueViolationError
-            if uq_err.constraint_name == "ix_users_email":
+        if getattr(err.orig, "pgcode", None) == "23505":
+            # asyncpg UniqueViolationError
+            uq_err = err.orig.__cause__  # ty: ignore[possibly-unbound-attribute]
+            if uq_err.constraint_name == "ix_users_email": # ty: ignore[unresolved-attribute]
                 raise EmailAlreadyInUseException() from err
-            elif uq_err.constraint_name == "ix_users_login":
+            elif uq_err.constraint_name == "ix_users_login": # ty: ignore[unresolved-attribute]
                 raise LoginAlreadyInUseException() from err
             raise
-        raise # pragma: no cover
-
+        raise  # pragma: no cover
 
     user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
     session.add(user_profile)

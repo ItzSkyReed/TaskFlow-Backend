@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, computed_field
 
 from ..config import get_settings
 from ..user.schemas import PublicUserSchema
@@ -11,8 +11,8 @@ from .enums import InvitationStatus
 
 settings = get_settings()
 
-class GroupAvatarMixin(BaseModel):
 
+class GroupAvatarMixin(BaseModel):
     has_avatar: Annotated[bool, Field(default=False, exclude=True)]
 
     @computed_field
@@ -22,13 +22,11 @@ class GroupAvatarMixin(BaseModel):
             return f"{settings.cdn_path}/avatars/groups/{self.id}.webp"
         return None
 
+
 class CreateGroupSchema(BaseModel):
     name: Annotated[
         str,
-        StringConstraints(
-            strip_whitespace=True,
-            max_length=50,
-            min_length=6),
+        StringConstraints(strip_whitespace=True, max_length=50, min_length=6),
         Field(
             ...,
             pattern=NAME_PATTERN,
@@ -50,7 +48,9 @@ class CreateGroupSchema(BaseModel):
         ),
     ]
 
-    max_members_count: Annotated[int, Field(ge=2, le=100, default=100, serialization_alias="max_members")]
+    max_members_count: Annotated[
+        int, Field(ge=2, le=100, default=100, serialization_alias="max_members")
+    ]
 
     invitations: Annotated[
         list[UUID] | None,
@@ -66,7 +66,6 @@ class GroupSummarySchema(GroupAvatarMixin, BaseModel):
 
     name: Annotated[str, Field(max_length=50)]
 
-
     creator_id: UUID
 
     created_at: Annotated[datetime, Field(...)]
@@ -74,6 +73,7 @@ class GroupSummarySchema(GroupAvatarMixin, BaseModel):
     max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class GroupSearchSchema(GroupAvatarMixin, BaseModel):
     id: UUID
@@ -83,6 +83,7 @@ class GroupSearchSchema(GroupAvatarMixin, BaseModel):
     max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class GroupDetailSchema(GroupAvatarMixin, BaseModel):
     id: UUID

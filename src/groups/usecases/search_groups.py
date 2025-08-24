@@ -35,9 +35,7 @@ async def search_groups(
     )
 
     query = (
-        select(
-            Group
-        )
+        select(Group)
         .options(
             load_only(Group.id, Group.name, Group.max_members, Group.has_avatar),
         )

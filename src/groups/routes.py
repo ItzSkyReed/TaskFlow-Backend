@@ -13,10 +13,10 @@ from .enums import InvitationStatus
 from .schemas import (
     CreateGroupSchema,
     GroupDetailSchema,
+    GroupSearchSchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
     ReceivedInvitationSchema,
-    GroupSearchSchema,
 )
 from .usecases import (
     create_group,
