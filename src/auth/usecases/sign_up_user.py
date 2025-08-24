@@ -1,10 +1,8 @@
-from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user import User, UserProfile
-from ...user.exceptions import LoginAlreadyInUseException
-from ...user.services import check_email_unique
+from ...user.exceptions import LoginAlreadyInUseException, EmailAlreadyInUseException
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
@@ -35,11 +33,13 @@ async def sign_up_user(
     except IntegrityError as err:
         await session.rollback()
         if getattr(err.orig, 'pgcode', None) == '23505':
-            # если выбросит EmailAlreadyInUseException
-            await check_email_unique(user_in.email, session)
-            # если не выбросило, значит email свободен, ошибка по логину
-            raise LoginAlreadyInUseException() from err
-        raise
+            uq_err = err.orig.__cause__  # asyncpg UniqueViolationError
+            if uq_err.constraint_name == "ix_users_email":
+                raise EmailAlreadyInUseException() from err
+            elif uq_err.constraint_name == "ix_users_login":
+                raise LoginAlreadyInUseException() from err
+            raise
+        raise # pragma: no cover
 
 
     user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)

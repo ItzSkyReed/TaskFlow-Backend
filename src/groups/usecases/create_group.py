@@ -52,7 +52,9 @@ async def create_group(
     except IntegrityError as err:
         await session.rollback()
         if getattr(err.orig, 'pgcode', None) == '23505':
-            raise GroupWithSuchNameAlreadyExistsException(
+            uq_err = err.orig.__cause__  # asyncpg UniqueViolationError
+            if uq_err.constraint_name == "ix_groups_name":
+                raise GroupWithSuchNameAlreadyExistsException(
                 group_name=created_group.name
             ) from err
         raise # pragma: no cover
