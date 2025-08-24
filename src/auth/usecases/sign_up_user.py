@@ -32,19 +32,20 @@ async def sign_up_user(
         session.add(user)
         await session.flush()
 
-        user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
-        session.add(user_profile)
-
-        await session.commit()
-
-    except IntegrityError as err:  # pragma: no cover
+    except IntegrityError as err:
         await session.rollback()
-        if isinstance(err.orig, UniqueViolationError):
+        if getattr(err.orig, 'pgcode', None) == '23505':
             # если выбросит EmailAlreadyInUseException
             await check_email_unique(user_in.email, session)
             # если не выбросило, значит email свободен, ошибка по логину
             raise LoginAlreadyInUseException() from err
         raise
+
+
+    user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
+    session.add(user_profile)
+
+    await session.commit()
 
     # Создание токенов
     access_token = JWTUtils.create_access_token(user.id)
