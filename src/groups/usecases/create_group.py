@@ -24,6 +24,8 @@ async def create_group(
     :param created_group: Создаваемая группа
     :param user_id: UUID профиля
     :param session: Сессия
+    :raises TooManyCreatedGroupsException: Слишком много групп создано данным пользователем (403)
+    :raises GroupWithSuchNameAlreadyExistsException: Группа с таким названием уже есть (409)
     """
     user = (
         await session.execute(select(User).where(User.id == user_id).with_for_update())
@@ -40,7 +42,7 @@ async def create_group(
     group = Group(
         name=created_group.name,
         creator_id=user.id,
-        max_members=created_group.max_members,
+        max_members=created_group.max_members_count,
         description=created_group.description,
     )
     session.add(group)
