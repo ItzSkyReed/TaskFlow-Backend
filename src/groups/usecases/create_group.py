@@ -49,9 +49,11 @@ async def create_group(
         await session.flush()
     except IntegrityError as err:
         await session.rollback()
-        if isinstance(err.orig, UniqueViolationError):
-            raise GroupWithSuchNameAlreadyExistsException(group_name=created_group.name) from err
-        raise
+        if getattr(err.orig, 'pgcode', None) == '23505':
+            raise GroupWithSuchNameAlreadyExistsException(
+                group_name=created_group.name
+            ) from err
+        raise # pragma: no cover
 
     creator_membership = GroupMember(user=user, group=group)
     session.add(creator_membership)

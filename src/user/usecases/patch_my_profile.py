@@ -24,7 +24,6 @@ async def patch_my_profile(
     user = await get_user_with_profile(user_id, session)
 
     if patch_schema.email is not None:
-        await check_email_unique(patch_schema.email, session)
         user.email = patch_schema.email
 
     if patch_schema.profile is not None:
@@ -36,7 +35,7 @@ async def patch_my_profile(
     except IntegrityError as err:
         await session.rollback()
 
-        if isinstance(err.orig, UniqueViolationError):
+        if getattr(err.orig, 'pgcode', None) == '23505':
             raise EmailAlreadyInUseException() from err
         raise
 
