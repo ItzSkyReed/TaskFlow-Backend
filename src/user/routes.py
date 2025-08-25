@@ -264,10 +264,7 @@ async def get_public_user_profile_route(
         },
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
-    },
-    dependencies=[
-        Depends(token_verification),
-    ],
+    }
 )
 async def get_user_groups_route(
         token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
