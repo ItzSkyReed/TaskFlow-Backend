@@ -14,6 +14,9 @@ class UserNotFoundByIdentifierException(BaseAPIException):
 
 
 class UserNotFoundByIdException(BaseAPIException):
+    """
+    404
+    """
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -25,6 +28,8 @@ class UserNotFoundByIdException(BaseAPIException):
 
 class EmailAlreadyInUseException(BaseAPIException):
     """
+    409
+
     Вызывается если Email уже используется у какого-либо пользователя
     """
 
