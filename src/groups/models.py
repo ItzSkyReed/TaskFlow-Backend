@@ -72,6 +72,11 @@ class Group(Base):
         back_populates="created_groups"
     )  # Создатель группы
 
+    users: Mapped[list["User"]] = relationship(
+        secondary="group_members",
+        back_populates="groups"
+    )
+
     members: Mapped[list["GroupMember"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"
     )  # Участники группы
