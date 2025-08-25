@@ -7,6 +7,7 @@ from starlette import status
 
 from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
+from ..constants import USER_LOGIN_PATTERN
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
 from .schemas import PatchUserSchema, PublicUserSchema, UserSchema, UserSearchSchema
@@ -24,10 +25,10 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
 
 @profile_router.get(
     "/search",
-    name="Поиск пользователей по имени",
+    name="Поиск пользователей по login",
     status_code=status.HTTP_200_OK,
     response_model=list[UserSearchSchema],  # список публичных профилей
-    description="Возвращает список пользователей, чьи имена максимально похожи на введенный текст",
+    description="Возвращает список пользователей, чьи login максимально похожи на введенный текст",
     responses={
         200: {
             "description": "Успешный поиск пользователей",
@@ -54,12 +55,13 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
 )
 async def search_profiles_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    name: Annotated[
+    login: Annotated[
         str,
         Query(
             max_length=32,
             min_length=1,
             description="Строка подразумевающее возможное имя пользователя",
+            pattern=USER_LOGIN_PATTERN
         ),
     ],
     limit: Annotated[
@@ -68,7 +70,7 @@ async def search_profiles_route(
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
 ) -> list[UserSearchSchema]:
     return await search_user_profiles(
-        login=name, limit=limit, offset=offset, session=session
+        login=login, limit=limit, offset=offset, session=session
     )
 
 
