@@ -55,15 +55,8 @@ async def search_user_profiles(
         .limit(limit)
         .offset(offset)
     )
-
-    logger.info(
-        query.compile(
-            dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
-        )
-    )
-
     result = await session.execute(query)
-    users_with_scores = result.all()
+    users_with_scores = result.scalars().all()
 
     return [
         UserSearchSchema.model_validate(user, from_attributes=True)
