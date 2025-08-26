@@ -69,6 +69,35 @@ class CreateGroupSchema(BaseModel):
         ),
     ]
 
+class PatchGroupSchema(BaseModel):
+
+    name: Annotated[
+        str | None,
+        StringConstraints(strip_whitespace=True, max_length=50, min_length=6),
+        Field(
+            default=None,
+            pattern=NAME_PATTERN,
+            description="Публичное название группы",
+            examples=["MegaGroup", "НевероятнаяГруппа123"],
+        ),
+    ]
+
+    description: Annotated[
+        str | None,
+        StringConstraints(
+            strip_whitespace=True,
+            max_length=2000,
+        ),
+        Field(
+            default=None,
+            description="Публичное название группы",
+            examples=["MegaGroup", "НевероятнаяГруппа123"],
+        ),
+    ]
+
+    max_members_count: Annotated[
+        int | None, Field(ge=2, le=100, default=None)
+    ]
 
 class GroupUserContextSchema(BaseModel):
     is_creator: Annotated[bool, Field(...)]

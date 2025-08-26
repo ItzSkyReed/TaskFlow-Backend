@@ -17,7 +17,7 @@ from .schemas import (
     GroupSummarySchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
-    ReceivedInvitationSchema,
+    ReceivedInvitationSchema, PatchGroupSchema,
 )
 from .usecases import (
     create_group,
@@ -27,7 +27,7 @@ from .usecases import (
     get_user_groups,
     invite_user_to_group,
     patch_group_avatar,
-    search_groups,
+    search_groups, patch_group,
 )
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
@@ -124,6 +124,55 @@ async def create_group_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> GroupDetailSchema:
     return await create_group(created_group, token_payload.sub, session)
+
+@group_router.patch(
+    "/{group_id}",
+    status_code=status.HTTP_200_OK,
+    name="Обновление информации о группе",
+    response_model=GroupDetailSchema,
+    description="Позволяет владельцу группы или пользователям с правами обновить параметры группы",
+    responses={
+        200: {"description": "Группа успешно изменена", "model": GroupDetailSchema},
+        400: {
+            "description": "Некорректный формат файла, или сам файл не фото",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для изменения аватара группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        413: {
+            "description": "Аватар слишком большой (вес файла)",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def patch_group_avatar_route(
+        group_id: Annotated[UUID, Path(...)],
+        patch_schema: Annotated[PatchGroupSchema, Body(...)],
+        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await patch_group(
+        patched_group=patch_schema,
+        group_id=group_id,
+        initiator_id=token_payload.sub,
+        session=session,
+    )
 
 
 @group_router.patch(
