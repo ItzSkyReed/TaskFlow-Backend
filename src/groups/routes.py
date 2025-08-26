@@ -92,7 +92,7 @@ async def search_groups_route(
     response_model=GroupDetailSchema,
     description="Создает группу, в которой пользователь будет являться владельцем",
     responses={
-        204: {"description": "Аватарка успешно удалена", "model": None},
+        201: {"description": "Группа успешно создана", "model": GroupDetailSchema},
         401: {
             "description": "Access token не найден, истек или некорректен",
             "model": ErrorResponseModel,
@@ -279,7 +279,7 @@ async def invite_user_to_group_route(
     response_model=GroupDetailSchema,
     description="Создает группу, в которой пользователь будет являться владельцем",
     responses={
-        200: {"description": "Группа успешно найдена", "model": None},
+        200: {"description": "Группа успешно найдена", "model": GroupDetailSchema},
         401: {
             "description": "Access token не найден, истек или некорректен",
             "model": ErrorResponseModel,
