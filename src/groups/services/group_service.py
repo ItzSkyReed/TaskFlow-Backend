@@ -17,17 +17,20 @@ from ..schemas import (
 )
 
 
-async def get_group_with_members(group_id: UUID, session: AsyncSession) -> Group:
+async def get_group_with_members(group_id: UUID, session: AsyncSession,*, with_for_update: bool = False) -> Group:
+    stmt = (select(Group)
+    .where(Group.id == group_id)
+    .options(
+            selectinload(Group.members)
+            .selectinload(GroupMember.user)
+            .selectinload(User.user_profile)
+        ))
+
+    if with_for_update:
+        stmt = stmt.with_for_update()
+
     group = (
-        await session.execute(
-            select(Group)
-            .where(Group.id == group_id)
-            .options(
-                selectinload(Group.members)
-                .selectinload(GroupMember.user)
-                .selectinload(User.user_profile)
-            )
-        )
+        await session.execute(stmt)
     ).scalar_one_or_none()
     if group is None:
         raise GroupNotFoundByIdException()
@@ -99,7 +102,6 @@ async def get_groups_member_count(
     :param session: Сессия
     :return: Возвращает словарь с ключем в виде UUID группы и значение в виде актуального кол-ва участников
     """
-    group_ids = [g.id for g in groups]
 
     query = (
         select(
@@ -107,7 +109,7 @@ async def get_groups_member_count(
             func.coalesce(func.count(GroupMember.user_id), 0).label("member_count"),
         )
         .outerjoin(GroupMember, Group.id == GroupMember.group_id)
-        .where(Group.id.in_(group_ids))
+        .where(Group.id.in_([g.id for g in groups]))
         .group_by(Group.id)
     )
 
