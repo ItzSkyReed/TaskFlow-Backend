@@ -1,7 +1,6 @@
 from logging import getLogger
 
 from sqlalchemy import case, desc, func, or_, select
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, load_only
 

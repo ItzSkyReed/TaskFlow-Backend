@@ -66,8 +66,7 @@ class User(Base):
     group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
 
     groups: Mapped[list["Group"]] = relationship(
-        secondary="group_members",
-        back_populates="users"
+        secondary="group_members", back_populates="users"
     )
 
     __table_args__ = (

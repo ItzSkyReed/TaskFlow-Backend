@@ -9,7 +9,6 @@ from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..constants import USER_LOGIN_PATTERN
 from ..database import get_async_session
-from ..groups.schemas import GroupSummarySchema
 from ..schemas import ErrorResponseModel, UploadFileSchema
 from .schemas import PatchUserSchema, PublicUserSchema, UserSchema, UserSearchSchema
 from .usecases import (
@@ -18,7 +17,7 @@ from .usecases import (
     get_public_user_profile,
     patch_my_profile,
     patch_my_profile_avatar,
-    search_user_profiles, get_user_groups,
+    search_user_profiles,
 )
 
 profile_router = APIRouter(prefix="/profile", tags=["Profile"])
@@ -62,7 +61,7 @@ async def search_profiles_route(
             max_length=32,
             min_length=1,
             description="Строка подразумевающее возможное имя пользователя",
-            pattern=USER_LOGIN_PATTERN
+            pattern=USER_LOGIN_PATTERN,
         ),
     ],
     limit: Annotated[

@@ -73,8 +73,7 @@ class Group(Base):
     )  # Создатель группы
 
     users: Mapped[list["User"]] = relationship(
-        secondary="group_members",
-        back_populates="groups"
+        secondary="group_members", back_populates="groups"
     )
 
     members: Mapped[list["GroupMember"]] = relationship(

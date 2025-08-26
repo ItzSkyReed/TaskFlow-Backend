@@ -178,6 +178,7 @@ class UserSearchSchema(UserAvatarMixin, BaseModel):
     """
     Модель пользователя с профилем
     """
+
     id: UUID
 
     login: Annotated[
