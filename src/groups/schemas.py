@@ -12,7 +12,16 @@ from .enums import InvitationStatus
 settings = get_settings()
 
 
-class GroupAvatarMixin(BaseModel):
+class GroupBaseSchema(BaseModel):
+    id: UUID
+
+    name: Annotated[str, Field(max_length=50)]
+
+    members_count: Annotated[int, Field(...)]
+    max_members_count: Annotated[int, Field(...)]
+
+    me: Annotated["GroupUserContextSchema", Field(...)]
+
     has_avatar: Annotated[bool, Field(default=False, exclude=True)]
 
     @computed_field
@@ -61,45 +70,29 @@ class CreateGroupSchema(BaseModel):
     ]
 
 
-class GroupSummarySchema(GroupAvatarMixin, BaseModel):
-    id: UUID
+class GroupUserContextSchema(BaseModel):
+    is_creator: Annotated[bool, Field(...)]
+    is_member: Annotated[bool, Field(...)]
+    permissions: list[str]
 
-    name: Annotated[str, Field(max_length=50)]
 
+class GroupSummarySchema(GroupBaseSchema, BaseModel):
     creator_id: UUID
 
     created_at: Annotated[datetime, Field(...)]
 
-    max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
-
     model_config = ConfigDict(from_attributes=True)
 
 
-class GroupSearchSchema(GroupAvatarMixin, BaseModel):
-    id: UUID
-
-    name: Annotated[str, Field(max_length=50)]
-
-    max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
-
+class GroupSearchSchema(GroupBaseSchema, BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class GroupDetailSchema(GroupAvatarMixin, BaseModel):
-    id: UUID
-
-    name: Annotated[str, Field(max_length=50)]
-
+class GroupDetailSchema(GroupSummarySchema, BaseModel):
     description: Annotated[
         str | None,
         Field(default=None),
     ]
-
-    creator_id: UUID
-
-    created_at: Annotated[datetime, Field(...)]
-
-    max_members_count: Annotated[int, Field(..., validation_alias="max_members")]
 
     members: Annotated[list["GroupMemberSchema"], Field(...)]
 

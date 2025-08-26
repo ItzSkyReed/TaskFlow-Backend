@@ -14,6 +14,7 @@ from .schemas import (
     CreateGroupSchema,
     GroupDetailSchema,
     GroupSearchSchema,
+    GroupSummarySchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
     ReceivedInvitationSchema,
@@ -57,11 +58,9 @@ group_router = APIRouter(prefix="/group", tags=["Group"])
         429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[
-        Depends(token_verification),
-    ],
 )
 async def search_groups_route(
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
     name: Annotated[
         str,
@@ -76,7 +75,13 @@ async def search_groups_route(
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
 ) -> list[GroupSearchSchema]:
-    return await search_groups(name=name, limit=limit, offset=offset, session=session)
+    return await search_groups(
+        user_id=token_payload.sub,
+        name=name,
+        limit=limit,
+        offset=offset,
+        session=session,
+    )
 
 
 @group_router.post(
@@ -285,13 +290,13 @@ async def invite_user_to_group_route(
         },
         500: {"description": "Внутренняя ошибка сервера."},
     },
-    dependencies=[Depends(token_verification)],
 )
 async def get_group_route(
     group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> GroupDetailSchema:
-    return await get_group(group_id, session)
+    return await get_group(group_id, token_payload.sub, session)
 
 
 @group_router.get(
