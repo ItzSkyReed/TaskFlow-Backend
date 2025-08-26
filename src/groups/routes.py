@@ -24,6 +24,7 @@ from .usecases import (
     delete_group_avatar,
     get_group,
     get_received_invitations,
+    get_user_groups,
     invite_user_to_group,
     patch_group_avatar,
     search_groups,
@@ -341,3 +342,82 @@ async def get_received_invitations_route(
         session=session,
         invitee_id=token_payload.sub,
     )
+
+
+@group_router.get(
+    "/mine/groups",
+    name="Получение списка своих групп где состоит пользователь из access_token",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GroupSummarySchema],
+    description="Получение списка своих групп где состоит пользователь из access_token",
+    responses={
+        200: {
+            "description": "Успешное получение профиля",
+            "model": list[GroupSummarySchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Пользователь не найден",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def get_mine_groups_route(
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> list[GroupSummarySchema]:
+    return await get_user_groups(token_payload.sub, session)
+
+
+@group_router.get(
+    "/{user_id}/groups",
+    name="Получение списка групп в которых есть пользователь",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GroupSummarySchema],
+    description="Получение списка групп в которых есть пользователь c опред. ID",
+    responses={
+        200: {
+            "description": "Успешное получение профиля",
+            "model": list[GroupSummarySchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Пользователь не найден",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[
+        Depends(token_verification),
+    ],
+)
+async def get_user_groups_route(
+    user_id: Annotated[UUID, Path(description="UUID пользователя")],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> list[GroupSummarySchema]:
+    return await get_user_groups(user_id, session)
