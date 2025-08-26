@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Optional, Self
+from typing import Annotated, Optional
 from uuid import UUID
 
 from pydantic import (
@@ -123,15 +123,6 @@ class PatchUserSchema(BaseModel):
         Field(default=None, serialization_alias="user_profile"),
     ]
 
-    @model_validator(mode="after")
-    def at_least_one_field(self) -> Self:
-        # noinspection PyTypeChecker
-        if not any(
-            getattr(self, field) is not None for field in self.__class__.model_fields
-        ):
-            raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
-        return self
-
 
 class PatchProfileSchema(BaseModel):
     name: Annotated[
@@ -163,15 +154,6 @@ class PatchProfileSchema(BaseModel):
         bool | None,
         Field(default=None, description="Показывать ли остальным пользователям email"),
     ]
-
-    @model_validator(mode="after")
-    def at_least_one_field(self) -> Self:
-        # noinspection PyTypeChecker
-        if not any(
-            getattr(self, field) is not None for field in self.__class__.model_fields
-        ):
-            raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
-        return self
 
 
 class UserSearchSchema(UserAvatarMixin, BaseModel):
