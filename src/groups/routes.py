@@ -134,7 +134,7 @@ async def create_group_route(
     responses={
         200: {"description": "Группа успешно изменена", "model": GroupDetailSchema},
         400: {
-            "description": "Некорректный формат файла, или сам файл не фото",
+            "description": "Некорректный формат cхемы",
             "model": ErrorResponseModel,
         },
         401: {
@@ -142,15 +142,15 @@ async def create_group_route(
             "model": ErrorResponseModel,
         },
         403: {
-            "description": "Недостаточно прав для изменения аватара группы",
+            "description": "Недостаточно прав для изменения группы",
             "model": ErrorResponseModel,
         },
         404: {
             "description": "Группы с таким ID не существует",
             "model": ErrorResponseModel,
         },
-        413: {
-            "description": "Аватар слишком большой (вес файла)",
+        409: {
+            "description": "Группа с таким названием уже существует/Предложенное макс. кол-во участником меньше, чем актуальное число участников в группе",
             "model": ErrorResponseModel,
         },
         422: {

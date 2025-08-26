@@ -27,7 +27,7 @@ class GroupWithSuchNameAlreadyExistsException(BaseAPIException):
     def __init__(self, group_name: str):
         super().__init__(
             status_code=status.HTTP_409_CONFLICT,
-            msg=f'Cannot create group "{group_name}" because group with such name already exists',
+            msg=f'Невозможно назвать группу "{group_name}" потому что группа с таким названием уже существует',
             loc=["groups", "body", "name"],
             err_type="value_error.group_name_already_exists",
         )
@@ -37,7 +37,7 @@ class TooManyCreatedGroupsException(BaseAPIException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
-            msg="User is a creator of too many groups",
+            msg="Слишком много ранее созданных групп",
             loc=["groups"],
             err_type="value_error.too_many_groups",
         )
@@ -47,7 +47,7 @@ class GroupNotFoundByIdException(BaseAPIException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            msg="group with such id is not found",
+            msg="Группа с таким ID не найдена",
             loc=["body", "group_id"],
             err_type="value_error.invalid_group_id",
         )
@@ -57,7 +57,19 @@ class NotEnoughPermissionsException(BaseAPIException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
-            msg="You don't have permissions to change avatar of that group",
+            msg="У вас нет прав для изменения этой группы",
             loc=["permissions"],
             err_type="permissions_error.forbidden",
+        )
+
+class GroupSizeConflictException(BaseAPIException):
+    def __init__(self, current_members: int, requested_size: int):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg=(
+                f"Невозможно уменьшить размер группы до {requested_size}, "
+                f"поскольку на данный момент в группе находится {current_members} человек"
+            ),
+            loc=["max_members_count"],
+            err_type="group.conflict.too_many_members",
         )
