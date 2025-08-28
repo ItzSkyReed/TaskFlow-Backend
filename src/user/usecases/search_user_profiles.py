@@ -4,7 +4,7 @@ from sqlalchemy import case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, load_only
 
-from .. import User, UserProfile
+from ...user import User, UserProfile
 from ..schemas import UserSearchSchema
 
 logger = getLogger(__name__)
