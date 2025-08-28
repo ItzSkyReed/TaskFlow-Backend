@@ -164,3 +164,22 @@ def map_to_group_search_schema(
         me=user_context,
         members_count=group_members_count,
     )
+
+
+def map_to_group_invitation_schema(
+    invitation: GroupInvitation,
+    user_context: GroupUserContextSchema,
+    group_members_count: int,
+) -> GroupInvitationSchema:
+    return GroupInvitationSchema(
+        id=invitation.id,
+        status=invitation.status,
+        updated_at=invitation.updated_at,
+        created_at=invitation.created_at,
+        inviter=PublicUserSchema.model_validate(
+            invitation.inviter, from_attributes=True
+        ),
+        group=map_to_group_summary_schema(
+            invitation.group, user_context, group_members_count
+        ),
+    )

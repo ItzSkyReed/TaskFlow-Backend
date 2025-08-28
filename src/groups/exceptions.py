@@ -117,3 +117,34 @@ class CannotKickGroupCreatorException(BaseAPIException):
             loc=["group", "creator_id"],
             err_type="group.cannot_kick_creator",
         )
+
+
+class GroupInvitationNotFoundException(BaseAPIException):
+    """
+    404
+
+    Возвращается если приглашение пользователя не найдено
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            msg="Приглашение в группу не найдено",
+            loc=["group", "user_id"],
+            err_type="group.invitation.not_found",
+        )
+
+class GroupIsFullException(BaseAPIException):
+    """
+    409
+
+    Возвращается если невозможно вступить в группу при принятие приглашения т.к группе макс. кол-во пользователей
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Приглашение в группу не принято, т.к в ней нет свободных мест",
+            loc=["group", "members"],
+            err_type="group.conflict.group_is_full",
+        )

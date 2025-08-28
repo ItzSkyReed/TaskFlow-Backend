@@ -393,6 +393,42 @@ async def get_received_invitations_route(
         invitee_id=token_payload.sub,
     )
 
+@group_router.patch(
+    "/invitations/{invitation_id}",
+    status_code=status.HTTP_200_OK,
+    name="Отправка ответа на определенное приглашение в группу",
+    response_model=GroupInvitationSchema,
+    description="Создает группу, в которой пользователь будет являться владельцем",
+    responses={
+        200: {
+            "description": "Приглашение успешно обработано (отклонено/принято)",
+            "model": GroupInvitationSchema,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {"description": "Приглашения не существует", "model": ErrorResponseModel},
+        409: {"description": "Группа переполнена пользователями", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def respond_to_invitation_route(
+        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+        invitation_id: Annotated[UUID, Path(...)],
+        response: Annotated[RespondToInvitationSchema, Body(...),],
+) -> GroupInvitationSchema:
+    return await respond_to_invitation(
+        respond_status=response,
+        session=session,
+        invitation_id=invitation_id,
+        user_id=token_payload.sub,
+    )
 
 @group_router.get(
     "/mine/groups",

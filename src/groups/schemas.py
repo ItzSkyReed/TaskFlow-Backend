@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, computed_field
@@ -69,8 +69,8 @@ class CreateGroupSchema(BaseModel):
         ),
     ]
 
-class PatchGroupSchema(BaseModel):
 
+class PatchGroupSchema(BaseModel):
     name: Annotated[
         str | None,
         StringConstraints(strip_whitespace=True, max_length=50, min_length=6),
@@ -95,9 +95,8 @@ class PatchGroupSchema(BaseModel):
         ),
     ]
 
-    max_members_count: Annotated[
-        int | None, Field(ge=2, le=100, default=None)
-    ]
+    max_members_count: Annotated[int | None, Field(ge=2, le=100, default=None)]
+
 
 class GroupUserContextSchema(BaseModel):
     is_creator: Annotated[bool, Field(...)]
@@ -163,3 +162,6 @@ class GroupInvitationSchema(BaseModel):
     updated_at: Annotated[datetime, Field(...)]
 
     model_config = ConfigDict(from_attributes=True)
+
+class RespondToInvitationSchema(BaseModel):
+    response: Annotated[Literal[InvitationStatus.REJECTED, InvitationStatus.ACCEPTED], Field(...)]
