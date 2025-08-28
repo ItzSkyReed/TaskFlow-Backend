@@ -6,32 +6,49 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
 from ...user import User
-from ..models import Group, GroupMember, GroupPermission, GroupUserPermission
+from ...user.schemas import PublicUserSchema
 from ..exceptions import GroupNotFoundException
+from ..models import (
+    Group,
+    GroupInvitation,
+    GroupMember,
+    GroupPermission,
+    GroupUserPermission,
+)
 from ..schemas import (
     GroupDetailSchema,
     GroupMemberSchema,
     GroupSearchSchema,
     GroupSummarySchema,
     GroupUserContextSchema,
+    GroupInvitationSchema,
 )
 
 
-async def get_group_with_members(group_id: UUID, session: AsyncSession,*, with_for_update: bool = False) -> Group:
-    stmt = (select(Group)
-    .where(Group.id == group_id)
-    .options(
+async def get_group_with_members(
+    group_id: UUID, session: AsyncSession, *, with_for_update: bool = False
+) -> Group:
+    """
+    Возвращает группу с загруженными участниками (Юзерами, и их профилями)
+    :param group_id: UUID группы
+    :param session: Сессия
+    :param with_for_update: Блокировка обновления
+    :raises GroupNotFoundByIdException: (404) Если группы не существует
+    """
+    stmt = (
+        select(Group)
+        .where(Group.id == group_id)
+        .options(
             selectinload(Group.members)
             .selectinload(GroupMember.user)
             .selectinload(User.user_profile)
-        ))
+        )
+    )
 
     if with_for_update:
         stmt = stmt.with_for_update()
 
-    group = (
-        await session.execute(stmt)
-    ).scalar_one_or_none()
+    group = (await session.execute(stmt)).scalar_one_or_none()
     if group is None:
         raise GroupNotFoundException()
     return group
@@ -79,7 +96,6 @@ async def get_groups_user_context(
     mem_query = select(GroupMember.group_id).where(
         GroupMember.user_id == user_id, GroupMember.group_id.in_(group_ids)
     )
-
     perms_map = {row.group_id: row.permissions or [] for row in perm_rows}
     mem_set = set((await session.execute(mem_query)).scalars().all())
 

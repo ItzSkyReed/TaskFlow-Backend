@@ -67,7 +67,7 @@ async def patch_group(
             uq_err = err.orig.__cause__  # ty: ignore[possibly-unbound-attribute]
             if uq_err.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
                 raise GroupWithSuchNameAlreadyExistsException(
-                    group_name=patched_group.name
+                    group_name=patched_group.name # ty: ignore[invalid-argument-type]
                 ) from err
         raise  # pragma: no cover
 
