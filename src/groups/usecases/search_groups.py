@@ -6,7 +6,12 @@ from sqlalchemy.orm import load_only
 
 from ..models import Group
 from ..schemas import GroupSearchSchema
-from ..services import get_groups_user_context, get_groups_member_count, map_to_group_search_schema
+from ..services import (
+    get_groups_member_count,
+    get_groups_user_context,
+    map_to_group_search_schema,
+)
+
 
 async def search_groups(
     user_id: UUID,

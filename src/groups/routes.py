@@ -17,7 +17,8 @@ from .schemas import (
     GroupSummarySchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
-    ReceivedInvitationSchema, PatchGroupSchema,
+    PatchGroupSchema,
+    GroupInvitationSchema, RespondToInvitationSchema,
 )
 from .usecases import (
     create_group,
@@ -27,8 +28,9 @@ from .usecases import (
     get_received_invitations,
     get_user_groups,
     invite_user_to_group,
+    patch_group,
     patch_group_avatar,
-    search_groups, patch_group,
+    search_groups, respond_to_invitation,
 )
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
@@ -98,10 +100,6 @@ async def search_groups_route(
             "description": "Access token не найден, истек или некорректен",
             "model": ErrorResponseModel,
         },
-        403: {
-            "description": "Превышено количество возможных созданных пользователем групп",
-            "model": ErrorResponseModel,
-        },
         409: {
             "description": "Группа с таким названием уже создана",
             "model": ErrorResponseModel,
@@ -125,6 +123,7 @@ async def create_group_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> GroupDetailSchema:
     return await create_group(created_group, token_payload.sub, session)
+
 
 @group_router.patch(
     "/{group_id}",
@@ -162,11 +161,11 @@ async def create_group_route(
         500: {"description": "Внутренняя ошибка сервера."},
     },
 )
-async def patch_group_avatar_route(
-        group_id: Annotated[UUID, Path(...)],
-        patch_schema: Annotated[PatchGroupSchema, Body(...)],
-        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
+async def patch_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    patch_schema: Annotated[PatchGroupSchema, Body(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> GroupDetailSchema:
     return await patch_group(
         patched_group=patch_schema,
@@ -354,12 +353,12 @@ async def get_group_route(
     "/invitations/received",
     status_code=status.HTTP_200_OK,
     name="Получение списка групп, куда вы приглашены",
-    response_model=list[ReceivedInvitationSchema],
+    response_model=list[GroupInvitationSchema],
     description="Создает группу, в которой пользователь будет являться владельцем",
     responses={
         200: {
             "description": "Группа успешно найдена",
-            "model": list[ReceivedInvitationSchema],
+            "model": list[GroupInvitationSchema],
         },
         401: {
             "description": "Access token не найден, истек или некорректен",
@@ -384,7 +383,7 @@ async def get_received_invitations_route(
         int, Query(ge=1, le=100, description="Максимальное количество результатов")
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> list[ReceivedInvitationSchema]:
+) -> list[GroupInvitationSchema]:
     return await get_received_invitations(
         invitation_status=invitation_status,
         limit=limit,
