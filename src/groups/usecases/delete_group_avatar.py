@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...minio import AVATARS_BUCKET_NAME, get_minio_client
-from ..exceptions import NotEnoughPermissionsException
+from ..exceptions import NotEnoughGroupPermissionsException
 from ..models import GroupPermission
 from ..services import get_group_with_members, group_member_has_permission
 
@@ -30,7 +30,7 @@ async def delete_group_avatar(
             GroupPermission.FULL_ACCESS,
             GroupPermission.MANAGE_GROUP,
         ):
-            raise NotEnoughPermissionsException()
+            raise NotEnoughGroupPermissionsException()
 
     async with get_minio_client() as client:
         await client.delete_object(

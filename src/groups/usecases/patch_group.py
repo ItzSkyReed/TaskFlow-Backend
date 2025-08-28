@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import GroupPermission
 from ..exceptions import (
     GroupWithSuchNameAlreadyExistsException,
-    NotEnoughPermissionsException,
     GroupSizeConflictException,
+    NotEnoughGroupPermissionsException,
 )
 from ..schemas import GroupDetailSchema, PatchGroupSchema
 from ..services import (
@@ -50,7 +50,7 @@ async def patch_group(
                 GroupPermission.FULL_ACCESS,
                 GroupPermission.MANAGE_GROUP,
         ):
-            raise NotEnoughPermissionsException()
+            raise NotEnoughGroupPermissionsException()
 
     if patched_group.name:
         group.name = patched_group.name

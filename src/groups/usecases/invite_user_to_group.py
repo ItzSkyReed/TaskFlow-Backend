@@ -8,7 +8,7 @@ from ..exceptions import (
     CannotInviteYourselfException,
     CannotUserThatIsAlreadyInThatGroupException,
     GroupNotFoundByIdException,
-    NotEnoughPermissionsException,
+    NotEnoughGroupPermissionsException,
 )
 from ..models import (
     Group,
@@ -64,7 +64,7 @@ async def invite_user_to_group(
         GroupPermission.FULL_ACCESS,
         GroupPermission.INVITE_MEMBERS,
     ):
-        raise NotEnoughPermissionsException()
+        raise NotEnoughGroupPermissionsException()
 
     stmt = (
         insert(GroupInvitation)

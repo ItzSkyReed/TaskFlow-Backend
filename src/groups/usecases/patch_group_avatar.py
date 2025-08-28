@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...minio import AVATARS_BUCKET_NAME, get_minio_client
 from ...utils import validate_avatar_file
-from ..exceptions import NotEnoughPermissionsException
+from ..exceptions import NotEnoughGroupPermissionsException
 from ..models import GroupPermission
 from ..schemas import GroupDetailSchema
 from ..services import (
@@ -42,7 +42,7 @@ async def patch_group_avatar(
             GroupPermission.FULL_ACCESS,
             GroupPermission.MANAGE_GROUP,
         ):
-            raise NotEnoughPermissionsException()
+            raise NotEnoughGroupPermissionsException()
 
     async with get_minio_client() as client:
         await client.put_object(

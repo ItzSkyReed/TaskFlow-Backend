@@ -53,7 +53,13 @@ class GroupNotFoundByIdException(BaseAPIException):
         )
 
 
-class NotEnoughPermissionsException(BaseAPIException):
+class NotEnoughGroupPermissionsException(BaseAPIException):
+    """
+    403
+
+    Возвращается если недостаточно прав для изменения ресурса
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
