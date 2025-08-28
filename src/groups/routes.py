@@ -397,7 +397,7 @@ async def get_received_invitations_route(
     status_code=status.HTTP_200_OK,
     name="Отправка ответа на определенное приглашение в группу",
     response_model=GroupInvitationSchema,
-    description="Создает группу, в которой пользователь будет являться владельцем",
+    description="Принимает ответ пользователя на то, будет ли он вступать в опред. группу или нет",
     responses={
         200: {
             "description": "Приглашение успешно обработано (отклонено/принято)",
