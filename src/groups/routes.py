@@ -22,6 +22,7 @@ from .schemas import (
 from .usecases import (
     create_group,
     delete_group_avatar,
+    delete_user_from_group,
     get_group,
     get_received_invitations,
     get_user_groups,
@@ -470,3 +471,54 @@ async def get_user_groups_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> list[GroupSummarySchema]:
     return await get_user_groups(user_id, session)
+
+
+@group_router.delete(
+    "/{group_id}/members/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Исключение пользователя из группы",
+    response_model=None,
+    description="Позволяет владельцу группы или пользователям с правами исключить пользователя из неё",
+    responses={
+        204: {"description": "Пользователь успешно исключен", "model": None},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для изменения исключения пользователя из группы; Невозможно исключить создателя группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно исключить из группы себя",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def delete_user_from_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> None:
+    await delete_user_from_group(
+        group_id=group_id,
+        initiator_id=token_payload.sub,
+        user_to_kick_id=user_id,
+        session=session,
+    )
+    return None

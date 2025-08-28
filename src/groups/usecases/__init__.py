@@ -1,5 +1,6 @@
 from .create_group import create_group
 from .delete_group_avatar import delete_group_avatar
+from .delete_user_from_group import delete_user_from_group
 from .get_group import get_group
 from .get_received_invitations import get_received_invitations
 from .get_user_groups import get_user_groups
@@ -17,4 +18,5 @@ __all__ = [
     "get_received_invitations",
     "get_user_groups",
     "patch_group"
+    "delete_user_from_group",
 ]

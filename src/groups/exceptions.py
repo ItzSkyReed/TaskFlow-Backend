@@ -85,3 +85,35 @@ class GroupSizeConflictException(BaseAPIException):
             loc=["max_members_count"],
             err_type="group.conflict.too_many_members",
         )
+
+
+class CannotKickYourselfException(BaseAPIException):
+    """
+    400
+
+    Возвращается если пользователь пытается исключить сам себя из группы
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Нельзя исключить самого себя из группы",
+            loc=["group", "user_id"],
+            err_type="group.cannot_kick_self",
+        )
+
+
+class CannotKickGroupCreatorException(BaseAPIException):
+    """
+    403
+
+    Возвращается если пользователь пытается создателя группы
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            msg="Нельзя исключить создателя группы из неё",
+            loc=["group", "creator_id"],
+            err_type="group.cannot_kick_creator",
+        )
