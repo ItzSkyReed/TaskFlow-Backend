@@ -154,7 +154,7 @@ class InvitationSummarySchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ReceivedInvitationSchema(BaseModel):
+class GroupInvitationSchema(BaseModel):
     id: Annotated[UUID, Field(...)]
     group: Annotated[GroupSummarySchema, Field(...)]
     inviter: Annotated[PublicUserSchema, Field(...)]
