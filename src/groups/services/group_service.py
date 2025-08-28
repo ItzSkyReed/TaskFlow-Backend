@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
 from ...user import User
-from ..exceptions import GroupNotFoundByIdException
 from ..models import Group, GroupMember, GroupPermission, GroupUserPermission
+from ..exceptions import GroupNotFoundException
 from ..schemas import (
     GroupDetailSchema,
     GroupMemberSchema,
@@ -33,7 +33,7 @@ async def get_group_with_members(group_id: UUID, session: AsyncSession,*, with_f
         await session.execute(stmt)
     ).scalar_one_or_none()
     if group is None:
-        raise GroupNotFoundByIdException()
+        raise GroupNotFoundException()
     return group
 
 

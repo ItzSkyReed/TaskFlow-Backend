@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..exceptions import (
     CannotInviteYourselfException,
     CannotUserThatIsAlreadyInThatGroupException,
-    GroupNotFoundByIdException,
+    GroupNotFoundException,
     NotEnoughGroupPermissionsException,
 )
 from ..models import (
@@ -41,7 +41,7 @@ async def invite_user_to_group(
     if not (
         await session.execute(select(exists().where(Group.id == group_id)))
     ).scalar():
-        raise GroupNotFoundByIdException()
+        raise GroupNotFoundException()
 
     member_exists = (
         await session.execute(

@@ -43,7 +43,13 @@ class TooManyCreatedGroupsException(BaseAPIException):
         )
 
 
-class GroupNotFoundByIdException(BaseAPIException):
+class GroupNotFoundException(BaseAPIException):
+    """
+    404
+
+    Вызывается если группа не найдена
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
