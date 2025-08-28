@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from ...user import User
 from ..enums import InvitationStatus
-from ..models import GroupInvitation, Group
+from ..models import Group, GroupInvitation
 from ..schemas import GroupInvitationSchema
 from ..services import get_groups_member_count, get_groups_user_context
 from ..services.group_service import map_to_group_invitation_schema
@@ -31,7 +31,9 @@ async def get_received_invitations(
     stmt = (
         select(GroupInvitation)
         .options(
-            joinedload(GroupInvitation.group).selectinload(Group.users).joinedload(User.user_profile)
+            joinedload(GroupInvitation.group)
+            .selectinload(Group.users)
+            .joinedload(User.user_profile)
         )
         .where(GroupInvitation.invitee_id == invitee_id)
         .order_by(GroupInvitation.created_at.desc())

@@ -13,12 +13,13 @@ from .enums import InvitationStatus
 from .schemas import (
     CreateGroupSchema,
     GroupDetailSchema,
+    GroupInvitationSchema,
     GroupSearchSchema,
     GroupSummarySchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
     PatchGroupSchema,
-    GroupInvitationSchema, RespondToInvitationSchema,
+    RespondToInvitationSchema,
 )
 from .usecases import (
     create_group,
@@ -30,7 +31,8 @@ from .usecases import (
     invite_user_to_group,
     patch_group,
     patch_group_avatar,
-    search_groups, respond_to_invitation,
+    respond_to_invitation,
+    search_groups,
 )
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
@@ -392,6 +394,7 @@ async def get_received_invitations_route(
         invitee_id=token_payload.sub,
     )
 
+
 @group_router.patch(
     "/invitations/{invitation_id}",
     status_code=status.HTTP_200_OK,
@@ -408,7 +411,10 @@ async def get_received_invitations_route(
             "model": ErrorResponseModel,
         },
         404: {"description": "Приглашения не существует", "model": ErrorResponseModel},
-        409: {"description": "Группа переполнена пользователями", "model": ErrorResponseModel},
+        409: {
+            "description": "Группа переполнена пользователями",
+            "model": ErrorResponseModel,
+        },
         422: {
             "description": "Некорректные данные в запросе (валидация схемы).",
             "model": ErrorResponseModel,
@@ -417,10 +423,13 @@ async def get_received_invitations_route(
     },
 )
 async def respond_to_invitation_route(
-        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
-        invitation_id: Annotated[UUID, Path(...)],
-        response: Annotated[RespondToInvitationSchema, Body(...),],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    invitation_id: Annotated[UUID, Path(...)],
+    response: Annotated[
+        RespondToInvitationSchema,
+        Body(...),
+    ],
 ) -> GroupInvitationSchema:
     return await respond_to_invitation(
         respond_status=response,
@@ -428,6 +437,7 @@ async def respond_to_invitation_route(
         invitation_id=invitation_id,
         user_id=token_payload.sub,
     )
+
 
 @group_router.get(
     "/mine/groups",

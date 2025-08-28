@@ -4,13 +4,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from .. import InvitationStatus, GroupMember
-from ..exceptions import GroupInvitationNotFoundException, GroupIsFullException
-from ..models import GroupInvitation, Group
-from ..schemas import GroupInvitationSchema, RespondToInvitationSchema
-from ..services import get_groups_user_context, get_groups_member_count
-from ..services.group_service import map_to_group_invitation_schema
 from ...user import User
+from .. import GroupMember, InvitationStatus
+from ..exceptions import GroupInvitationNotFoundException, GroupIsFullException
+from ..models import Group, GroupInvitation
+from ..schemas import GroupInvitationSchema, RespondToInvitationSchema
+from ..services import get_groups_member_count, get_groups_user_context
+from ..services.group_service import map_to_group_invitation_schema
 
 
 async def respond_to_invitation(
@@ -30,9 +30,14 @@ async def respond_to_invitation(
     invitation = (
         await session.execute(
             select(GroupInvitation)
-            .where(GroupInvitation.id == invitation_id, GroupInvitation.invitee_id == user_id)
+            .where(
+                GroupInvitation.id == invitation_id,
+                GroupInvitation.invitee_id == user_id,
+            )
             .options(
-                joinedload(GroupInvitation.group).selectinload(Group.members).joinedload(User.user_profile)
+                joinedload(GroupInvitation.group)
+                .selectinload(Group.members)
+                .joinedload(User.user_profile)
             )
             .with_for_update(of=Group)
         )
@@ -54,12 +59,12 @@ async def respond_to_invitation(
 
     group_seq = [invitation.group]
 
-    groups_user_context_map = await get_groups_user_context(
-        group_seq, user_id, session
-    )
+    groups_user_context_map = await get_groups_user_context(group_seq, user_id, session)
 
     members_count = await get_groups_member_count(group_seq, session)
 
-    return map_to_group_invitation_schema(invitation, groups_user_context_map[invitation.group.id], members_count[invitation.group.id])
-
-
+    return map_to_group_invitation_schema(
+        invitation,
+        groups_user_context_map[invitation.group.id],
+        members_count[invitation.group.id],
+    )

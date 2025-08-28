@@ -163,5 +163,8 @@ class GroupInvitationSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class RespondToInvitationSchema(BaseModel):
-    response: Annotated[Literal[InvitationStatus.REJECTED, InvitationStatus.ACCEPTED], Field(...)]
+    response: Annotated[
+        Literal[InvitationStatus.REJECTED, InvitationStatus.ACCEPTED], Field(...)
+    ]

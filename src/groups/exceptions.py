@@ -153,6 +153,7 @@ class GroupInvitationNotFoundException(BaseAPIException):
             err_type="group.invitation.not_found",
         )
 
+
 class GroupIsFullException(BaseAPIException):
     """
     409
