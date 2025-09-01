@@ -4,6 +4,7 @@ from .group_service import (
     get_groups_user_context,
     group_member_has_permission,
 )
+from .mappings import *  # noqa: F403
 
 __all__ = [
     "get_group_with_members",
