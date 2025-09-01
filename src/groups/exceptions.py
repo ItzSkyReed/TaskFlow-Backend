@@ -126,7 +126,7 @@ class CannotKickGroupCreatorException(BaseAPIException):
     """
     403
 
-    Возвращается если пользователь пытается создателя группы
+    Возвращается если пользователь пытается исключить создателя группы
     """
 
     def __init__(self):
@@ -137,6 +137,20 @@ class CannotKickGroupCreatorException(BaseAPIException):
             err_type="group.cannot_kick_creator",
         )
 
+class CreatorCantLeaveFromGroupException(BaseAPIException):
+    """
+    409
+
+    Возвращается если пользователь, являющий создателем группы пытается выйти из нее
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Нельзя будучи создателем группы выйти из нее",
+            loc=["group", "creator_id"],
+            err_type="group.conflict.creator_cant_leave_from_group",
+        )
 
 class GroupInvitationNotFoundException(BaseAPIException):
     """

@@ -9,7 +9,7 @@ from .patch_group import patch_group
 from .patch_group_avatar import patch_group_avatar
 from .respond_to_invitation import respond_to_invitation
 from .search_groups import search_groups
-
+from .leave_from_group import leave_from_group
 __all__ = [
     "create_group",
     "patch_group_avatar",
@@ -22,4 +22,5 @@ __all__ = [
     "patch_group",
     "delete_user_from_group",
     "respond_to_invitation",
+    "leave_from_group"
 ]

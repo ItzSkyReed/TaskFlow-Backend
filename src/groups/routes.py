@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Annotated
 from uuid import UUID
 
@@ -32,7 +33,7 @@ from .usecases import (
     patch_group,
     patch_group_avatar,
     respond_to_invitation,
-    search_groups,
+    search_groups, leave_from_group,
 )
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
@@ -80,7 +81,7 @@ async def search_groups_route(
         int, Query(ge=1, le=100, description="Максимальное количество результатов")
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> list[GroupSearchSchema]:
+) -> Sequence[GroupSearchSchema]:
     return await search_groups(
         user_id=token_payload.sub,
         name=name,
@@ -385,7 +386,7 @@ async def get_received_invitations_route(
         int, Query(ge=1, le=100, description="Максимальное количество результатов")
     ] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> list[GroupInvitationSchema]:
+) -> Sequence[GroupInvitationSchema]:
     return await get_received_invitations(
         invitation_status=invitation_status,
         limit=limit,
@@ -473,7 +474,7 @@ async def respond_to_invitation_route(
 async def get_mine_groups_route(
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> list[GroupSummarySchema]:
+) -> Sequence[GroupSummarySchema]:
     return await get_user_groups(token_payload.sub, session)
 
 
@@ -514,9 +515,52 @@ async def get_mine_groups_route(
 async def get_user_groups_route(
     user_id: Annotated[UUID, Path(description="UUID пользователя")],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> list[GroupSummarySchema]:
+) -> Sequence[GroupSummarySchema]:
     return await get_user_groups(user_id, session)
 
+@group_router.delete(
+    "/{group_id}/members/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Выход пользователя из группы",
+    response_model=None,
+    description="Позволяет  пользователю выйти из определенной группы",
+    responses={
+        204: {"description": "Пользователь успешно вышел", "model": None},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно создателю группы выйти из неё",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def leave_from_group_route(
+        group_id: Annotated[UUID, Path(...)],
+        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> None:
+    await leave_from_group(
+        group_id=group_id,
+        user_id=token_payload.sub,
+        session=session,
+    )
+    return None
 
 @group_router.delete(
     "/{group_id}/members/{user_id}",
