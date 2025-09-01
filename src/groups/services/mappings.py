@@ -152,7 +152,7 @@ async def map_to_group_search_schemas(
     ]
 
 
-@ObjectMapper.register(Group, GroupSearchSchema)
+@ObjectMapper.register(Group, GroupInvitationSchema)
 async def map_to_group_invitation_schema(
     invitation: GroupInvitation, user_id: UUID, session: AsyncSession
 ) -> GroupInvitationSchema:
@@ -168,7 +168,7 @@ async def map_to_group_invitation_schema(
     )
 
 
-@ObjectMapper.register_bulk(Group, GroupSearchSchema)
+@ObjectMapper.register_bulk(Group, GroupInvitationSchema)
 async def map_to_group_invitation_schemas(
     invitations: Sequence[GroupInvitation], user_id: UUID, session: AsyncSession
 ) -> list[GroupInvitationSchema]:
