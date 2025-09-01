@@ -7,3 +7,4 @@ coverage[toml]
 httpx
 anyio
 pytest-order
+ty>=0.0.1a17

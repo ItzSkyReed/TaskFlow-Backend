@@ -3,14 +3,13 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user import User
 from .. import GroupMember, InvitationStatus
 from ..exceptions import GroupInvitationNotFoundException, GroupIsFullException
 from ..models import Group, GroupInvitation
 from ..schemas import GroupInvitationSchema, RespondToInvitationSchema
-from ..services import get_groups_member_count, get_groups_user_context
-from ..services.group_service import map_to_group_invitation_schema
 
 
 async def respond_to_invitation(
@@ -57,14 +56,4 @@ async def respond_to_invitation(
 
     await session.commit()
 
-    group_seq = [invitation.group]
-
-    groups_user_context_map = await get_groups_user_context(group_seq, user_id, session)
-
-    members_count = await get_groups_member_count(group_seq, session)
-
-    return map_to_group_invitation_schema(
-        invitation,
-        groups_user_context_map[invitation.group.id],
-        members_count[invitation.group.id],
-    )
+    return await ObjectMapper.map(invitation, GroupInvitationSchema, user_id=user_id, session=session)

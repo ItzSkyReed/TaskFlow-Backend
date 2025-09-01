@@ -1,13 +1,11 @@
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ..schemas import GroupDetailSchema
 from ..services import (
     get_group_with_members,
-    get_groups_member_count,
-    get_groups_user_context,
-    map_to_group_detail_schema,
 )
 
 
@@ -24,12 +22,4 @@ async def get_group(
     """
     group = await get_group_with_members(group_id, session)
 
-    group_seq = [group]
-
-    groups_user_context_map = await get_groups_user_context(group_seq, user_id, session)
-
-    members_count = await get_groups_member_count(group_seq, session)
-
-    return map_to_group_detail_schema(
-        group, groups_user_context_map[group.id], members_count[group.id]
-    )
+    return await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)

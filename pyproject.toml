@@ -21,7 +21,7 @@ dependencies = [
     "aioboto3",
     "types-aiobotocore-s3",
     "pillow",
-    "ty>=0.0.1a17"
+    "sqlalchemy-pydantic-mapper"
 ]
 
 [tool.ruff]

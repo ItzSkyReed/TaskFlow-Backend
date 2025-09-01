@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from .. import GroupPermission
 from ..exceptions import (
@@ -12,10 +13,7 @@ from ..exceptions import (
 from ..schemas import GroupDetailSchema, PatchGroupSchema
 from ..services import (
     get_group_with_members,
-    get_groups_member_count,
-    get_groups_user_context,
     group_member_has_permission,
-    map_to_group_detail_schema,
 )
 
 
@@ -74,13 +72,4 @@ async def patch_group(
         raise  # pragma: no cover
 
     await session.commit()
-    group_seq = [group]
-    groups_user_context_map = await get_groups_user_context(
-        group_seq, initiator_id, session
-    )
-
-    members_count = await get_groups_member_count(group_seq, session)
-
-    return map_to_group_detail_schema(
-        group, groups_user_context_map[group.id], members_count[group.id]
-    )
+    return await ObjectMapper.map(group, GroupDetailSchema, user_id=initiator_id, session=session)

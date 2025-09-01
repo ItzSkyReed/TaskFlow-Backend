@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user.models import User
 from ..constants import MAX_CREATED_GROUPS
@@ -15,16 +16,13 @@ from ..models import Group, GroupInvitation, GroupMember, InvitationStatus
 from ..schemas import CreateGroupSchema, GroupDetailSchema
 from ..services import (
     get_group_with_members,
-    get_groups_member_count,
-    get_groups_user_context,
-    map_to_group_detail_schema,
 )
 
 
 async def create_group(
-    created_group: CreateGroupSchema,
-    user_id: UUID,
-    session: AsyncSession,
+        created_group: CreateGroupSchema,
+        user_id: UUID,
+        session: AsyncSession,
 ) -> GroupDetailSchema:
     """
     Создание группы
@@ -91,11 +89,5 @@ async def create_group(
     await session.commit()
 
     group = await get_group_with_members(group.id, session)
-    group_seq = [group]
-    groups_user_context_map = await get_groups_user_context(group_seq, user_id, session)
 
-    members_count = await get_groups_member_count(group_seq, session)
-
-    return map_to_group_detail_schema(
-        group, groups_user_context_map[group.id], members_count[group.id]
-    )
+    return await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)

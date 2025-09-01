@@ -1,16 +1,13 @@
+from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ..models import Group
 from ..schemas import GroupSearchSchema
-from ..services import (
-    get_groups_member_count,
-    get_groups_user_context,
-    map_to_group_search_schema,
-)
 
 
 async def search_groups(
@@ -19,7 +16,7 @@ async def search_groups(
     limit: int,
     offset: int,
     session: AsyncSession,
-) -> list[GroupSearchSchema]:
+) -> Sequence[GroupSearchSchema]:
     """
     Поиск групп по имени
     :param user_id: UUID пользователя вызывающего эндпоинт
@@ -68,13 +65,4 @@ async def search_groups(
     if not groups:
         return []
 
-    groups_user_context_map = await get_groups_user_context(groups, user_id, session)
-
-    members_count = await get_groups_member_count(groups, session)
-
-    return [
-        map_to_group_search_schema(
-            group, groups_user_context_map[group.id], members_count[group.id]
-        )
-        for group in groups
-    ]
+    return await ObjectMapper.map_bulk(groups, GroupSearchSchema, user_id=user_id, session=session)

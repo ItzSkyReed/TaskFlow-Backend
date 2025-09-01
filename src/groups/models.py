@@ -154,6 +154,10 @@ class GroupMember(Base):
         UniqueConstraint(
             "group_id", "user_id", name="uq_group_members_group_user"
         ),  # Гарантирует что пользователь не добавлен в группу дважды
+        # Индекс для быстоого поиска по user_id и group_id
+        Index("ix_gup_user_group_group_members", "user_id", "group_id", unique=True),
+        # Индекс для быстоого поиска по group_id
+        Index("ix_gup_group_group_members", "group_id", unique=True),
     )
 
 
@@ -322,4 +326,6 @@ class GroupUserPermission(Base):
         UniqueConstraint(
             "group_id", "user_id", "permission", name="uq_group_user_permission"
         ),
+        # Индекс для быстоого поиска по user_id и group_id
+        Index("ix_gup_user_group_group_user_permissions", "user_id", "group_id", unique=True),
     )

@@ -6,21 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
 from ...user import User
-from ...user.schemas import PublicUserSchema
 from ..exceptions import GroupNotFoundException
 from ..models import (
     Group,
-    GroupInvitation,
     GroupMember,
     GroupPermission,
     GroupUserPermission,
 )
 from ..schemas import (
-    GroupDetailSchema,
-    GroupInvitationSchema,
-    GroupMemberSchema,
-    GroupSearchSchema,
-    GroupSummarySchema,
     GroupUserContextSchema,
 )
 
@@ -108,6 +101,38 @@ async def get_groups_user_context(
         for g in groups
     }
 
+async def get_group_user_context(
+        group: Group, user_id: UUID, session: AsyncSession
+) -> GroupUserContextSchema:
+    """
+    Получает контекст пользователя в одной группе.
+
+    :param group: Группа
+    :param user_id: UUID пользователя для которого находится контекст
+    :param session: Асинхронная сессия SQLAlchemy
+    :return: Объект GroupUserContextSchema
+    """
+    GUP = aliased(GroupUserPermission)
+
+    perm_query = (
+        select(
+            func.array_agg(GUP.permission).filter(GUP.permission.isnot(None)).label("permissions")
+        )
+        .where(GUP.user_id == user_id, GUP.group_id == group.id)
+    )
+    permissions: list[str] | None = (await session.execute(perm_query)).scalar_one_or_none()
+
+    # проверка членства
+    mem_query = select(GroupMember.group_id).where(
+        GroupMember.user_id == user_id, GroupMember.group_id == group.id
+    )
+    is_member = (await session.execute(mem_query)).scalar_one_or_none() is not None
+
+    return GroupUserContextSchema(
+        permissions=permissions or [],
+        is_creator=(group.creator_id == user_id),
+        is_member=is_member,
+    )
 
 async def get_groups_member_count(
     groups: Sequence[Group], session: AsyncSession
@@ -133,69 +158,19 @@ async def get_groups_member_count(
 
     return {group_id: member_count for group_id, member_count in rows}
 
-
-def map_to_group_detail_schema(
-    group: Group, user_context: GroupUserContextSchema, group_members_count: int
-) -> GroupDetailSchema:
-    return GroupDetailSchema(
-        id=group.id,
-        name=group.name,
-        description=group.description,
-        creator_id=group.creator_id,
-        created_at=group.created_at,
-        max_members_count=group.max_members,
-        members=[
-            GroupMemberSchema.model_validate(member, from_attributes=True)
-            for member in group.members
-        ],
-        has_avatar=group.has_avatar,
-        me=user_context,
-        members_count=group_members_count,
+async def get_group_member_count(
+        group: Group, session: AsyncSession
+) -> int:
+    """
+    Находит кол-во участников для одной группы.
+    :param group: группа
+    :param session: Сессия
+    :return: актуальное кол-во участников
+    """
+    query = (
+        select(func.count(GroupMember.user_id))
+        .where(GroupMember.group_id == group.id)
     )
 
-
-def map_to_group_summary_schema(
-    group: Group, user_context: GroupUserContextSchema, group_members_count
-) -> GroupSummarySchema:
-    return GroupSummarySchema(
-        id=group.id,
-        name=group.name,
-        creator_id=group.creator_id,
-        created_at=group.created_at,
-        max_members_count=group.max_members,
-        has_avatar=group.has_avatar,
-        me=user_context,
-        members_count=group_members_count,
-    )
-
-
-def map_to_group_search_schema(
-    group: Group, user_context: GroupUserContextSchema, group_members_count
-) -> GroupSearchSchema:
-    return GroupSearchSchema(
-        id=group.id,
-        name=group.name,
-        max_members_count=group.max_members,
-        has_avatar=group.has_avatar,
-        me=user_context,
-        members_count=group_members_count,
-    )
-
-
-def map_to_group_invitation_schema(
-    invitation: GroupInvitation,
-    user_context: GroupUserContextSchema,
-    group_members_count: int,
-) -> GroupInvitationSchema:
-    return GroupInvitationSchema(
-        id=invitation.id,
-        status=invitation.status,
-        updated_at=invitation.updated_at,
-        created_at=invitation.created_at,
-        inviter=PublicUserSchema.model_validate(
-            invitation.inviter, from_attributes=True
-        ),
-        group=map_to_group_summary_schema(
-            invitation.group, user_context, group_members_count
-        ),
-    )
+    count = await session.scalar(query)
+    return count or 0
