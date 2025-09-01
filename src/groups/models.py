@@ -74,11 +74,13 @@ class Group(Base):
     )  # Создатель группы
 
     users: Mapped[list["User"]] = relationship(
-        secondary="group_members", back_populates="groups"
+        secondary="group_members",
+        back_populates="groups",
+        overlaps="group_memberships,group",
     )
 
     members: Mapped[list["GroupMember"]] = relationship(
-        back_populates="group", cascade="all, delete-orphan"
+        back_populates="group", cascade="all, delete-orphan", overlaps="users"
     )  # Участники группы
 
     invitations: Mapped[list["GroupInvitation"]] = relationship(
@@ -130,10 +132,10 @@ class GroupMember(Base):
     )  # Время входа пользователя в группу
 
     group: Mapped["Group"] = relationship(
-        back_populates="members"
+        back_populates="members", overlaps="groups"
     )  # Группа, участником которой является пользователь
     user: Mapped["User"] = relationship(
-        back_populates="group_memberships"
+        back_populates="group_memberships", overlaps="groups,users"
     )  # Пользователь
 
     permission_objs: Mapped[list["GroupUserPermission"]] = relationship(

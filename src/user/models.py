@@ -63,10 +63,14 @@ class User(Base):
         passive_deletes=True,
     )
 
-    group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
+    group_memberships: Mapped[list["GroupMember"]] = relationship(
+        back_populates="user", overlaps="groups,users"
+    )
 
     groups: Mapped[list["Group"]] = relationship(
-        secondary="group_members", back_populates="users"
+        secondary="group_members",
+        back_populates="users",
+        overlaps="group_memberships,members",
     )
 
     __table_args__ = (
