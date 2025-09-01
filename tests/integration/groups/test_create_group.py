@@ -158,7 +158,7 @@ async def test_create_group_limit_exceeded(client: AsyncClient):
             "max_members_count": 5,
         },
     )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_409_CONFLICT
 
 
 async def test_create_group_duplicate_name(client: AsyncClient):
