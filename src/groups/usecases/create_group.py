@@ -20,9 +20,9 @@ from ..services import (
 
 
 async def create_group(
-        created_group: CreateGroupSchema,
-        user_id: UUID,
-        session: AsyncSession,
+    created_group: CreateGroupSchema,
+    user_id: UUID,
+    session: AsyncSession,
 ) -> GroupDetailSchema:
     """
     Создание группы
@@ -90,4 +90,6 @@ async def create_group(
 
     group = await get_group_with_members(group.id, session)
 
-    return await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)
+    return await ObjectMapper.map(
+        group, GroupDetailSchema, user_id=user_id, session=session
+    )

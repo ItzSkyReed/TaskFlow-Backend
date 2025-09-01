@@ -4,19 +4,16 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..exceptions import (
-    CannotKickGroupCreatorException,
-    CannotKickYourselfException,
+    CreatorCantLeaveFromGroupException,
     GroupNotFoundException,
-    NotEnoughGroupPermissionsException, CreatorCantLeaveFromGroupException,
 )
-from ..models import Group, GroupMember, GroupPermission
-from ..services import group_member_has_permission
+from ..models import Group, GroupMember
 
 
 async def leave_from_group(
-        group_id: UUID,
-        user_id: UUID,
-        session: AsyncSession,
+    group_id: UUID,
+    user_id: UUID,
+    session: AsyncSession,
 ) -> None:
     """
     Удаление аватарки профиля группы
@@ -41,4 +38,3 @@ async def leave_from_group(
         .where(GroupMember.user_id == user_id)
     )
     await session.commit()
-

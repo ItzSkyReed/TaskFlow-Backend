@@ -137,6 +137,7 @@ class CannotKickGroupCreatorException(BaseAPIException):
             err_type="group.cannot_kick_creator",
         )
 
+
 class CreatorCantLeaveFromGroupException(BaseAPIException):
     """
     409
@@ -151,6 +152,7 @@ class CreatorCantLeaveFromGroupException(BaseAPIException):
             loc=["group", "creator_id"],
             err_type="group.conflict.creator_cant_leave_from_group",
         )
+
 
 class GroupInvitationNotFoundException(BaseAPIException):
     """

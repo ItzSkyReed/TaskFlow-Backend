@@ -56,4 +56,6 @@ async def respond_to_invitation(
 
     await session.commit()
 
-    return await ObjectMapper.map(invitation, GroupInvitationSchema, user_id=user_id, session=session)
+    return await ObjectMapper.map(
+        invitation, GroupInvitationSchema, user_id=user_id, session=session
+    )

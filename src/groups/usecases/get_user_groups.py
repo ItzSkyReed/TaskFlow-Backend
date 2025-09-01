@@ -37,4 +37,6 @@ async def get_user_groups(
     if not user.groups:
         return []
 
-    return await ObjectMapper.map_bulk(user.group, GroupSummarySchema, user_id=user_id, session=session)
+    return await ObjectMapper.map_bulk(
+        user.group, GroupSummarySchema, user_id=user_id, session=session
+    )

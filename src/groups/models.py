@@ -8,10 +8,11 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     String,
     UniqueConstraint,
-    func, ForeignKeyConstraint,
+    func,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
@@ -225,9 +226,9 @@ class GroupInvitation(Base):
             ),
         ),
         ForeignKeyConstraint(
-            ['group_id', 'inviter_id'],
-            ['group_members.group_id', 'group_members.user_id'],
-            ondelete='CASCADE'
+            ["group_id", "inviter_id"],
+            ["group_members.group_id", "group_members.user_id"],
+            ondelete="CASCADE",
         ),
     )
 
@@ -332,10 +333,15 @@ class GroupUserPermission(Base):
             "group_id", "user_id", "permission", name="uq_group_user_permission"
         ),
         # Индекс для быстоого поиска по user_id и group_id
-        Index("ix_gup_user_group_group_user_permissions", "user_id", "group_id", unique=True),
+        Index(
+            "ix_gup_user_group_group_user_permissions",
+            "user_id",
+            "group_id",
+            unique=True,
+        ),
         ForeignKeyConstraint(
-            ['group_id', 'user_id'],
-            ['group_members.group_id', 'group_members.user_id'],
-            ondelete='CASCADE'
+            ["group_id", "user_id"],
+            ["group_members.group_id", "group_members.user_id"],
+            ondelete="CASCADE",
         ),
     )

@@ -101,8 +101,9 @@ async def get_groups_user_context(
         for g in groups
     }
 
+
 async def get_group_user_context(
-        group: Group, user_id: UUID, session: AsyncSession
+    group: Group, user_id: UUID, session: AsyncSession
 ) -> GroupUserContextSchema:
     """
     Получает контекст пользователя в одной группе.
@@ -114,13 +115,14 @@ async def get_group_user_context(
     """
     GUP = aliased(GroupUserPermission)
 
-    perm_query = (
-        select(
-            func.array_agg(GUP.permission).filter(GUP.permission.isnot(None)).label("permissions")
-        )
-        .where(GUP.user_id == user_id, GUP.group_id == group.id)
-    )
-    permissions: list[str] | None = (await session.execute(perm_query)).scalar_one_or_none()
+    perm_query = select(
+        func.array_agg(GUP.permission)
+        .filter(GUP.permission.isnot(None))
+        .label("permissions")
+    ).where(GUP.user_id == user_id, GUP.group_id == group.id)
+    permissions: list[str] | None = (
+        await session.execute(perm_query)
+    ).scalar_one_or_none()
 
     # проверка членства
     mem_query = select(GroupMember.group_id).where(
@@ -133,6 +135,7 @@ async def get_group_user_context(
         is_creator=(group.creator_id == user_id),
         is_member=is_member,
     )
+
 
 async def get_groups_member_count(
     groups: Sequence[Group], session: AsyncSession
@@ -158,18 +161,16 @@ async def get_groups_member_count(
 
     return {group_id: member_count for group_id, member_count in rows}
 
-async def get_group_member_count(
-        group: Group, session: AsyncSession
-) -> int:
+
+async def get_group_member_count(group: Group, session: AsyncSession) -> int:
     """
     Находит кол-во участников для одной группы.
     :param group: группа
     :param session: Сессия
     :return: актуальное кол-во участников
     """
-    query = (
-        select(func.count(GroupMember.user_id))
-        .where(GroupMember.group_id == group.id)
+    query = select(func.count(GroupMember.user_id)).where(
+        GroupMember.group_id == group.id
     )
 
     count = await session.scalar(query)

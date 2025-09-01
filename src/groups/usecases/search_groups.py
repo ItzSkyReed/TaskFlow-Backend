@@ -65,4 +65,6 @@ async def search_groups(
     if not groups:
         return []
 
-    return await ObjectMapper.map_bulk(groups, GroupSearchSchema, user_id=user_id, session=session)
+    return await ObjectMapper.map_bulk(
+        groups, GroupSearchSchema, user_id=user_id, session=session
+    )

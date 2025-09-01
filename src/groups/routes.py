@@ -30,10 +30,11 @@ from .usecases import (
     get_received_invitations,
     get_user_groups,
     invite_user_to_group,
+    leave_from_group,
     patch_group,
     patch_group_avatar,
     respond_to_invitation,
-    search_groups, leave_from_group,
+    search_groups,
 )
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
@@ -518,6 +519,7 @@ async def get_user_groups_route(
 ) -> Sequence[GroupSummarySchema]:
     return await get_user_groups(user_id, session)
 
+
 @group_router.delete(
     "/{group_id}/members/me",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -551,9 +553,9 @@ async def get_user_groups_route(
     },
 )
 async def leave_from_group_route(
-        group_id: Annotated[UUID, Path(...)],
-        token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> None:
     await leave_from_group(
         group_id=group_id,
@@ -561,6 +563,7 @@ async def leave_from_group_route(
         session=session,
     )
     return None
+
 
 @group_router.delete(
     "/{group_id}/members/{user_id}",
