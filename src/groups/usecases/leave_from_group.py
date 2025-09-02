@@ -16,7 +16,7 @@ async def leave_from_group(
     session: AsyncSession,
 ) -> None:
     """
-    Удаление аватарки профиля группы
+    Выход из группы
     :param group_id: UUID группы
     :param user_id: UUID человека, который выходит из группы
     :param session: Сессия
