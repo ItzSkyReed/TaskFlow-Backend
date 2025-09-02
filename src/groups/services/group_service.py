@@ -34,7 +34,7 @@ async def get_group_with_members(
         .options(
             selectinload(Group.members)
             .selectinload(GroupMember.user)
-            .selectinload(User.user_profile)
+            .joinedload(User.user_profile)
         )
     )
 
