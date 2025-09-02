@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from starlette import status
 
 from ..exceptions import BaseAPIException
@@ -13,16 +15,16 @@ class UserNotFoundByIdentifierException(BaseAPIException):
         )
 
 
-class UserNotFoundByIdException(BaseAPIException):
+class UserNotFoundException(BaseAPIException):
     """
     404
     """
 
-    def __init__(self):
+    def __init__(self, user_id: UUID):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            msg="user with such id is not found",
-            loc=["access_token", "sub"],
+            msg=f"Пользователь с id: {user_id} не найден",
+            loc=["access_token", "body"],
             err_type="value_error.invalid_sub",
         )
 

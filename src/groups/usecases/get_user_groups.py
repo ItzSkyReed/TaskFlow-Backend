@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...groups.schemas import GroupSummarySchema
-from ...user.exceptions import UserNotFoundByIdException
+from ...user.exceptions import UserNotFoundException
 from ...user.models import User
 
 
@@ -32,7 +32,7 @@ async def get_user_groups(
     )
 
     if user is None:
-        raise UserNotFoundByIdException()
+        raise UserNotFoundException(user_id)
 
     if not user.groups:
         return []

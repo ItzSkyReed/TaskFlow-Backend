@@ -2,7 +2,7 @@ from .exceptions import (
     EmailAlreadyInUseException,
     LoginAlreadyInUseException,
     UserNotFoundByIdentifierException,
-    UserNotFoundByIdException,
+    UserNotFoundException,
 )
 from .models import User, UserProfile
 from .routes import profile_router
@@ -11,7 +11,7 @@ __all__ = [
     "User",
     "UserProfile",
     "UserNotFoundByIdentifierException",
-    "UserNotFoundByIdException",
+    "UserNotFoundException",
     "EmailAlreadyInUseException",
     "LoginAlreadyInUseException",
     "profile_router",
