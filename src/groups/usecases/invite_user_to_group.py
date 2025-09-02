@@ -5,8 +5,8 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..exceptions import (
+    CannotInviteUserThatIsAlreadyInThatGroupException,
     CannotInviteYourselfException,
-    CannotUserThatIsAlreadyInThatGroupException,
     GroupNotFoundException,
     NotEnoughGroupPermissionsException,
 )
@@ -55,7 +55,7 @@ async def invite_user_to_group(
     ).scalar()
 
     if member_exists:
-        raise CannotUserThatIsAlreadyInThatGroupException()
+        raise CannotInviteUserThatIsAlreadyInThatGroupException()
 
     if not group_member_has_permission(
         group_id,
