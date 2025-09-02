@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from starlette import status
 
 from src.exceptions import BaseAPIException
@@ -119,6 +121,38 @@ class CannotKickYourselfException(BaseAPIException):
             msg="Нельзя исключить самого себя из группы",
             loc=["group", "user_id"],
             err_type="group.cannot_kick_self",
+        )
+
+
+class CannotChangeCreatorToYourselfException(BaseAPIException):
+    """
+    400
+
+    Возвращается если пользователь пытается самому себе передать создателя группы
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Нельзя самому себе передать создателя группы",
+            loc=["group", "user_id"],
+            err_type="group.cannot_change_creator_to_yourself",
+        )
+
+
+class RequiredUserNotInGroupException(BaseAPIException):
+    """
+    400
+
+    Возвращается если пользователь не состоит в группе, хотя это требуется запросом
+    """
+
+    def __init__(self, user_id: UUID):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg=f"Пользователь {user_id} не состоит в требуемой группе",
+            loc=["group", "user_id"],
+            err_type="group.required_user_not_in_group",
         )
 
 

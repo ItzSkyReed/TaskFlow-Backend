@@ -1,3 +1,4 @@
+from .change_group_creator import change_group_creator
 from .create_group import create_group
 from .delete_group_avatar import delete_group_avatar
 from .delete_user_from_group import delete_user_from_group
@@ -24,4 +25,5 @@ __all__ = [
     "delete_user_from_group",
     "respond_to_invitation",
     "leave_from_group",
+    "change_group_creator",
 ]

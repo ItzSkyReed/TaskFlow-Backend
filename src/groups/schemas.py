@@ -168,3 +168,7 @@ class RespondToInvitationSchema(BaseModel):
     response: Annotated[
         Literal[InvitationStatus.REJECTED, InvitationStatus.ACCEPTED], Field(...)
     ]
+
+
+class ChangeGroupCreatorSchema(BaseModel):
+    new_creator_id: UUID

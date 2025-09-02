@@ -12,6 +12,7 @@ from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
 from .enums import InvitationStatus
 from .schemas import (
+    ChangeGroupCreatorSchema,
     CreateGroupSchema,
     GroupDetailSchema,
     GroupInvitationSchema,
@@ -23,6 +24,7 @@ from .schemas import (
     RespondToInvitationSchema,
 )
 from .usecases import (
+    change_group_creator,
     create_group,
     delete_group_avatar,
     delete_user_from_group,
@@ -614,3 +616,49 @@ async def delete_user_from_group_route(
         session=session,
     )
     return None
+
+
+@group_router.patch(
+    "/{group_id}/creator",
+    status_code=status.HTTP_200_OK,
+    name="Изменяет создателя группы",
+    response_model=GroupDetailSchema,
+    description="Позволяет владельцу группы изменить её владельца",
+    responses={
+        200: {"description": "Создатель успешно изменен", "model": GroupDetailSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Пользователь, пытающийся сменить владельца группы не является её актуальным владельцем",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def change_group_creator_route(
+    change_group_schema: Annotated[ChangeGroupCreatorSchema, Body(...)],
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await change_group_creator(
+        group_id=group_id,
+        actual_creator_user_id=token_payload.sub,
+        new_creator_user_id=change_group_schema.new_creator_id,
+        session=session,
+    )
