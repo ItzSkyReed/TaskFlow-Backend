@@ -5,7 +5,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, joinedload
 
-from ...user import User, UserNotFoundByIdentifierException, UserNotFoundByIdException
+from ...user import User, UserNotFoundByIdentifierException, UserNotFoundException
 from ..exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 
 
@@ -26,18 +26,22 @@ async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User
     return user
 
 
-async def get_user(user_id: UUID, session: AsyncSession) -> User:
+async def get_user(
+    user_id: UUID, session: AsyncSession, *, with_for_update: bool = False
+) -> User:
     """
     Получение пользователя по identifier
     :param user_id: UUID пользователя
+    :param with_for_update: добавляет FOR UPDATE
     :param session: Сессия
     :raises UserNotFoundByIdException: Если пользователь не найден
     """
-    user = (
-        await session.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    stmt = select(User).where(User.id == user_id)
+    if with_for_update:
+        stmt = stmt.with_for_update()
+    user = (await session.execute(stmt)).scalar_one_or_none()
     if user is None:
-        raise UserNotFoundByIdException()
+        raise UserNotFoundException(user_id)
     return user
 
 
@@ -56,7 +60,7 @@ async def get_user_with_profile(user_id: UUID, session: AsyncSession) -> User:
         )
     ).scalar_one_or_none()
     if user is None:
-        raise UserNotFoundByIdException()
+        raise UserNotFoundException()
     return user
 
 
