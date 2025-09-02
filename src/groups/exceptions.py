@@ -2,7 +2,7 @@ from uuid import UUID
 
 from starlette import status
 
-from src.exceptions import BaseAPIException
+from ..exceptions import BaseAPIException
 
 
 class CannotInviteYourselfException(BaseAPIException):
