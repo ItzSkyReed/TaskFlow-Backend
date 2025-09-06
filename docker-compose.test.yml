@@ -69,21 +69,6 @@ services:
     networks:
       - taskflow_net_test
 
-  migrate-test:
-    build: .
-    container_name: taskflow_migrate_test
-    restart: "no"
-    depends_on:
-      postgres-test:
-        condition: service_healthy
-    env_file:
-      - .env.test
-    environment:
-      MIGRATION_INSIDE_DOCKER: 1
-    command: alembic upgrade head
-    networks:
-      - taskflow_net_test
-
   web-test:
     build:
       context: .
@@ -105,7 +90,7 @@ services:
       - ./src:/fast_api/src
     networks:
       - taskflow_net_test
-    command: [ "pytest", "-s"]
+    command: ["sh", "-c", "alembic upgrade head && pytest -s"]
 
 networks:
   taskflow_net_test:
