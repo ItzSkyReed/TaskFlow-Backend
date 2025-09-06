@@ -10,12 +10,13 @@ from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
-from .enums import InvitationStatus
+from .enums import GroupPermission, InvitationStatus
 from .schemas import (
     ChangeGroupCreatorSchema,
     CreateGroupSchema,
     GroupDetailSchema,
     GroupInvitationSchema,
+    GroupMemberSchema,
     GroupSearchSchema,
     GroupSummarySchema,
     InvitationSummarySchema,
@@ -24,6 +25,7 @@ from .schemas import (
     RespondToInvitationSchema,
 )
 from .usecases import (
+    add_user_group_permission,
     change_group_creator,
     create_group,
     delete_group_avatar,
@@ -35,6 +37,7 @@ from .usecases import (
     leave_from_group,
     patch_group,
     patch_group_avatar,
+    remove_user_group_permission,
     respond_to_invitation,
     search_groups,
 )
@@ -658,6 +661,54 @@ async def add_user_group_permission_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> GroupMemberSchema:
     return await add_user_group_permission(
+        permission=permission,
+        group_id=group_id,
+        changer_user_id=token_payload.sub,
+        target_user_id=user_id,
+        session=session,
+    )
+
+
+@group_router.delete(
+    "/{group_id}/members/{user_id}/{permission}",
+    status_code=status.HTTP_200_OK,
+    name="Удаление права пользователя в группе",
+    response_model=GroupMemberSchema,
+    description="Позволяет пользователю удалять права в группе другому пользователю",
+    responses={
+        200: {"description": "Право успешно удалено", "model": GroupMemberSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для добавления данного права пользователю.",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно исключить из группы себя",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def remove_user_group_permission_route(
+    permission: Annotated[GroupPermission, Path(...)],
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupMemberSchema:
+    return await remove_user_group_permission(
         permission=permission,
         group_id=group_id,
         changer_user_id=token_payload.sub,
