@@ -618,6 +618,54 @@ async def delete_user_from_group_route(
     return None
 
 
+@group_router.post(
+    "/{group_id}/members/{user_id}/{permission}",
+    status_code=status.HTTP_200_OK,
+    name="Добавление права пользователю в группе",
+    response_model=GroupMemberSchema,
+    description="Позволяет пользователю добавлять права в группе другому пользователю",
+    responses={
+        200: {"description": "Право успешно добавлено", "model": GroupMemberSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для добавления данного права пользователю.",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно исключить из группы себя",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def add_user_group_permission_route(
+    permission: Annotated[GroupPermission, Path(...)],
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupMemberSchema:
+    return await add_user_group_permission(
+        permission=permission,
+        group_id=group_id,
+        changer_user_id=token_payload.sub,
+        target_user_id=user_id,
+        session=session,
+    )
+
+
 @group_router.patch(
     "/{group_id}/creator",
     status_code=status.HTTP_200_OK,

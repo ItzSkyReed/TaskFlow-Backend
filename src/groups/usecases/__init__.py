@@ -1,3 +1,4 @@
+from .add_user_group_permissions import add_user_group_permission
 from .change_group_creator import change_group_creator
 from .create_group import create_group
 from .delete_group_avatar import delete_group_avatar
@@ -9,6 +10,7 @@ from .invite_user_to_group import invite_user_to_group
 from .leave_from_group import leave_from_group
 from .patch_group import patch_group
 from .patch_group_avatar import patch_group_avatar
+from .remove_user_group_permissions import remove_user_group_permission
 from .respond_to_invitation import respond_to_invitation
 from .search_groups import search_groups
 
@@ -26,4 +28,6 @@ __all__ = [
     "respond_to_invitation",
     "leave_from_group",
     "change_group_creator",
+    "add_user_group_permission",
+    "remove_user_group_permission",
 ]

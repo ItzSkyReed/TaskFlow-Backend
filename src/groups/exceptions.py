@@ -188,6 +188,22 @@ class CreatorCantLeaveFromGroupException(BaseAPIException):
         )
 
 
+class UserCantChangeOwnPermissionException(BaseAPIException):
+    """
+    409
+
+    Возвращается если пользователь пытается поменять собственные поля
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Нельзя менять собственные права",
+            loc=["group", "creator_id"],
+            err_type="group.conflict.user_cant_change_own_permissions",
+        )
+
+
 class GroupInvitationNotFoundException(BaseAPIException):
     """
     404

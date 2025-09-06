@@ -28,6 +28,6 @@ class GroupPermission(str, Enum):
     MANAGE_GROUP = (
         "EDIT_GROUP"  # Позволяет изменять name, avatar, max численность группы
     )
-    MANAGE_MEMBERS = "CONTROL_MEMBERS"  # Позволяет изменять права пользователей (кроме MANAGE_MEMBERS)
+    MANAGE_MEMBERS = "CONTROL_MEMBERS"  # Позволяет изменять права пользователей (кроме MANAGE_MEMBERS, FULL_ACCESS)
     MANAGE_TASKS = "MANAGE_TASKS"  # Позволяет создавать/изменять/удалять задачи
     FULL_ACCESS = "FULL_ACCESS"  # Полный доступ (включая добавление MANAGE_MEMBERS другим пользователям)
