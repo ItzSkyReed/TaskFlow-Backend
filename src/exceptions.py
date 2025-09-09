@@ -25,6 +25,20 @@ class BaseAPIException(HTTPException):
         super().__init__(status_code=status_code, detail=[detail], **kwargs)
 
 
+class SomethingWentWrongException(BaseAPIException):
+    def __init__(self):
+        """
+        500
+
+        Вызывается если неясно, что пошло не так.
+        """
+        super().__init__(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            msg="Something went wrong",
+            err_type="internal_server_error",
+        )
+
+
 class ExceededAvatarSizeException(BaseAPIException):
     def __init__(self):
         super().__init__(
