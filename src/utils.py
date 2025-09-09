@@ -3,6 +3,8 @@ import io
 from fastapi import UploadFile
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel
+from sqlalchemy import Result, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped
 
 from .constants import ALLOWED_AVATAR_CONTENT_TYPES, MAX_AVATAR_SIZE
@@ -17,6 +19,9 @@ from .exceptions import (
 async def update_model_from_schema(
     model: SQlAlchemyBase | Mapped[SQlAlchemyBase], schema: BaseModel
 ) -> None:
+    """
+    Deprecated
+    """
     update_data = schema.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(model, key, value)
@@ -45,3 +50,18 @@ async def validate_avatar_file(file: UploadFile) -> None:
         raise InvalidAvatarFileException() from err
 
     file.file.seek(0)
+
+
+async def lock_rows(
+    session: AsyncSession, table: type[SQlAlchemyBase], *where_clauses
+) -> Result:
+    """
+    Заблокировать строки таблицы `table`, соответствующие условиям `where_clauses`.
+    Если условия не переданы, блокирует все строки таблицы.
+    """
+    stmt = select(table).with_for_update()
+
+    if where_clauses:
+        stmt = stmt.where(*where_clauses)
+
+    return await session.execute(stmt)
