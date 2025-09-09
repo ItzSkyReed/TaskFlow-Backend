@@ -13,6 +13,7 @@ from .patch_group_avatar import patch_group_avatar
 from .remove_user_group_permissions import remove_user_group_permission
 from .respond_to_invitation import respond_to_invitation
 from .search_groups import search_groups
+from .send_join_request import send_join_request
 
 __all__ = [
     "create_group",
@@ -30,4 +31,5 @@ __all__ = [
     "change_group_creator",
     "add_user_group_permission",
     "remove_user_group_permission",
+    "send_join_request",
 ]

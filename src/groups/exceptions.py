@@ -17,9 +17,29 @@ class CannotInviteYourselfException(BaseAPIException):
 
 class CannotInviteUserThatIsAlreadyInThatGroupException(BaseAPIException):
     def __init__(self):
+        """
+        400
+
+        Вызывается если приглашаемый пользователь уже в группе
+        """
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
-            msg="Cannot invite user that is already in group",
+            msg="Невозможно пригласить пользователя, который уже состоит в данной группе",
+            loc=["groups", "members"],
+            err_type="group.invitation.invited_user_already_in_group",
+        )
+
+
+class UserAlreadyInGroupRequestException(BaseAPIException):
+    def __init__(self):
+        """
+        400
+
+        Вызывается если приглашаемый пользователь уже в группе
+        """
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Невозможно отправить заявку в группу, в которой вы уже состоите",
             loc=["groups", "members"],
             err_type="group.invitation.invited_user_already_in_group",
         )

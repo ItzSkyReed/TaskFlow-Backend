@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, computed_f
 from ..config import get_settings
 from ..user.schemas import PublicUserSchema
 from .constants import NAME_PATTERN
-from .enums import InvitationStatus
+from .enums import InvitationStatus, JoinRequestStatus
 
 settings = get_settings()
 
@@ -172,3 +172,14 @@ class RespondToInvitationSchema(BaseModel):
 
 class ChangeGroupCreatorSchema(BaseModel):
     new_creator_id: UUID
+
+
+class JoinRequestSchema(BaseModel):
+    id: Annotated[UUID, Field(...)]
+    group_id: Annotated[UUID, Field(...)]
+    requester_id: Annotated[UUID, Field(...)]
+    status: Annotated[JoinRequestStatus, Field(...)]
+    created_at: Annotated[datetime, Field(...)]
+    updated_at: Annotated[datetime, Field(...)]
+
+    model_config = ConfigDict(from_attributes=True)

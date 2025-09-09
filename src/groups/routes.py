@@ -21,6 +21,7 @@ from .schemas import (
     GroupSummarySchema,
     InvitationSummarySchema,
     InviteUserToGroupSchema,
+    JoinRequestSchema,
     PatchGroupSchema,
     RespondToInvitationSchema,
 )
@@ -40,6 +41,7 @@ from .usecases import (
     remove_user_group_permission,
     respond_to_invitation,
     search_groups,
+    send_join_request,
 )
 
 group_router = APIRouter(prefix="/group", tags=["Group"])
@@ -759,5 +761,52 @@ async def change_group_creator_route(
         group_id=group_id,
         actual_creator_user_id=token_payload.sub,
         new_creator_user_id=change_group_schema.new_creator_id,
+        session=session,
+    )
+
+
+@group_router.post(
+    "/{group_id}/join-request/",
+    status_code=status.HTTP_200_OK,
+    name="Отправка пользователем запроса на вступление в группу",
+    response_model=JoinRequestSchema,
+    description="Позволяет владельцу группы изменить её владельца",
+    responses={
+        200: {
+            "description": "Успешная отправка заявки на вступление",
+            "model": JoinRequestSchema,
+        },
+        400: {
+            "description": "Пользователь уже в группе",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Группа полная",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def send_join_request_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> JoinRequestSchema:
+    return await send_join_request(
+        group_id=group_id,
+        requester_id=token_payload.sub,
         session=session,
     )
