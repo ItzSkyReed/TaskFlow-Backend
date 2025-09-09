@@ -68,8 +68,8 @@ async def change_group_creator(
 
     group.creator_id = new_creator_user_id
 
-    await session.commit()
-
-    return await ObjectMapper.map(
+    schemas = await ObjectMapper.map(
         group, GroupDetailSchema, user_id=actual_creator_user_id, session=session
     )
+    await session.commit()
+    return schemas

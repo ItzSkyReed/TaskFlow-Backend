@@ -25,6 +25,7 @@ async def patch_my_profile(
     if patch_schema.email is not None:
         user.email = patch_schema.email
 
+    # TODO Использовать ObjectMapper
     if patch_schema.profile is not None:
         await update_model_from_schema(user.user_profile, patch_schema.profile)
 

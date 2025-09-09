@@ -102,8 +102,7 @@ async def remove_user_group_permission(
             GroupUserPermission.permission == permission,
         )
     )
-
-    await session.commit()
     await session.refresh(target_member)
+    await session.commit()
 
     return GroupMemberSchema.model_validate(target_member, from_attributes=True)

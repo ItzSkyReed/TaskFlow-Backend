@@ -52,8 +52,9 @@ async def patch_group_avatar(
 
     group.has_avatar = True
     session.add(group)
-    await session.commit()
 
-    return await ObjectMapper.map(
+    schemas = await ObjectMapper.map(
         group, GroupDetailSchema, user_id=initiator_id, session=session
     )
+    await session.commit()
+    return schemas

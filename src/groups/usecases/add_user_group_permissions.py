@@ -104,8 +104,7 @@ async def add_user_group_permission(
             granted_by=changer_user_id,
         )
     )
-
-    await session.commit()
     await session.refresh(target_member)
+    await session.commit()
 
     return GroupMemberSchema.model_validate(target_member, from_attributes=True)
