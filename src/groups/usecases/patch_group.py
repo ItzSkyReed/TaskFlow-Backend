@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from asyncpg import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_pydantic_mapper import ObjectMapper
@@ -62,16 +63,15 @@ async def patch_group(
         await session.flush()
     except IntegrityError as err:
         await session.rollback()
-        if getattr(err.orig, "pgcode", None) == "23505":
-            # asyncpg UniqueViolationError;
-            uq_err = err.orig.__cause__  # ty: ignore[possibly-unbound-attribute]
-            if uq_err.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
+        if isinstance(err.orig, UniqueViolationError):
+            if err.orig.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
                 raise GroupWithSuchNameAlreadyExistsException(
-                    group_name=patched_group.name  # ty: ignore[invalid-argument-type]
+                    group_name=patched_group.name
                 ) from err
         raise  # pragma: no cover
 
-    await session.commit()
-    return await ObjectMapper.map(
+    schemas = await ObjectMapper.map(
         group, GroupDetailSchema, user_id=initiator_id, session=session
     )
+    await session.commit()
+    return schemas

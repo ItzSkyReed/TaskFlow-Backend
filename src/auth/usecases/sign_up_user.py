@@ -1,3 +1,4 @@
+from asyncpg import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,14 +33,11 @@ async def sign_up_user(
 
     except IntegrityError as err:
         await session.rollback()
-        if getattr(err.orig, "pgcode", None) == "23505":
-            # asyncpg UniqueViolationError
-            uq_err = err.orig.__cause__  # ty: ignore[possibly-unbound-attribute]
-            if uq_err.constraint_name == "ix_users_email":  # ty: ignore[unresolved-attribute]
+        if isinstance(err.orig, UniqueViolationError):
+            if err.orig.constraint_name == "ix_users_email":
                 raise EmailAlreadyInUseException() from err
-            elif uq_err.constraint_name == "ix_users_login":  # ty: ignore[unresolved-attribute]
+            elif err.orig.constraint_name == "ix_users_login":
                 raise LoginAlreadyInUseException() from err
-            raise
         raise  # pragma: no cover
 
     user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)

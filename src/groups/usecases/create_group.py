@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from asyncpg import UniqueViolationError
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -56,10 +57,9 @@ async def create_group(
         await session.flush()
     except IntegrityError as err:
         await session.rollback()
-        if getattr(err.orig, "pgcode", None) == "23505":
+        if isinstance(err.orig, UniqueViolationError):
             # asyncpg UniqueViolationError;
-            uq_err = err.orig.__cause__  # ty: ignore[possibly-unbound-attribute]
-            if uq_err.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
+            if err.orig.constraint_name == "ix_groups_name":
                 raise GroupWithSuchNameAlreadyExistsException(
                     group_name=created_group.name
                 ) from err
