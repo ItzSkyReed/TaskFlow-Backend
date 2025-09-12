@@ -31,7 +31,6 @@ async def respond_to_invitation(
             select(GroupInvitation)
             .where(
                 GroupInvitation.id == invitation_id,
-                GroupInvitation.invitee_id == user_id,
             )
             .options(
                 joinedload(GroupInvitation.group)
