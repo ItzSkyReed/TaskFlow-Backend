@@ -22,9 +22,7 @@ async def leave_from_group(
     :param session: Сессия
     """
 
-    group = (
-        await session.execute(select(Group).where(Group.id == group_id))
-    ).scalar_one_or_none()
+    group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
 
     if not group:
         raise GroupNotFoundException
@@ -33,8 +31,6 @@ async def leave_from_group(
         raise CreatorCantLeaveFromGroupException()
 
     await session.execute(
-        delete(GroupMember)
-        .where(GroupMember.group_id == group_id)
-        .where(GroupMember.user_id == user_id)
+        delete(GroupMember).where(GroupMember.group_id == group_id).where(GroupMember.user_id == user_id)
     )
     await session.commit()

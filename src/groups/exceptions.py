@@ -97,13 +97,13 @@ class NotEnoughGroupPermissionsException(BaseAPIException):
     """
     403
 
-    Возвращается если недостаточно прав для изменения ресурса
+    Возвращается если недостаточно прав для изменения или получения ресурса
     """
 
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
-            msg="У вас нет прав для изменения этой группы",
+            msg="У вас нет прав для изменения или получения ресурса",
             loc=["permissions"],
             err_type="group.permissions.forbidden",
         )

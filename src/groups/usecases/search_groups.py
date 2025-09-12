@@ -26,9 +26,7 @@ async def search_groups(
     :param session: Сессия
     """
 
-    await session.execute(
-        select(func.set_config("pg_trgm.similarity_threshold", "0.1", True))
-    )
+    await session.execute(select(func.set_config("pg_trgm.similarity_threshold", "0.1", True)))
 
     similarity_score = func.similarity(Group.name, name)
 
@@ -65,6 +63,4 @@ async def search_groups(
     if not groups:
         return []
 
-    return await ObjectMapper.map_bulk(
-        groups, GroupSearchSchema, user_id=user_id, session=session
-    )
+    return await ObjectMapper.map_bulk(groups, GroupSearchSchema, user_id=user_id, session=session)

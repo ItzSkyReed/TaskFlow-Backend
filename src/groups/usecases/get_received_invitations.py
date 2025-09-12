@@ -30,11 +30,7 @@ async def get_received_invitations(
 
     stmt = (
         select(GroupInvitation)
-        .options(
-            joinedload(GroupInvitation.group)
-            .selectinload(Group.users)
-            .joinedload(User.user_profile)
-        )
+        .options(joinedload(GroupInvitation.group).selectinload(Group.users).joinedload(User.user_profile))
         .where(GroupInvitation.invitee_id == invitee_id)
         .order_by(GroupInvitation.created_at.desc())
         .offset(offset)

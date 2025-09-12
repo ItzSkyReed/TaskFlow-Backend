@@ -30,9 +30,7 @@ class User(Base):
         primary_key=True,
         server_default=text("uuid_generate_v4()"),
     )
-    login: Mapped[str] = mapped_column(
-        String(32), unique=True, index=True, nullable=False
-    )
+    login: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
     email: Mapped[str] = mapped_column(
         String(319),  # RFC-validated max length
         unique=True,
@@ -43,9 +41,7 @@ class User(Base):
         String(128),  # достаточная длина для bcrypt/scrypt/argon2
         nullable=False,
     )
-    has_avatar: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default=text("false")
-    )
+    has_avatar: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
@@ -117,17 +113,11 @@ class UserProfile(Base):
         nullable=True,  # Макс. длина ТГ юзернейма
     )
 
-    show_discord: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    show_discord: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
-    show_telegram: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    show_telegram: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
-    show_email: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    show_email: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     __table_args__ = (
         # Проверка, что или оба параметра связанные с ТГ пустые, или оба имеют значение
@@ -150,6 +140,4 @@ class UserProfile(Base):
         ),
     )
 
-    user: Mapped["User"] = relationship(
-        "User", back_populates="user_profile", uselist=False
-    )
+    user: Mapped["User"] = relationship("User", back_populates="user_profile", uselist=False)

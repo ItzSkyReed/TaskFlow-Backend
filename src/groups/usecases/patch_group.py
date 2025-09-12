@@ -66,12 +66,10 @@ async def patch_group(
         if isinstance(err.orig, UniqueViolationError):
             if err.orig.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
                 raise GroupWithSuchNameAlreadyExistsException(
-                    group_name=patched_group.name
+                    group_name=patched_group.name  # ty: ignore invalid-argument-type
                 ) from err
         raise  # pragma: no cover
 
-    schemas = await ObjectMapper.map(
-        group, GroupDetailSchema, user_id=initiator_id, session=session
-    )
+    schemas = await ObjectMapper.map(group, GroupDetailSchema, user_id=initiator_id, session=session)
     await session.commit()
     return schemas

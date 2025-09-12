@@ -17,18 +17,14 @@ async def get_user_by_identifier(identifier: str, session: AsyncSession) -> User
     :raises UserNotFoundByIdentifierException: Если пользователь не найден
     """
     user = (
-        await session.execute(
-            select(User).where(or_(User.email == identifier, User.login == identifier))
-        )
+        await session.execute(select(User).where(or_(User.email == identifier, User.login == identifier)))
     ).scalar_one_or_none()
     if not user:
         raise UserNotFoundByIdentifierException()
     return user
 
 
-async def get_user(
-    user_id: UUID, session: AsyncSession, *, with_for_update: bool = False
-) -> User:
+async def get_user(user_id: UUID, session: AsyncSession, *, with_for_update: bool = False) -> User:
     """
     Получение пользователя по identifier
     :param user_id: UUID пользователя
@@ -53,14 +49,10 @@ async def get_user_with_profile(user_id: UUID, session: AsyncSession) -> User:
     :raises UserNotFoundByIdException: Если пользователь не найден
     """
     user = (
-        await session.execute(
-            select(User)
-            .options(joinedload(User.user_profile))
-            .filter(User.id == user_id)
-        )
+        await session.execute(select(User).options(joinedload(User.user_profile)).filter(User.id == user_id))
     ).scalar_one_or_none()
     if user is None:
-        raise UserNotFoundException()
+        raise UserNotFoundException(user_id)
     return user
 
 
@@ -86,6 +78,7 @@ async def check_email_unique(email: EmailStr, session: AsyncSession) -> None:
     :param session: Сессия
     :raises LoginAlreadyInUseException: Если такой email уже используется
     """
+    # noinspection PyTypeChecker
     if await user_exists_by_field(User.email, email, session):
         raise EmailAlreadyInUseException()
 

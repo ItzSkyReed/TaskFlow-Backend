@@ -30,18 +30,14 @@ def upgrade() -> None:
         existing_nullable=False,
     )
     op.drop_constraint(op.f("groups_creator_id_fkey"), "groups", type_="foreignkey")
-    op.create_foreign_key(
-        None, "groups", "users", ["creator_id"], ["id"], ondelete="RESTRICT"
-    )
+    op.create_foreign_key(None, "groups", "users", ["creator_id"], ["id"], ondelete="RESTRICT")
     op.add_column(
         "user_profiles",
         sa.Column("show_discord", sa.Boolean(), server_default="false", nullable=False),
     )
     op.add_column(
         "user_profiles",
-        sa.Column(
-            "show_telegram", sa.Boolean(), server_default="false", nullable=False
-        ),
+        sa.Column("show_telegram", sa.Boolean(), server_default="false", nullable=False),
     )
     op.add_column(
         "user_profiles",

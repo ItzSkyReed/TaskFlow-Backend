@@ -145,9 +145,7 @@ class SignInSchema(BaseModel):
         except ValidationError:
             pass
 
-        raise ValueError(
-            "Identifier must be a valid email or login (letters, digits, underscore)"
-        )
+        raise ValueError("Identifier must be a valid email or login (letters, digits, underscore)")
 
 
 class ChangePasswordSchema(BaseModel):

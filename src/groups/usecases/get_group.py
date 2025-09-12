@@ -22,6 +22,4 @@ async def get_group(
     """
     group = await get_group_with_members(group_id, session)
 
-    return await ObjectMapper.map(
-        group, GroupDetailSchema, user_id=user_id, session=session
-    )
+    return await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)

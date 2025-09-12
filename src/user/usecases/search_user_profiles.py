@@ -24,9 +24,7 @@ async def search_user_profiles(
     :param session: Сессия
     """
 
-    await session.execute(
-        select(func.set_config("pg_trgm.similarity_threshold", "0.1", True))
-    )
+    await session.execute(select(func.set_config("pg_trgm.similarity_threshold", "0.1", True)))
 
     similarity_score = func.similarity(User.login, login)
 
@@ -57,7 +55,4 @@ async def search_user_profiles(
     result = await session.execute(query)
     users_with_scores = result.scalars().all()
 
-    return [
-        UserSearchSchema.model_validate(user, from_attributes=True)
-        for user in users_with_scores
-    ]
+    return [UserSearchSchema.model_validate(user, from_attributes=True) for user in users_with_scores]

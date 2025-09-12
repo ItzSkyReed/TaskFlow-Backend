@@ -16,9 +16,7 @@ from .exceptions import (
 )
 
 
-async def update_model_from_schema(
-    model: SQlAlchemyBase | Mapped[SQlAlchemyBase], schema: BaseModel
-) -> None:
+async def update_model_from_schema(model: SQlAlchemyBase | Mapped[SQlAlchemyBase], schema: BaseModel) -> None:
     """
     Deprecated
     """
@@ -52,9 +50,7 @@ async def validate_avatar_file(file: UploadFile) -> None:
     file.file.seek(0)
 
 
-async def lock_rows(
-    session: AsyncSession, table: type[SQlAlchemyBase], *where_clauses
-) -> Result:
+async def lock_rows(session: AsyncSession, table: type[SQlAlchemyBase], *where_clauses) -> Result:
     """
     Заблокировать строки таблицы `table`, соответствующие условиям `where_clauses`.
     Если условия не переданы, блокирует все строки таблицы.

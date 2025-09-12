@@ -78,11 +78,7 @@ async def respond_to_join_request(
 
     if respond_status == JoinRequestStatus.APPROVED:
         await session.execute(
-            (
-                insert(GroupMember).values(
-                    group_id=join_request.group_id, user_id=join_request.requester_id
-                )
-            )
+            (insert(GroupMember).values(group_id=join_request.group_id, user_id=join_request.requester_id))
         )
         join_request.status = JoinRequestStatus.APPROVED
 

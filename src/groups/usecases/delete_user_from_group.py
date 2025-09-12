@@ -27,9 +27,7 @@ async def delete_user_from_group(
     :param session: Сессия
     """
 
-    group = (
-        await session.execute(select(Group).where(Group.id == group_id))
-    ).scalar_one_or_none()
+    group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
 
     if not group:
         raise GroupNotFoundException

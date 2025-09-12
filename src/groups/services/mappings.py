@@ -36,9 +36,7 @@ __all__ = [
 
 
 @ObjectMapper.register(Group, GroupDetailSchema)
-async def map_to_group_detail_schema(
-    group: Group, user_id: UUID, session: AsyncSession
-) -> GroupDetailSchema:
+async def map_to_group_detail_schema(group: Group, user_id: UUID, session: AsyncSession) -> GroupDetailSchema:
     return GroupDetailSchema(
         id=group.id,
         name=group.name,
@@ -46,10 +44,7 @@ async def map_to_group_detail_schema(
         creator_id=group.creator_id,
         created_at=group.created_at,
         max_members_count=group.max_members,
-        members=[
-            GroupMemberSchema.model_validate(member, from_attributes=True)
-            for member in group.members
-        ],
+        members=[GroupMemberSchema.model_validate(member, from_attributes=True) for member in group.members],
         has_avatar=group.has_avatar,
         me=await get_group_user_context(group, user_id, session),
         members_count=await get_group_member_count(group, session),
@@ -72,8 +67,7 @@ async def map_to_group_detail_schemas(
             created_at=group.created_at,
             max_members_count=group.max_members,
             members=[
-                GroupMemberSchema.model_validate(member, from_attributes=True)
-                for member in group.members
+                GroupMemberSchema.model_validate(member, from_attributes=True) for member in group.members
             ],
             has_avatar=group.has_avatar,
             me=user_contexts[group.id],
@@ -122,9 +116,7 @@ async def map_to_group_summary_schemas(
 
 
 @ObjectMapper.register(Group, GroupSearchSchema)
-async def map_to_group_search_schema(
-    group: Group, user_id: UUID, session: AsyncSession
-) -> GroupSearchSchema:
+async def map_to_group_search_schema(group: Group, user_id: UUID, session: AsyncSession) -> GroupSearchSchema:
     return GroupSearchSchema(
         id=group.id,
         name=group.name,
@@ -164,9 +156,7 @@ async def map_to_group_invitation_schema(
         status=invitation.status,
         updated_at=invitation.updated_at,
         created_at=invitation.created_at,
-        inviter=PublicUserSchema.model_validate(
-            invitation.inviter, from_attributes=True
-        ),
+        inviter=PublicUserSchema.model_validate(invitation.inviter, from_attributes=True),
         group=await map_to_group_summary_schema(invitation.group, user_id, session),
     )
 
@@ -184,14 +174,10 @@ async def map_to_group_invitation_schemas(
             status=invitation.status,
             updated_at=invitation.updated_at,
             created_at=invitation.created_at,
-            inviter=PublicUserSchema.model_validate(
-                invitation.inviter, from_attributes=True
-            ),
+            inviter=PublicUserSchema.model_validate(invitation.inviter, from_attributes=True),
             group=group_summary_schema,
         )
-        for invitation, group_summary_schema in zip(
-            invitations, groups_summary_schemas, strict=False
-        )
+        for invitation, group_summary_schema in zip(invitations, groups_summary_schemas, strict=False)
     ]
 
 
@@ -201,9 +187,7 @@ async def map_to_group_join_request_schema(
 ) -> JoinRequestSchema:
     return JoinRequestSchema(
         id=join_request.id,
-        requester=PublicUserSchema.model_validate(
-            join_request.requester, from_attributes=True
-        ),
+        requester=PublicUserSchema.model_validate(join_request.requester, from_attributes=True),
         status=join_request.status,
         updated_at=join_request.updated_at,
         created_at=join_request.created_at,
@@ -224,12 +208,8 @@ async def map_to_group_join_request_schemas(
             status=join_request.status,
             updated_at=join_request.updated_at,
             created_at=join_request.created_at,
-            requester=PublicUserSchema.model_validate(
-                join_request.requester, from_attributes=True
-            ),
+            requester=PublicUserSchema.model_validate(join_request.requester, from_attributes=True),
             group=group_summary_schema,
         )
-        for join_request, group_summary_schema in zip(
-            join_requests, groups_summary_schemas, strict=False
-        )
+        for join_request, group_summary_schema in zip(join_requests, groups_summary_schemas, strict=False)
     ]

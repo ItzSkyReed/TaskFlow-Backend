@@ -33,14 +33,10 @@ async def create_group(
     :raises TooManyCreatedGroupsException: Слишком много групп создано данным пользователем (403)
     :raises GroupWithSuchNameAlreadyExistsException: Группа с таким названием уже есть (409)
     """
-    user = (
-        await session.execute(select(User).where(User.id == user_id).with_for_update())
-    ).scalar_one()
+    user = (await session.execute(select(User).where(User.id == user_id).with_for_update())).scalar_one()
 
     created_count = (
-        await session.execute(
-            select(func.count(Group.id)).where(Group.creator_id == user_id)
-        )
+        await session.execute(select(func.count(Group.id)).where(Group.creator_id == user_id))
     ).scalar_one()
     if created_count >= MAX_CREATED_GROUPS:
         raise TooManyCreatedGroupsException()
@@ -59,10 +55,8 @@ async def create_group(
         await session.rollback()
         if isinstance(err.orig, UniqueViolationError):
             # asyncpg UniqueViolationError;
-            if err.orig.constraint_name == "ix_groups_name":
-                raise GroupWithSuchNameAlreadyExistsException(
-                    group_name=created_group.name
-                ) from err
+            if err.orig.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
+                raise GroupWithSuchNameAlreadyExistsException(group_name=created_group.name) from err
         raise  # pragma: no cover
 
     creator_membership = GroupMember(user=user, group=group)
@@ -90,6 +84,4 @@ async def create_group(
 
     group = await get_group_with_members(group.id, session)
 
-    return await ObjectMapper.map(
-        group, GroupDetailSchema, user_id=user_id, session=session
-    )
+    return await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)

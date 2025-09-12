@@ -21,6 +21,7 @@ async def sign_up_user(
     """
     hashed_password = PasswordUtils.hash_password(user_in.password)
 
+    # noinspection PyTypeChecker
     user = User(
         login=user_in.login,
         email=user_in.email,
@@ -34,9 +35,9 @@ async def sign_up_user(
     except IntegrityError as err:
         await session.rollback()
         if isinstance(err.orig, UniqueViolationError):
-            if err.orig.constraint_name == "ix_users_email":
+            if err.orig.constraint_name == "ix_users_email":  # ty: ignore[unresolved-attribute]
                 raise EmailAlreadyInUseException() from err
-            elif err.orig.constraint_name == "ix_users_login":
+            elif err.orig.constraint_name == "ix_users_login":  # ty: ignore[unresolved-attribute]
                 raise LoginAlreadyInUseException() from err
         raise  # pragma: no cover
 

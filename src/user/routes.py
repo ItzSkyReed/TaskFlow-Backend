@@ -64,14 +64,10 @@ async def search_profiles_route(
             pattern=USER_LOGIN_PATTERN,
         ),
     ],
-    limit: Annotated[
-        int, Query(ge=1, le=100, description="Максимальное количество результатов")
-    ] = 20,
+    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
 ) -> list[UserSearchSchema]:
-    return await search_user_profiles(
-        login=login, limit=limit, offset=offset, session=session
-    )
+    return await search_user_profiles(login=login, limit=limit, offset=offset, session=session)
 
 
 @profile_router.get(
@@ -194,9 +190,7 @@ async def delete_my_avatar_route(
     },
 )
 async def patch_my_avatar_route(
-    file: Annotated[
-        UploadFileSchema, File(..., description="Файл аватарки в формате webp")
-    ],
+    file: Annotated[UploadFileSchema, File(..., description="Файл аватарки в формате webp")],
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> UserSchema:

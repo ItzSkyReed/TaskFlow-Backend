@@ -33,9 +33,7 @@ async def respond_to_invitation(
                 GroupInvitation.id == invitation_id,
             )
             .options(
-                joinedload(GroupInvitation.group)
-                .selectinload(Group.members)
-                .joinedload(User.user_profile)
+                joinedload(GroupInvitation.group).selectinload(Group.members).joinedload(User.user_profile)
             )
             .with_for_update(of=Group)
         )
@@ -53,8 +51,6 @@ async def respond_to_invitation(
         invitation.status = InvitationStatus.ACCEPTED
         invitation.group.members.append(GroupMember(user_id=user_id))
 
-    schemas = await ObjectMapper.map(
-        invitation, GroupInvitationSchema, user_id=user_id, session=session
-    )
+    schemas = await ObjectMapper.map(invitation, GroupInvitationSchema, user_id=user_id, session=session)
     await session.commit()
     return schemas

@@ -30,9 +30,7 @@ async def add_new_refresh_token(user_id: UUID, token_jti: UUID) -> None:
             await redis_client.zremrangebyrank(key, 0, remove_count - 1)
 
 
-async def remove_all_refresh_tokens_except(
-    user_id: UUID, except_token_jti: UUID
-) -> None:
+async def remove_all_refresh_tokens_except(user_id: UUID, except_token_jti: UUID) -> None:
     """
     Удаляет refresh token пользователя кроме определенного
     :param user_id: UUID пользователя
@@ -47,9 +45,7 @@ async def remove_all_refresh_tokens_except(
         results = await pipe.execute()
         all_tokens = results[0]
 
-        tokens_to_remove = [
-            token for token in all_tokens if token != str(except_token_jti)
-        ]
+        tokens_to_remove = [token for token in all_tokens if token != str(except_token_jti)]
         if tokens_to_remove:
             pipe.zrem(key, *tokens_to_remove)
             await pipe.execute()

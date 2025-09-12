@@ -31,11 +31,7 @@ async def get_group_with_members(
     stmt = (
         select(Group)
         .where(Group.id == group_id)
-        .options(
-            selectinload(Group.members)
-            .selectinload(GroupMember.user)
-            .joinedload(User.user_profile)
-        )
+        .options(selectinload(Group.members).selectinload(GroupMember.user).joinedload(User.user_profile))
     )
 
     if with_for_update:
@@ -116,14 +112,10 @@ async def get_group_user_context(
     GUP = aliased(GroupUserPermission)
 
     perm_query = select(
-        func.array_agg(GUP.permission)
-        .filter(GUP.permission.isnot(None))
-        .label("permissions")
+        func.array_agg(GUP.permission).filter(GUP.permission.isnot(None)).label("permissions")
     ).where(GUP.user_id == user_id, GUP.group_id == group.id)
 
-    permissions: list[str] | None = (
-        await session.execute(perm_query)
-    ).scalar_one_or_none()
+    permissions: list[str] | None = (await session.execute(perm_query)).scalar_one_or_none()
 
     # проверка членства
     mem_query = select(GroupMember.group_id).where(
@@ -138,9 +130,7 @@ async def get_group_user_context(
     )
 
 
-async def get_groups_member_count(
-    groups: Sequence[Group], session: AsyncSession
-) -> dict[UUID, int]:
+async def get_groups_member_count(groups: Sequence[Group], session: AsyncSession) -> dict[UUID, int]:
     """
     Находит кол-во участников для всех переданных групп
     :param groups: группы, для которых нужно найти кол-во участников
@@ -170,9 +160,7 @@ async def get_group_member_count(group: Group, session: AsyncSession) -> int:
     :param session: Сессия
     :return: актуальное кол-во участников
     """
-    query = select(func.count(GroupMember.user_id)).where(
-        GroupMember.group_id == group.id
-    )
+    query = select(func.count(GroupMember.user_id)).where(GroupMember.group_id == group.id)
 
     count = await session.scalar(query)
     return count or 0

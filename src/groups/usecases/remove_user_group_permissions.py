@@ -44,10 +44,7 @@ async def remove_user_group_permission(
 
     group = await get_group_with_members(group_id, session, with_for_update=True)
 
-    if (
-        permission == GroupPermission.FULL_ACCESS
-        and changer_user_id != group.creator_id
-    ):
+    if permission == GroupPermission.FULL_ACCESS and changer_user_id != group.creator_id:
         raise NotEnoughGroupPermissionsException()
 
     # Получаем права того, кто меняет права

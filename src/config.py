@@ -11,9 +11,7 @@ class Settings(BaseSettings):
     project_name: str = "Template"
     version: str = "0.0.1"
     cors_allowed_origins: List[str] = []
-    environment: Literal["DEV", "PROD", "TEST"] = Field(
-        "DEV", description="App environment: DEV or PROD"
-    )
+    environment: Literal["DEV", "PROD", "TEST"] = Field("DEV", description="App environment: DEV or PROD")
     root_path: str
     api_prefix: str
     cdn_path: str

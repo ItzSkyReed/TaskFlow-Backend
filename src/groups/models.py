@@ -39,13 +39,9 @@ class Group(Base):
         server_default=text("uuid_generate_v4()"),
     )
 
-    name: Mapped[str] = mapped_column(
-        String(50), nullable=False, unique=True, index=True
-    )  # Название группы
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)  # Название группы
 
-    description: Mapped[str] = mapped_column(
-        String(2000), nullable=True
-    )  # Описание группы
+    description: Mapped[str] = mapped_column(String(2000), nullable=True)  # Описание группы
 
     max_members: Mapped[int] = mapped_column(
         SMALLINT(), nullable=False, server_default=text("100")
@@ -69,9 +65,7 @@ class Group(Base):
         DateTime, server_default=func.now(), nullable=False
     )  # Время создания группы
 
-    creator: Mapped["User"] = relationship(
-        back_populates="created_groups"
-    )  # Создатель группы
+    creator: Mapped["User"] = relationship(back_populates="created_groups")  # Создатель группы
 
     users: Mapped[list["User"]] = relationship(
         secondary="group_members",
@@ -223,9 +217,7 @@ class GroupInvitation(Base):
             "group_id",
             "invitee_id",  # поля, к которым применим
             unique=True,
-            postgresql_where=text(
-                f"status = '{InvitationStatus.PENDING.name}'::status"
-            ),
+            postgresql_where=text(f"status = '{InvitationStatus.PENDING.name}'::status"),
         ),
         ForeignKeyConstraint(
             ["group_id", "inviter_id"],
@@ -284,9 +276,7 @@ class GroupJoinRequest(Base):
             "group_id",
             "requester_id",
             unique=True,
-            postgresql_where=text(
-                f"status = '{JoinRequestStatus.PENDING.name}'::join_request_status"
-            ),
+            postgresql_where=text(f"status = '{JoinRequestStatus.PENDING.name}'::join_request_status"),
         ),
     )
 
@@ -333,9 +323,7 @@ class GroupUserPermission(Base):
 
     __table_args__ = (
         # Гарантирует, что нет дублированных прав.
-        UniqueConstraint(
-            "group_id", "user_id", "permission", name="uq_group_user_permission"
-        ),
+        UniqueConstraint("group_id", "user_id", "permission", name="uq_group_user_permission"),
         # Индекс для быстоого поиска по user_id и group_id
         Index(
             "ix_gup_user_group_group_user_permissions",

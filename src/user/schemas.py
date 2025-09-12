@@ -35,9 +35,7 @@ class UserSchema(UserAvatarMixin, BaseModel):
 
     id: UUID
 
-    login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
-    ]
+    login: Annotated[str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)]
 
     email: Annotated[EmailStr, Field(..., max_length=320)]
 
@@ -61,17 +59,13 @@ class ProfileSchema(BaseModel):
 class PublicUserSchema(UserAvatarMixin, BaseModel):
     id: UUID
 
-    login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
-    ]
+    login: Annotated[str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)]
 
     email: Annotated[EmailStr | None, Field(default=None, max_length=320)]
 
     registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
 
-    profile: Annotated[
-        "PublicProfileSchema", Field(..., validation_alias="user_profile")
-    ]
+    profile: Annotated["PublicProfileSchema", Field(..., validation_alias="user_profile")]
 
     @model_validator(mode="after")
     def check_profile_visibility(self):
@@ -84,12 +78,8 @@ class PublicUserSchema(UserAvatarMixin, BaseModel):
 
 class PublicProfileSchema(BaseModel):
     name: Annotated[str, Field(..., max_length=32)]
-    telegram_username: Annotated[
-        str | None, Field(default=None, min_length=4, max_length=64)
-    ]
-    discord_username: Annotated[
-        str | None, Field(default=None, min_length=4, max_length=64)
-    ]
+    telegram_username: Annotated[str | None, Field(default=None, min_length=4, max_length=64)]
+    discord_username: Annotated[str | None, Field(default=None, min_length=4, max_length=64)]
 
     show_telegram: Annotated[bool, Field(default=False, exclude=True)]
     show_discord: Annotated[bool, Field(default=False, exclude=True)]
@@ -163,13 +153,9 @@ class UserSearchSchema(UserAvatarMixin, BaseModel):
 
     id: UUID
 
-    login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)
-    ]
+    login: Annotated[str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)]
 
-    profile: Annotated[
-        "UserSearchProfileSchema", Field(..., validation_alias="user_profile")
-    ]
+    profile: Annotated["UserSearchProfileSchema", Field(..., validation_alias="user_profile")]
 
     model_config = ConfigDict(from_attributes=True)
 

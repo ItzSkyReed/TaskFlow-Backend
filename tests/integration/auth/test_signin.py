@@ -36,12 +36,8 @@ async def test_valid_sign_in(client):
     assert cookie_value is not None, "refresh_token cookie должен быть установлен"
 
     set_cookie_headers = response.headers.get_list("set-cookie")
-    assert any("refresh_token=" in h for h in set_cookie_headers), (
-        "Нет refresh_token в Set-Cookie"
-    )
-    assert any("HttpOnly" in h for h in set_cookie_headers), (
-        "refresh_token должен быть HttpOnly"
-    )
+    assert any("refresh_token=" in h for h in set_cookie_headers), "Нет refresh_token в Set-Cookie"
+    assert any("HttpOnly" in h for h in set_cookie_headers), "refresh_token должен быть HttpOnly"
 
     expected_path = f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}"
     assert any(f"Path={expected_path}" in h for h in set_cookie_headers), (

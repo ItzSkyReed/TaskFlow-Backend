@@ -40,11 +40,7 @@ async def send_join_request(
     try:
         if (
             await session.execute(
-                select(
-                    exists().where(
-                        GroupMember.user_id == requester_id, Group.id == group_id
-                    )
-                )
+                select(exists().where(GroupMember.user_id == requester_id, Group.id == group_id))
             )
         ).scalar():
             raise UserAlreadyInGroupRequestException()
@@ -63,9 +59,7 @@ async def send_join_request(
     # Вставка заявки с возвратом результата
     stmt = (
         insert(GroupJoinRequest)
-        .from_select(
-            ["group_id", "requester_id"], select(subq.c.group_id, literal(requester_id))
-        )
+        .from_select(["group_id", "requester_id"], select(subq.c.group_id, literal(requester_id)))
         .on_conflict_do_nothing(index_elements=["group_id", "requester_id"])
         .returning(GroupJoinRequest)
     )

@@ -141,9 +141,7 @@ async def sign_in_user_route(
         500: {"description": "Внутренняя ошибка сервера."},
     },
 )
-async def refresh_tokens_route(
-    request: Request, response: Response
-) -> AccessTokenSchema:
+async def refresh_tokens_route(request: Request, response: Response) -> AccessTokenSchema:
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:

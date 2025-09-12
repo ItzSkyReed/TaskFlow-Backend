@@ -38,9 +38,7 @@ async def invite_user_to_group(
     if invitee_id == inviter_id:
         raise CannotInviteYourselfException()
 
-    if not (
-        await session.execute(select(exists().where(Group.id == group_id)))
-    ).scalar():
+    if not (await session.execute(select(exists().where(Group.id == group_id)))).scalar():
         raise GroupNotFoundException()
 
     member_exists = (

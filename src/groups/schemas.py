@@ -57,9 +57,7 @@ class CreateGroupSchema(BaseModel):
         ),
     ]
 
-    max_members_count: Annotated[
-        int, Field(ge=2, le=100, default=100, serialization_alias="max_members")
-    ]
+    max_members_count: Annotated[int, Field(ge=2, le=100, default=100, serialization_alias="max_members")]
 
     invitations: Annotated[
         list[UUID] | None,
@@ -165,9 +163,7 @@ class GroupInvitationSchema(BaseModel):
 
 
 class RespondToInvitationSchema(BaseModel):
-    response: Annotated[
-        Literal[InvitationStatus.REJECTED, InvitationStatus.ACCEPTED], Field(...)
-    ]
+    response: Annotated[Literal[InvitationStatus.REJECTED, InvitationStatus.ACCEPTED], Field(...)]
 
 
 class ChangeGroupCreatorSchema(BaseModel):
@@ -186,6 +182,4 @@ class JoinRequestSchema(BaseModel):
 
 
 class RespondToJoinRequestSchema(BaseModel):
-    response: Annotated[
-        Literal[JoinRequestStatus.REJECTED, JoinRequestStatus.APPROVED], Field(...)
-    ]
+    response: Annotated[Literal[JoinRequestStatus.REJECTED, JoinRequestStatus.APPROVED], Field(...)]
