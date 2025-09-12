@@ -23,7 +23,7 @@ async def add_new_refresh_token(user_id: UUID, token_jti: UUID) -> None:
         pipe.expire(key, auth_settings.refresh_token_expires_in * 60)
 
         results = await pipe.execute()
-        _, count, _ = results
+        count = results[1]
 
         if count > MAX_REFRESH_TOKENS:
             remove_count = count - MAX_REFRESH_TOKENS
