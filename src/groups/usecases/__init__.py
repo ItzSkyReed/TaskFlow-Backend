@@ -4,6 +4,7 @@ from .create_group import create_group
 from .delete_group_avatar import delete_group_avatar
 from .delete_user_from_group import delete_user_from_group
 from .get_group import get_group
+from .get_group_join_requests import get_group_join_requests
 from .get_received_invitations import get_received_invitations
 from .get_user_groups import get_user_groups
 from .invite_user_to_group import invite_user_to_group
@@ -34,4 +35,5 @@ __all__ = [
     "remove_user_group_permission",
     "send_join_request",
     "respond_to_join_request",
+    "get_group_join_requests",
 ]
