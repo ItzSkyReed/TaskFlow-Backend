@@ -5,13 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user.schemas import PublicUserSchema
-from ..models import Group, GroupInvitation
+from ..models import Group, GroupInvitation, GroupJoinRequest
 from ..schemas import (
     GroupDetailSchema,
     GroupInvitationSchema,
     GroupMemberSchema,
     GroupSearchSchema,
     GroupSummarySchema,
+    JoinRequestSchema,
 )
 from . import get_groups_member_count
 from .group_service import (
@@ -29,6 +30,8 @@ __all__ = [
     "map_to_group_search_schema",
     "map_to_group_invitation_schema",
     "map_to_group_summary_schema",
+    "map_to_group_join_request_schema",
+    "map_to_group_join_request_schemas",
 ]
 
 
@@ -188,5 +191,45 @@ async def map_to_group_invitation_schemas(
         )
         for invitation, group_summary_schema in zip(
             invitations, groups_summary_schemas, strict=False
+        )
+    ]
+
+
+@ObjectMapper.register(GroupJoinRequest, JoinRequestSchema)
+async def map_to_group_join_request_schema(
+    join_request: GroupJoinRequest, user_id: UUID, session: AsyncSession
+) -> JoinRequestSchema:
+    return JoinRequestSchema(
+        id=join_request.id,
+        requester=PublicUserSchema.model_validate(
+            join_request.requester, from_attributes=True
+        ),
+        status=join_request.status,
+        updated_at=join_request.updated_at,
+        created_at=join_request.created_at,
+        group=await map_to_group_summary_schema(join_request.group, user_id, session),
+    )
+
+
+@ObjectMapper.register_bulk(GroupJoinRequest, GroupInvitationSchema)
+async def map_to_group_join_request_schemas(
+    join_requests: Sequence[GroupJoinRequest], user_id: UUID, session: AsyncSession
+) -> list[JoinRequestSchema]:
+    groups_summary_schemas = await map_to_group_summary_schemas(
+        [join_request.group for join_request in join_requests], user_id, session
+    )
+    return [
+        JoinRequestSchema(
+            id=join_request.id,
+            status=join_request.status,
+            updated_at=join_request.updated_at,
+            created_at=join_request.created_at,
+            requester=PublicUserSchema.model_validate(
+                join_request.requester, from_attributes=True
+            ),
+            group=group_summary_schema,
+        )
+        for join_request, group_summary_schema in zip(
+            join_requests, groups_summary_schemas, strict=False
         )
     ]

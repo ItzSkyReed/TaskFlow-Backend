@@ -270,9 +270,11 @@ class GroupJoinRequest(Base):
         DateTime, nullable=False, server_default=func.now(), onupdate=datetime.now
     )  # Время обновления заявки
 
-    group: Mapped["Group"] = relationship()  # Группа в которую отправлена заявка
-    requester: Mapped["User"] = (
-        relationship()
+    group: Mapped["Group"] = relationship(
+        "Group", back_populates="join_requests"
+    )  # Группа в которую отправлена заявка
+    requester: Mapped["User"] = relationship(
+        "User", back_populates="join_requests"
     )  # Пользователь отправивший заявку в группу
 
     __table_args__ = (

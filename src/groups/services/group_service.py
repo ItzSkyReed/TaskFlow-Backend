@@ -120,6 +120,7 @@ async def get_group_user_context(
         .filter(GUP.permission.isnot(None))
         .label("permissions")
     ).where(GUP.user_id == user_id, GUP.group_id == group.id)
+
     permissions: list[str] | None = (
         await session.execute(perm_query)
     ).scalar_one_or_none()

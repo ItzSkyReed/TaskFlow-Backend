@@ -235,8 +235,40 @@ class GroupInvitationNotFoundException(BaseAPIException):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
             msg="Приглашение в группу не найдено",
-            loc=["group", "user_id"],
+            loc=["group", "invitation_id"],
             err_type="group.invitation.not_found",
+        )
+
+
+class GroupJoinRequestNotFoundException(BaseAPIException):
+    """
+    404
+
+    Возвращается если приглашение пользователя не найдено
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            msg="Заявка на вступление в группу в группу не найдено",
+            loc=["group", "join_request_id"],
+            err_type="group.join_request.not_found",
+        )
+
+
+class GroupJoinRequestAlreadyResolvedException(BaseAPIException):
+    """
+    409
+
+    Возвращается если на приглашение пользователя уже отвечено
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="На данное приглашение уже дан ответ",
+            loc=["group", "join_request_id"],
+            err_type="group.join_request.already_resolved",
         )
 
 
@@ -244,13 +276,13 @@ class GroupIsFullException(BaseAPIException):
     """
     409
 
-    Возвращается если невозможно вступить в группу при принятие приглашения т.к группе макс. кол-во пользователей
+    Возвращается если невозможно добавить в группу пользователя так как достигнуто максимальное количество
     """
 
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_409_CONFLICT,
-            msg="Приглашение в группу не принято, т.к в ней нет свободных мест",
+            msg="В группе достигнуто максимальное кол-во пользователей",
             loc=["group", "members"],
             err_type="group.conflict.group_is_full",
         )

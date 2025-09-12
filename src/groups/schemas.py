@@ -176,10 +176,16 @@ class ChangeGroupCreatorSchema(BaseModel):
 
 class JoinRequestSchema(BaseModel):
     id: Annotated[UUID, Field(...)]
-    group_id: Annotated[UUID, Field(...)]
-    requester_id: Annotated[UUID, Field(...)]
+    group: Annotated[GroupSummarySchema, Field(...)]
+    requester: Annotated[PublicUserSchema, Field(...)]
     status: Annotated[JoinRequestStatus, Field(...)]
     created_at: Annotated[datetime, Field(...)]
     updated_at: Annotated[datetime, Field(...)]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class RespondToJoinRequestSchema(BaseModel):
+    response: Annotated[
+        Literal[JoinRequestStatus.REJECTED, JoinRequestStatus.APPROVED], Field(...)
+    ]
