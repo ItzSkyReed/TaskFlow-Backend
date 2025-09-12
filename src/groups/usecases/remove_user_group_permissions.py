@@ -86,11 +86,11 @@ async def remove_user_group_permission(
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
-    if GroupPermission.MANAGE_MEMBERS not in changer_member.permissions:
+    if GroupPermission.CONTROL_MEMBERS not in changer_member.permissions:
         raise NotEnoughGroupPermissionsException()
 
     if (
-        permission == GroupPermission.MANAGE_MEMBERS
+        permission == GroupPermission.CONTROL_MEMBERS
         and GroupPermission.FULL_ACCESS not in changer_member.permissions
     ):
         raise NotEnoughGroupPermissionsException()
