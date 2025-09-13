@@ -80,8 +80,10 @@ async def create_group(
             index_where=(GroupInvitation.status == InvitationStatus.PENDING),
         )
         await session.execute(stmt)
-    await session.commit()
 
     group = await get_group_with_members(group.id, session)
 
-    return await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)
+    schema = await ObjectMapper.map(group, GroupDetailSchema, user_id=user_id, session=session)
+
+    await session.commit()
+    return schema

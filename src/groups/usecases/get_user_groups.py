@@ -22,10 +22,8 @@ async def get_user_groups(
     """
 
     user = (
-        (await session.execute(select(User).where(user_id == User.id).options(joinedload(User.groups))))
-        .unique()
-        .scalar_one_or_none()
-    )
+        await session.execute(select(User).where(User.id == user_id).options(joinedload(User.groups)))
+    ).scalar_one_or_none()
 
     if user is None:
         raise UserNotFoundException(user_id)
@@ -33,4 +31,4 @@ async def get_user_groups(
     if not user.groups:
         return []
 
-    return await ObjectMapper.map_bulk(user.group, GroupSummarySchema, user_id=user_id, session=session)
+    return await ObjectMapper.map_bulk(user.groups, GroupSummarySchema, user_id=user_id, session=session)

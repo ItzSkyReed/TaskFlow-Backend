@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from ...user.models import User
+from ...utils import lock_rows
 from ..enums import GroupPermission
 from ..exceptions import (
     NotEnoughGroupPermissionsException,
@@ -37,10 +38,13 @@ async def add_user_group_permission(
     - Для выдачи FULL_ACCESS нужно быть создателем группы.
 
     """
-
     # noinspection DuplicatedCode
     if target_user_id == changer_user_id:
         raise UserCantChangeOwnPermissionException()
+
+    # Лочим пользователей
+    await lock_rows(session, User, User.id == target_user_id)
+    await lock_rows(session, User, User.id == changer_user_id)
 
     # Получаем группу с членами
     group = await get_group_with_members(group_id, session, with_for_update=True)
@@ -66,6 +70,7 @@ async def add_user_group_permission(
     )
     if not changer_member:
         raise RequiredUserNotInGroupException(user_id=changer_user_id)
+
     target_member = (
         (
             await session.execute(
@@ -101,7 +106,6 @@ async def add_user_group_permission(
             granted_by=changer_user_id,
         )
     )
-    await session.refresh(target_member)
     await session.commit()
 
     return GroupMemberSchema.model_validate(target_member, from_attributes=True)

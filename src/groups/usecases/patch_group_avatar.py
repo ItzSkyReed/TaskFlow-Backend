@@ -22,15 +22,15 @@ async def patch_group_avatar(
     session: AsyncSession,
 ) -> GroupDetailSchema:
     """
-    Обновление аватарки профиля группы
-    :param file: Содержит данные о самом аватаре группы
+    Обновление аватарки профиля группы.
+    :param file: Содержит данные о самой аватарке группы
     :param group_id: UUID группы
     :param initiator_id: UUID человека, который меняет аватарку
     :param session: Сессия
     """
     await validate_avatar_file(file)
 
-    group = await get_group_with_members(group_id, session)
+    group = await get_group_with_members(group_id, session, with_for_update=True)
 
     if initiator_id != group.creator_id:
         if not group_member_has_permission(

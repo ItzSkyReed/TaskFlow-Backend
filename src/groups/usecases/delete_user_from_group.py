@@ -20,20 +20,22 @@ async def delete_user_from_group(
     session: AsyncSession,
 ) -> None:
     """
-    Удаление аватарки профиля группы
+    Удаление пользователя из группы
     :param group_id: UUID группы
     :param initiator_id: UUID человека, который кикает другого.
     :param user_to_kick_id: UUID человека, которого надо исключить из группы
     :param session: Сессия
     """
 
-    group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
-
-    if not group:
-        raise GroupNotFoundException
-
     if initiator_id == user_to_kick_id:
         raise CannotKickYourselfException()
+
+    group = (
+        await session.execute(select(Group).where(Group.id == group_id).with_for_update())
+    ).scalar_one_or_none()
+
+    if not group:
+        raise GroupNotFoundException()
 
     if group.creator_id == user_to_kick_id:
         raise CannotKickGroupCreatorException()

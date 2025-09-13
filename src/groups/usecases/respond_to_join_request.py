@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
-from ...user import User, UserProfile
+from ...user import User
 from .. import GroupMember, GroupPermission, JoinRequestStatus
 from ..exceptions import (
     GroupIsFullException,
@@ -46,7 +46,7 @@ async def respond_to_join_request(
             .join(User.user_profile)
             .where(GroupJoinRequest.id == join_request_id)
             .options(joinedload(GroupJoinRequest.group).selectinload(Group.members))
-            .with_for_update(of=(GroupJoinRequest, Group, User, UserProfile))
+            .with_for_update(of=(GroupJoinRequest, Group))
         )
     ).scalar_one_or_none()
 

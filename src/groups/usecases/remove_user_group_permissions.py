@@ -57,7 +57,6 @@ async def remove_user_group_permission(
                     GroupMember.group_id == group.id,
                 )
                 .options(joinedload(GroupMember.permission_objs))
-                .with_for_update()
             )
         )
         .scalars()

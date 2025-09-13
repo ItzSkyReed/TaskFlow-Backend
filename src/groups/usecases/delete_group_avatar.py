@@ -3,6 +3,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...minio import AVATARS_BUCKET_NAME, get_minio_client
+from ...user import User
+from ...utils import lock_rows
 from ..exceptions import NotEnoughGroupPermissionsException
 from ..models import GroupPermission
 from ..services import get_group_with_members, group_member_has_permission
@@ -20,7 +22,9 @@ async def delete_group_avatar(
     :param session: Сессия
     """
 
-    group = await get_group_with_members(group_id, session)
+    await lock_rows(session, User, User.id == initiator_id)
+
+    group = await get_group_with_members(group_id, session, with_for_update=True)
 
     if initiator_id != group.creator_id:
         if not group_member_has_permission(

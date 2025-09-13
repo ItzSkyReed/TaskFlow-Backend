@@ -1,11 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import exists, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user import User
-from .. import GroupMember
+from ...utils import lock_rows
 from ..exceptions import (
     CannotChangeCreatorToYourselfException,
     NotEnoughGroupPermissionsException,
@@ -36,34 +36,24 @@ async def change_group_creator(
     if actual_creator_user_id == new_creator_user_id:
         raise CannotChangeCreatorToYourselfException()
 
+    # Лочим пользователей
+    await lock_rows(session, User, User.id == actual_creator_user_id)
+    await lock_rows(session, User, User.id == new_creator_user_id)
+
     group = await get_group_with_members(group_id, session, with_for_update=True)
 
     if group.creator_id != actual_creator_user_id:
         raise NotEnoughGroupPermissionsException()
 
-    # Заблокировать обоих пользователей (одним запросом)
-    (
-        (
-            await session.execute(
-                select(User)
-                .where(User.id.in_([actual_creator_user_id, new_creator_user_id]))
-                .with_for_update()
-            )
-        )
-        .scalars()
-        .all()
+    actual_creator = await session.execute(
+        select(User).where(User.id == actual_creator_user_id).with_for_update()
     )
+    new_creator = await session.execute(select(User).where(User.id == new_creator_user_id).with_for_update())
 
-    is_new_creator_in_group = await session.scalar(
-        select(
-            exists().where(
-                GroupMember.group_id == group_id,
-                GroupMember.user_id == new_creator_user_id,
-            )
-        )
-    )
+    if actual_creator is None:
+        raise RequiredUserNotInGroupException(actual_creator_user_id)
 
-    if not is_new_creator_in_group:
+    if new_creator is None:
         raise RequiredUserNotInGroupException(new_creator_user_id)
 
     group.creator_id = new_creator_user_id

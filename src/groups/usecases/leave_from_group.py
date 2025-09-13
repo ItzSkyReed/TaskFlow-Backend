@@ -25,7 +25,7 @@ async def leave_from_group(
     group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
 
     if not group:
-        raise GroupNotFoundException
+        raise GroupNotFoundException()
 
     if group.creator_id == user_id:
         raise CreatorCantLeaveFromGroupException()

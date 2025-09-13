@@ -1,7 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, exists, or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy_pydantic_mapper import ObjectMapper
@@ -33,7 +33,9 @@ async def get_group_join_requests(
 
     :raises NotEnoughGroupPermissionsException: 403. Возвращается если недостаточно прав для изменения ресурса
     """
-    if not (await session.execute(select(exists().where(Group.id == group_id)))).scalar():
+    group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
+
+    if group is None:
         raise GroupNotFoundException()
 
     # Проверяем, что пользователь в группе, и у него есть необходимые для просмотра права, если этого нет, не даем смотреть заявки.
@@ -58,7 +60,6 @@ async def get_group_join_requests(
                     Group.creator_id == user_id,  # проверка на создателя
                 ),
             )
-            .with_for_update()
         )
     ).scalar_one_or_none():
         raise NotEnoughGroupPermissionsException()

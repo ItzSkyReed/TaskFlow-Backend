@@ -43,12 +43,10 @@ async def invite_user_to_group(
 
     member_exists = (
         await session.execute(
-            select(GroupMember)
-            .where(
+            select(GroupMember).where(
                 GroupMember.user_id == invitee_id,
                 GroupMember.group_id == group_id,
             )
-            .with_for_update()
         )
     ).scalar()
 
