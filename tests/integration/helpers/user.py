@@ -20,6 +20,7 @@ class AuthResult(TypedDict):
     payload: PayloadDict
     refresh_token: str
     access_token: str
+    id: uuid.UUID
 
 
 async def register_and_login(client: AsyncClient, unique=None) -> AuthResult:
@@ -37,15 +38,21 @@ async def register_and_login(client: AsyncClient, unique=None) -> AuthResult:
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
     assert response.status_code == status.HTTP_201_CREATED
 
-    refresh_token = response.cookies["refresh_token"]
-    access_token = response.json()["access_token"]
-
     return {
         "payload": payload,
-        "refresh_token": refresh_token,
-        "access_token": access_token,
+        "refresh_token": response.cookies["refresh_token"],
+        "access_token": response.json()["access_token"],
+        "id": response.json()["id"],
     }
 
 
 async def get_token_payload(token: str) -> dict:
     return orjson.loads(base64.urlsafe_b64decode(token.split(".")[1] + "=="))
+
+
+async def set_authorization(
+    client: AsyncClient,
+    user: AuthResult,
+):
+    client.cookies.set("refresh_token", user["refresh_token"])
+    client.headers["Authorization"] = f"Bearer {user['access_token']}"
