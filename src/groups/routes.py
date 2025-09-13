@@ -762,6 +762,55 @@ async def change_group_creator_route(
     )
 
 
+@group_router.get(
+    "/{group_id}/join-requests/",
+    status_code=status.HTTP_200_OK,
+    name="Получения списка заявок на вступление в группу",
+    response_model=list[JoinRequestSchema],
+    description="Позволяет пользователю с правами FULL_ACCESS или ACCEPT_JOIN_REQUESTS, а также создателю группы просматривать список заявок на вступление",
+    responses={
+        200: {
+            "description": "Успешное получение заявок на вступление",
+            "model": JoinRequestSchema,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав, чтобы увидеть список заявок",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def get_group_join_requests_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    request_status: Annotated[list[JoinRequestStatus] | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
+    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+) -> Sequence[JoinRequestSchema]:
+    return await get_group_join_requests(
+        join_request_status=request_status,
+        group_id=group_id,
+        user_id=token_payload.sub,
+        session=session,
+        limit=limit,
+        offset=offset,
+    )
+
+
 @group_router.post(
     "/{group_id}/join-requests/",
     status_code=status.HTTP_200_OK,
@@ -806,55 +855,6 @@ async def send_join_request_route(
         group_id=group_id,
         requester_id=token_payload.sub,
         session=session,
-    )
-
-
-@group_router.get(
-    "/{group_id}/join-requests/",
-    status_code=status.HTTP_200_OK,
-    name="Получения списка заявок на вступление в группу",
-    response_model=list[JoinRequestSchema],
-    description="Позволяет пользователю с правами FULL_ACCESS или ACCEPT_JOIN_REQUESTS, а также создателю группы просматривать список заявок на вступление",
-    responses={
-        200: {
-            "description": "Успешное получение заявок на вступление",
-            "model": JoinRequestSchema,
-        },
-        401: {
-            "description": "Access token не найден, истек или некорректен",
-            "model": ErrorResponseModel,
-        },
-        403: {
-            "description": "Недостаточно прав, чтобы увидеть список заявок",
-            "model": ErrorResponseModel,
-        },
-        404: {
-            "description": "Группы с таким ID не существует",
-            "model": ErrorResponseModel,
-        },
-        422: {
-            "description": "Некорректные данные в запросе (валидация схемы).",
-            "model": ErrorResponseModel,
-        },
-        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
-        500: {"description": "Внутренняя ошибка сервера."},
-    },
-)
-async def get_group_join_requests_route(
-    request_status: Annotated[list[JoinRequestStatus] | None, Query(default=None)],
-    group_id: Annotated[UUID, Path(...)],
-    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
-    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
-    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> Sequence[JoinRequestSchema]:
-    return await get_group_join_requests(
-        join_request_status=request_status,
-        group_id=group_id,
-        user_id=token_payload.sub,
-        session=session,
-        limit=limit,
-        offset=offset,
     )
 
 
