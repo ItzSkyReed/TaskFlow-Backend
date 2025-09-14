@@ -1,22 +1,22 @@
 from uuid import UUID
 
-from sqlalchemy import exists, func, literal, select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...exceptions import SomethingWentWrongException
+from ...user import User
 from ...utils import lock_rows
+from .. import JoinRequestStatus
 from ..exceptions import (
     GroupIsFullException,
     GroupNotFoundException,
     UserAlreadyInGroupRequestException,
 )
-from ..models import (
-    Group,
-    GroupJoinRequest,
-    GroupMember,
-)
+from ..models import Group, GroupJoinRequest, GroupMember
 from ..schemas import JoinRequestSchema
 
 
@@ -32,56 +32,67 @@ async def send_join_request(
     :param session: Сессия
     """
 
-    if not (await lock_rows(session, Group, Group.id == group_id)).scalar_one_or_none():
+    # Блокируем группу
+    group = (await lock_rows(session, Group, Group.id == group_id)).scalar_one_or_none()
+    if not group:
         raise GroupNotFoundException()
 
+    # Блокируем всех участников группы
     await lock_rows(session, GroupMember, GroupMember.group_id == group_id)
 
-    try:
-        if (
-            await session.execute(
-                select(exists().where(GroupMember.user_id == requester_id, Group.id == group_id))
-            )
-        ).scalar():
-            raise UserAlreadyInGroupRequestException()
-    except IntegrityError as err:
-        raise SomethingWentWrongException() from err
-
-    # Проверяем кол-во участников
-    subq = (
-        select(Group.id.label("group_id"))
-        .join(GroupMember, Group.id == GroupMember.group_id, isouter=True)
-        .where(Group.id == group_id)
-        .group_by(Group.id, Group.max_members)
-        .having(func.count(GroupMember.user_id) < Group.max_members)
-    )
-
-    # Вставка заявки с возвратом результата
-    stmt = (
-        insert(GroupJoinRequest)
-        .from_select(["group_id", "requester_id"], select(subq.c.group_id, literal(requester_id)))
-        .on_conflict_do_nothing(index_elements=["group_id", "requester_id"])
-        .returning(GroupJoinRequest)
-    )
-    try:
-        result = await session.execute(stmt)
-    except IntegrityError as err:
-        raise SomethingWentWrongException() from err
-
-    inserted_row = result.scalar_one_or_none()
-
-    if inserted_row is None:
-        existing = await session.execute(
-            select(GroupJoinRequest).where(
-                GroupJoinRequest.group_id == group_id,
-                GroupJoinRequest.requester_id == requester_id,
+    # Проверяем — не в группе ли уже этот пользователь
+    if (
+        await session.execute(
+            select(GroupMember).where(
+                GroupMember.user_id == requester_id,
+                GroupMember.group_id == group_id,
             )
         )
-        if existing.scalar_one_or_none():
-            await session.commit()
-            return JoinRequestSchema.model_validate(existing, from_attributes=True)
+    ).scalar_one_or_none():
+        raise UserAlreadyInGroupRequestException()
 
+    # Считаем количество участников
+    members_count = (
+        await session.execute(select(func.count(GroupMember.user_id)).where(GroupMember.group_id == group_id))
+    ).scalar_one()
+
+    if members_count >= group.max_members:
         raise GroupIsFullException()
 
+    # Вставляем заявку
+    await session.execute(
+        insert(GroupJoinRequest)
+        .values(group_id=group_id, requester_id=requester_id)
+        .on_conflict_do_nothing(
+            index_elements=["group_id", "requester_id"],
+            index_where=(GroupJoinRequest.status == JoinRequestStatus.PENDING),
+        )
+    )
+    try:
+        await session.flush()
+    except IntegrityError as err:
+        raise SomethingWentWrongException() from err
+
+    join_request = (
+        await session.execute(
+            select(GroupJoinRequest)
+            .join(GroupJoinRequest.requester)
+            .join(User.user_profile)
+            .where(
+                GroupJoinRequest.group_id == group_id,
+                GroupJoinRequest.requester_id == requester_id,
+                GroupJoinRequest.status == JoinRequestStatus.PENDING,
+            )
+            .options(joinedload(GroupJoinRequest.group).selectinload(Group.members))
+            .with_for_update(of=GroupJoinRequest)
+        )
+    ).scalar_one_or_none()
+
+    if not join_request:
+        raise GroupIsFullException()
+
+    join_request_schema = await ObjectMapper.map(
+        join_request, JoinRequestSchema, user_id=requester_id, session=session
+    )
     await session.commit()
-    return JoinRequestSchema.model_validate(inserted_row, from_attributes=True)
+    return join_request_schema
