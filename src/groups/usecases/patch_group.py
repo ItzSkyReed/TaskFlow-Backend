@@ -63,11 +63,9 @@ async def patch_group(
         await session.flush()
     except IntegrityError as err:
         await session.rollback()
-        if isinstance(err.orig, UniqueViolationError):
-            if err.orig.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
-                raise GroupWithSuchNameAlreadyExistsException(
-                    group_name=patched_group.name  # ty: ignore invalid-argument-type
-                ) from err
+        if isinstance(err.orig.__cause__, UniqueViolationError):
+            if err.orig.__cause__.constraint_name == "ix_groups_name":
+                raise GroupWithSuchNameAlreadyExistsException(group_name=patched_group.name) from err
         raise  # pragma: no cover
 
     schemas = await ObjectMapper.map(group, GroupDetailSchema, user_id=initiator_id, session=session)

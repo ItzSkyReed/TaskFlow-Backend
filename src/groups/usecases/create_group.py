@@ -53,9 +53,8 @@ async def create_group(
         await session.flush()
     except IntegrityError as err:
         await session.rollback()
-        if isinstance(err.orig, UniqueViolationError):
-            # asyncpg UniqueViolationError;
-            if err.orig.constraint_name == "ix_groups_name":  # ty: ignore[unresolved-attribute]
+        if isinstance(err.orig.__cause__, UniqueViolationError):
+            if err.orig.__cause__.constraint_name == "ix_groups_name":
                 raise GroupWithSuchNameAlreadyExistsException(group_name=created_group.name) from err
         raise  # pragma: no cover
 

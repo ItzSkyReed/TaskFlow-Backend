@@ -32,17 +32,16 @@ async def sign_up_user(
         session.add(user)
         await session.flush()
 
+        session.add(UserProfile(id=user.id, name=user_in.name or user_in.login))
+
     except IntegrityError as err:
         await session.rollback()
-        if isinstance(err.orig, UniqueViolationError):
-            if err.orig.constraint_name == "ix_users_email":  # ty: ignore[unresolved-attribute]
+        if isinstance(err.orig.__cause__, UniqueViolationError):
+            if err.orig.__cause__.constraint_name == "ix_users_email":
                 raise EmailAlreadyInUseException() from err
-            elif err.orig.constraint_name == "ix_users_login":  # ty: ignore[unresolved-attribute]
+            elif err.orig.__cause__.constraint_name == "ix_users_login":
                 raise LoginAlreadyInUseException() from err
         raise  # pragma: no cover
-
-    user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
-    session.add(user_profile)
 
     await session.commit()
 
