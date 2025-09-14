@@ -1,14 +1,14 @@
 import pytest
 from httpx import AsyncClient
-from starlette import status
-
-from src.groups import group_router
-from src.groups.constants import MAX_CREATED_GROUPS
-from tests.integration.helpers import (
+from integration.helpers import (
     get_random_symbols,
     get_token_payload,
     register_and_login,
 )
+from starlette import status
+
+from src.groups import group_router
+from src.groups.constants import MAX_CREATED_GROUPS
 
 
 @pytest.mark.order(1)

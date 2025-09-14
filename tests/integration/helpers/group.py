@@ -6,12 +6,14 @@ from src.groups import group_router
 
 async def create_group(
     client: AsyncClient,
-    name: str = get_random_symbols(),
+    name: str | None = None,
     description: str | None = None,
     max_members_count: int | None = 100,
     invitations: list[str] | None = None,
 ) -> Response:
     """Создание группы и возврат её uuid"""
+    if not name:
+        name = await get_random_symbols()
 
     payload = {
         "name": name,

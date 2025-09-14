@@ -1,9 +1,7 @@
 import uuid
 
 from httpx import AsyncClient
-from integration.helpers import get_random_symbols, register_and_login
-from integration.helpers.group import create_group
-from integration.helpers.user import set_authorization
+from integration.helpers import create_group, get_random_symbols, register_and_login, set_authorization
 from starlette import status
 
 from src.groups import group_router
