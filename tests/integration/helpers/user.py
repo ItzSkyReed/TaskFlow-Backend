@@ -7,6 +7,7 @@ from httpx import AsyncClient
 from starlette import status
 
 from src.auth import auth_router
+from src.user import profile_router
 
 
 class PayloadDict(TypedDict):
@@ -37,12 +38,14 @@ async def register_and_login(client: AsyncClient, unique=None) -> AuthResult:
     # Регистрация
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
     assert response.status_code == status.HTTP_201_CREATED
+    client.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
+    profile_response = await client.get(f"{profile_router.prefix}/me")
 
     return {
         "payload": payload,
         "refresh_token": response.cookies["refresh_token"],
         "access_token": response.json()["access_token"],
-        "id": response.json()["id"],
+        "id": profile_response.json()["id"],
     }
 
 
