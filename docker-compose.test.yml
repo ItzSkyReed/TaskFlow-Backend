@@ -81,10 +81,10 @@ services:
         condition: service_healthy
       minio-test:
         condition: service_healthy
-      migrate-test:
-        condition: service_completed_successfully
     env_file:
       - .env.test   # монтируем папку для отчёта
+    environment:
+      MIGRATION_INSIDE_DOCKER: 1
     volumes:
       - ./htmlcov:/fast_api/htmlcov
       - ./src:/fast_api/src
