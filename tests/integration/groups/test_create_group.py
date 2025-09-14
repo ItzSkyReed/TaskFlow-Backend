@@ -1,3 +1,4 @@
+import pytest
 from httpx import AsyncClient
 from starlette import status
 
@@ -10,6 +11,7 @@ from tests.integration.helpers import (
 )
 
 
+@pytest.mark.order(1)
 async def test_create_group_success(client: AsyncClient):
     """Успешное создание группы без приглашений"""
     user = await register_and_login(client)
@@ -32,6 +34,7 @@ async def test_create_group_success(client: AsyncClient):
     assert data["creator_id"] == (await get_token_payload(user["refresh_token"]))["sub"]
 
 
+@pytest.mark.order(1)
 async def test_create_group_success_no_members(client: AsyncClient):
     """Успешное создание группы без приглашений"""
     user = await register_and_login(client)
@@ -53,6 +56,7 @@ async def test_create_group_success_no_members(client: AsyncClient):
     assert data["creator_id"] == (await get_token_payload(user["refresh_token"]))["sub"]
 
 
+@pytest.mark.order(1)
 async def test_create_group_max_members_too_big(client: AsyncClient):
     """Успешное создание группы без приглашений"""
     user = await register_and_login(client)
@@ -72,6 +76,7 @@ async def test_create_group_max_members_too_big(client: AsyncClient):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.order(1)
 async def test_create_group_max_members_too_small(client: AsyncClient):
     """Успешное создание группы без приглашений"""
     user = await register_and_login(client)
@@ -91,6 +96,7 @@ async def test_create_group_max_members_too_small(client: AsyncClient):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.order(1)
 async def test_create_group_no_name(client: AsyncClient):
     """Успешное создание группы без приглашений"""
     user = await register_and_login(client)
@@ -109,6 +115,7 @@ async def test_create_group_no_name(client: AsyncClient):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
+@pytest.mark.order(1)
 async def test_create_group_with_invitations(client: AsyncClient):
     """Успешное создание группы с приглашениями"""
     owner = await register_and_login(client)
@@ -132,6 +139,7 @@ async def test_create_group_with_invitations(client: AsyncClient):
     assert response.status_code == status.HTTP_201_CREATED
 
 
+@pytest.mark.order(1)
 async def test_create_group_limit_exceeded(client: AsyncClient):
     """Превышен лимит создания групп"""
     user = await register_and_login(client)
@@ -161,6 +169,7 @@ async def test_create_group_limit_exceeded(client: AsyncClient):
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
+@pytest.mark.order(1)
 async def test_create_group_duplicate_name(client: AsyncClient):
     """Попытка создать группу с тем же именем"""
     user = await register_and_login(client)
@@ -184,6 +193,7 @@ async def test_create_group_duplicate_name(client: AsyncClient):
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
+@pytest.mark.order(1)
 async def test_create_group_unauthorized(client: AsyncClient):
     """Без access_token → 401"""
     response = await client.post(
