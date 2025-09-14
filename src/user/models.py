@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import text
 from ..database import Base
 
 if TYPE_CHECKING:
-    from ..groups import Group, GroupMember
+    from ..groups import Group, GroupJoinRequest, GroupMember
 
 
 class User(Base):
@@ -67,6 +67,10 @@ class User(Base):
         secondary="group_members",
         back_populates="users",
         overlaps="group_memberships,members",
+    )
+
+    join_requests: Mapped[list["GroupJoinRequest"]] = relationship(
+        "GroupJoinRequest", back_populates="requester", cascade="all, delete-orphan"
     )
 
     __table_args__ = (

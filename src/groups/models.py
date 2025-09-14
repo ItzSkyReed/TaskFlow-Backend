@@ -81,6 +81,10 @@ class Group(Base):
         back_populates="group", cascade="all, delete-orphan"
     )  # Приглашения в группу
 
+    join_requests: Mapped[list["GroupJoinRequest"]] = relationship(
+        "GroupJoinRequest", back_populates="group", cascade="all, delete-orphan"
+    )
+
     __table_args__ = (
         Index(
             "ix_groups_name_trgm",
