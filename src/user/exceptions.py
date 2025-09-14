@@ -47,6 +47,8 @@ class EmailAlreadyInUseException(BaseAPIException):
 
 class LoginAlreadyInUseException(BaseAPIException):
     """
+    409
+
     Вызывается если Login уже используется у какого-либо пользователя
     """
 
