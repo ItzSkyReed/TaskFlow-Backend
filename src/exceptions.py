@@ -53,7 +53,7 @@ class InvalidAvatarFileException(BaseAPIException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
-            msg="user with such id is not found",
+            msg="Invalid avatar file",
             loc=["body", "avatar"],
             err_type="avatar_error.invalid_avatar",
         )
@@ -65,5 +65,5 @@ class UnsupportedAvatarFormatException(BaseAPIException):
             status_code=status.HTTP_400_BAD_REQUEST,
             msg="only WebP photos are allowed",
             loc=["body", "avatar"],
-            err_type="avatar_error.invalid_avatar",
+            err_type="avatar_error.unsupported_avatar_format",
         )

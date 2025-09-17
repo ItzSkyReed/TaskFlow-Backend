@@ -33,9 +33,23 @@ async def client_session(app):
         yield ac
 
 
+@pytest.fixture(scope="session")
+async def cdn_client_session():
+    async with AsyncClient(base_url=f"http://{settings.minio_host}:{settings.minio_storage_port}") as ac:
+        yield ac
+
+
 @pytest.fixture
 async def client(client_session):
     """Чистый HTTP-клиент для каждого теста, на основе session-клиента"""
     client_session.cookies.clear()
     client_session.headers.clear()
     return client_session
+
+
+@pytest.fixture
+async def cdn_client(cdn_client_session):
+    """Чистый HTTP-клиент для каждого теста, на основе session-клиента"""
+    cdn_client_session.cookies.clear()
+    cdn_client_session.headers.clear()
+    return cdn_client_session
