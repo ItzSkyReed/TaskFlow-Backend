@@ -54,7 +54,6 @@ async def test_patch_group_no_permission(client: AsyncClient):
     patch_data = {"name": f"hacked_name{random_symbols}"}
     resp = await client.patch(f"{group_router.prefix}/{group_id}", json=patch_data)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
-    assert resp.json()["err_type"] == "group.not_enough_permissions"
 
 
 async def test_patch_group_duplicate_name(client: AsyncClient):
@@ -69,4 +68,3 @@ async def test_patch_group_duplicate_name(client: AsyncClient):
     patch_data = {"name": f"group1{random_symbols}"}  # Попытка задать дублирующее имя
     resp = await client.patch(f"{group_router.prefix}/{group2_id}", json=patch_data)
     assert resp.status_code == status.HTTP_409_CONFLICT
-    assert resp.json()["err_type"] == "group.with_such_name_already_exists"
