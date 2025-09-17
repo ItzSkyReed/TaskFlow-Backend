@@ -32,10 +32,7 @@ async def validate_avatar_file(file: UploadFile) -> None:
     if file.content_type not in ALLOWED_AVATAR_CONTENT_TYPES:
         raise UnsupportedAvatarFormatException()
 
-    try:
-        content = await file.read()
-    except Exception as err:
-        raise InvalidAvatarFileException() from err
+    content = await file.read()
 
     if len(content) > MAX_AVATAR_SIZE:
         raise ExceededAvatarSizeException()
