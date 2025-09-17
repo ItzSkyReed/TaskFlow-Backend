@@ -57,5 +57,7 @@ async def set_authorization(
     client: AsyncClient,
     user: AuthResult,
 ):
-    client.cookies.set("refresh_token", user["refresh_token"])
+    client.cookies.clear()
+    client.headers.clear()
+    client.cookies["refresh_token"] = user["refresh_token"]
     client.headers["Authorization"] = f"Bearer {user['access_token']}"
