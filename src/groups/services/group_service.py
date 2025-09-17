@@ -56,7 +56,7 @@ async def group_member_has_permission(
                 )
             )
         )
-    ) is not None
+    ).scalars().first() is not None
 
 
 async def get_groups_user_context(

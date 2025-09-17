@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     redis_port: int
     redis_out_port: int
 
+    minio_host: str
     minio_root_user: str
     minio_root_password: str
     minio_web_port: int
