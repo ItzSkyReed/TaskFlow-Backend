@@ -1,5 +1,3 @@
-import logging
-
 from httpx import AsyncClient
 from integration.helpers import create_group, get_random_symbols, register_and_login, set_authorization
 from starlette import status
@@ -20,9 +18,6 @@ async def test_search_groups_ilike_p(client: AsyncClient):
 
     assert get_response.status_code == status.HTTP_200_OK
     data = get_response.json()
-
-    logging.fatal(data)
-    logging.fatal(resp.json())
 
     assert data[0]["id"] == resp.json()["id"]
 

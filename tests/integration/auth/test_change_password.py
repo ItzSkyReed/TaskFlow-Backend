@@ -73,7 +73,6 @@ async def test_change_password_wrong_old(client: AsyncClient):
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    print(response.json())
     assert response.json()["detail"] is not None
 
 
