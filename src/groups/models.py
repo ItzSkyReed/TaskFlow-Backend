@@ -230,6 +230,8 @@ class GroupInvitation(Base):
         ),
     )
 
+    __mapper_args__ = {"confirm_deleted_rows": False}
+
 
 class GroupJoinRequest(Base):
     __tablename__ = "group_join_requests"
@@ -283,6 +285,8 @@ class GroupJoinRequest(Base):
             postgresql_where=text(f"status = '{JoinRequestStatus.PENDING.name}'::join_request_status"),
         ),
     )
+
+    __mapper_args__ = {"confirm_deleted_rows": False}
 
 
 class GroupUserPermission(Base):
@@ -341,3 +345,5 @@ class GroupUserPermission(Base):
             ondelete="CASCADE",
         ),
     )
+
+    __mapper_args__ = {"confirm_deleted_rows": False}

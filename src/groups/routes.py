@@ -30,6 +30,7 @@ from .usecases import (
     add_user_group_permission,
     change_group_creator,
     create_group,
+    delete_group,
     delete_group_avatar,
     delete_user_from_group,
     get_group,
@@ -183,6 +184,46 @@ async def patch_group_route(
         patched_group=patch_schema,
         group_id=group_id,
         initiator_id=token_payload.sub,
+        session=session,
+    )
+
+
+@group_router.delete(
+    "/{group_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Удаление группы",
+    response_model=None,
+    description="Позволяет владельцу группы удалить её",
+    responses={
+        204: {"description": "Группа успешно удалена", "model": None},
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для удаления группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def delete_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> None:
+    return await delete_group(
+        group_id=group_id,
+        user_id=token_payload.sub,
         session=session,
     )
 

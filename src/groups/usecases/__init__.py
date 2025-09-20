@@ -1,6 +1,7 @@
 from .add_user_group_permissions import add_user_group_permission
 from .change_group_creator import change_group_creator
 from .create_group import create_group
+from .delete_group import delete_group
 from .delete_group_avatar import delete_group_avatar
 from .delete_user_from_group import delete_user_from_group
 from .get_group import get_group
@@ -36,4 +37,5 @@ __all__ = [
     "send_join_request",
     "respond_to_join_request",
     "get_group_join_requests",
+    "delete_group",
 ]
