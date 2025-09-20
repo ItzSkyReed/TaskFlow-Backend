@@ -22,8 +22,10 @@ async def get_user_groups(
     """
 
     user = (
-        await session.execute(select(User).where(User.id == user_id).options(joinedload(User.groups)))
-    ).scalar_one_or_none()
+        (await session.execute(select(User).where(User.id == user_id).options(joinedload(User.groups))))
+        .unique()
+        .scalar_one_or_none()
+    )
 
     if user is None:
         raise UserNotFoundException(user_id)
