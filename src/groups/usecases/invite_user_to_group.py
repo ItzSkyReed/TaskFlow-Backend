@@ -53,7 +53,7 @@ async def invite_user_to_group(
     if member_exists:
         raise CannotInviteUserThatIsAlreadyInThatGroupException()
 
-    if not group_member_has_permission(
+    if not await group_member_has_permission(
         group_id,
         inviter_id,
         session,

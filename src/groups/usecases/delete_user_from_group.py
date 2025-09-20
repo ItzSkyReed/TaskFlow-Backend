@@ -41,7 +41,7 @@ async def delete_user_from_group(
         raise CannotKickGroupCreatorException()
 
     if initiator_id != group.creator_id:
-        if not group_member_has_permission(
+        if not await group_member_has_permission(
             group_id,
             initiator_id,
             session,

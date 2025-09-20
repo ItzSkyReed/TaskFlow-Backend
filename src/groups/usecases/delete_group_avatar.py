@@ -27,7 +27,7 @@ async def delete_group_avatar(
     group = await get_group_with_members(group_id, session, with_for_update=True)
 
     if initiator_id != group.creator_id:
-        if not group_member_has_permission(
+        if not await group_member_has_permission(
             group_id,
             initiator_id,
             session,
