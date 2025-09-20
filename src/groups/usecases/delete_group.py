@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...minio import AVATARS_BUCKET_NAME, get_minio_client
 from ...user.models import User
 from ..exceptions import (
     GroupNotFoundException,
@@ -35,6 +36,12 @@ async def delete_group(
 
     if deleted_group.creator_id != user.id:
         raise NotEnoughGroupPermissionsException()
+
+    async with get_minio_client() as client:
+        await client.delete_object(
+            Bucket=AVATARS_BUCKET_NAME,
+            Key=f"groups/{group_id}.webp",
+        )
 
     await session.execute(delete(Group).where(Group.id == group_id))
     await session.commit()
