@@ -1,9 +1,12 @@
 from uuid import UUID
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, literal, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import contains_eager
+from sqlalchemy_pydantic_mapper import ObjectMapper
 
+from ...user import User, UserNotFoundException
 from ..exceptions import (
     CannotInviteUserThatIsAlreadyInThatGroupException,
     CannotInviteYourselfException,
@@ -84,10 +87,16 @@ async def invite_user_to_group(
 
     invitation = (
         await session.execute(
-            select(GroupInvitation).where(
+            select(GroupInvitation)
+            .join(Group, Group.id == GroupInvitation.group_id)
+            .where(
                 GroupInvitation.group_id == group_id,
                 GroupInvitation.invitee_id == invitee_id,
                 GroupInvitation.status == InvitationStatus.PENDING,
+            )
+            .with_for_update(of=Group)
+            .options(
+                contains_eager(GroupInvitation.group).selectinload(Group.users).joinedload(User.user_profile)
             )
         )
     ).scalar_one()
