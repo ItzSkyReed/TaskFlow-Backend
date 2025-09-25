@@ -25,7 +25,7 @@ class UserNotFoundException(BaseAPIException):
             status_code=status.HTTP_404_NOT_FOUND,
             msg=f"Пользователь с id: {user_id} не найден",
             loc=["access_token", "body"],
-            err_type="value_error.invalid_sub",
+            err_type="user.not_found",
         )
 
 
