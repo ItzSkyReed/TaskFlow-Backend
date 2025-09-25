@@ -41,6 +41,9 @@ async def invite_user_to_group(
     if not (await session.execute(select(exists().where(Group.id == group_id)))).scalar():
         raise GroupNotFoundException()
 
+    if not (await session.execute(select(exists().where(User.id == invitee_id)))).scalar():
+        raise UserNotFoundException(invitee_id)
+
     member_exists = (
         await session.execute(
             select(GroupMember).where(
