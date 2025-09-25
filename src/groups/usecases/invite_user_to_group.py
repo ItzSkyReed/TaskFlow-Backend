@@ -76,7 +76,7 @@ async def invite_user_to_group(
         )
         .on_conflict_do_nothing(
             index_elements=["group_id", "invitee_id"],
-            index_where=(GroupInvitation.status == InvitationStatus.PENDING),
+            index_where=(GroupInvitation.status == literal(InvitationStatus.PENDING, literal_execute=True)),
         )
     )
 
