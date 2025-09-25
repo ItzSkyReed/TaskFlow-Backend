@@ -158,7 +158,7 @@ class GroupMember(Base):
         # Индекс для быстоого поиска по user_id и group_id
         Index("ix_gup_user_group_group_members", "user_id", "group_id", unique=True),
         # Индекс для быстоого поиска по group_id
-        Index("ix_gup_group_group_members", "group_id", unique=True),
+        Index("ix_group_group_members", "group_id", unique=False),
     )
 
 
