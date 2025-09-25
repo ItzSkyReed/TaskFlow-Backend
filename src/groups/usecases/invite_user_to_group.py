@@ -92,6 +92,6 @@ async def invite_user_to_group(
         )
     ).scalar_one()
 
+    schema = await ObjectMapper.map(invitation, GroupInvitationSchema, user_id=inviter_id, session=session)
     await session.commit()
-
-    return InvitationSummarySchema.model_validate(invitation, from_attributes=True)
+    return schema
