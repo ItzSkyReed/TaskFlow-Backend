@@ -1,5 +1,5 @@
 from .common import get_random_bytes, get_random_symbols
-from .group import create_group
+from .group import add_user_to_group, create_group
 from .user import get_token_payload, register_and_login, set_authorization
 
 __all__ = [
@@ -9,4 +9,5 @@ __all__ = [
     "create_group",
     "set_authorization",
     "get_random_bytes",
+    "add_user_to_group",
 ]
