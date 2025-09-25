@@ -43,8 +43,8 @@ async def respond_to_invitation(
     if invitation is None:
         raise GroupInvitationNotFoundException()
 
-    if len(invitation.group.members) == invitation.group.max_members:
-        raise GroupIsFullException()
+    if user_id != invitation.invitee_id:
+        raise GroupInvitationForbiddenException()
 
     if respond_status.response.REJECTED:
         invitation.status = InvitationStatus.REJECTED
