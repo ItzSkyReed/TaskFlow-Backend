@@ -6,6 +6,12 @@ from ..exceptions import BaseAPIException
 
 
 class CannotInviteYourselfException(BaseAPIException):
+    """
+    400
+
+    Вызывается если попытаться пригласить в группу самого себя
+    """
+
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -237,6 +243,23 @@ class GroupInvitationNotFoundException(BaseAPIException):
             msg="Приглашение в группу не найдено",
             loc=["group", "invitation_id"],
             err_type="group.invitation.not_found",
+        )
+
+
+class GroupInvitationForbiddenException(BaseAPIException):
+    """
+    403
+
+    Возвращается, если приглашение пытается подтвердить/отклонить
+    пользователь, которому оно не адресовано.
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            msg="Вы не можете отвечать на это приглашение",
+            loc=["invitation_id"],
+            err_type="group.invitation.forbidden",
         )
 
 

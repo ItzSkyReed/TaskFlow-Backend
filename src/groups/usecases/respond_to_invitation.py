@@ -7,7 +7,11 @@ from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user import User
 from .. import GroupMember, InvitationStatus
-from ..exceptions import GroupInvitationNotFoundException, GroupIsFullException
+from ..exceptions import (
+    GroupInvitationForbiddenException,
+    GroupInvitationNotFoundException,
+    GroupIsFullException,
+)
 from ..models import Group, GroupInvitation
 from ..schemas import GroupInvitationSchema, RespondToInvitationSchema
 
@@ -53,7 +57,7 @@ async def respond_to_invitation(
             raise GroupIsFullException()
 
         invitation.status = InvitationStatus.ACCEPTED
-        invitation.group.members.append(GroupMember(user_id=user_id))
+        session.add(GroupMember(user_id=invitation.invitee_id, group_id=invitation.group.id))
 
     schemas = await ObjectMapper.map(invitation, GroupInvitationSchema, user_id=user_id, session=session)
     await session.commit()
