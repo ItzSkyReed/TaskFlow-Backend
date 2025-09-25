@@ -17,7 +17,7 @@ from ..models import (
     GroupPermission,
     InvitationStatus,
 )
-from ..schemas import InvitationSummarySchema
+from ..schemas import GroupInvitationSchema
 from ..services import group_member_has_permission
 
 
@@ -26,7 +26,7 @@ async def invite_user_to_group(
     inviter_id: UUID,
     invitee_id: UUID,
     session: AsyncSession,
-) -> InvitationSummarySchema:
+) -> GroupInvitationSchema:
     """
     Отправка приглашения пользователю в группу, если ранее его не было (или возврат ранее созданного, если было)
     :param invitee_id: ID приглашенного пользователя

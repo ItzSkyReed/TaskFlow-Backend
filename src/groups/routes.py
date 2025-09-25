@@ -19,7 +19,6 @@ from .schemas import (
     GroupMemberSchema,
     GroupSearchSchema,
     GroupSummarySchema,
-    InvitationSummarySchema,
     InviteUserToGroupSchema,
     JoinRequestSchema,
     PatchGroupSchema,
@@ -327,12 +326,12 @@ async def delete_group_avatar_route(
     "/{group_id}/invitations",
     status_code=status.HTTP_201_CREATED,
     name="Приглашение пользователя в группу",
-    response_model=InvitationSummarySchema,
+    response_model=GroupInvitationSchema,
     description="Позволяет владельцу группы или пользователям с правами пригласить человека в группу, если такое приглашение уже существовало, вернется ранее сделанное",
     responses={
         201: {
             "description": "Приглашение пользователя в группу (новое или старое)",
-            "model": InvitationSummarySchema,
+            "model": GroupInvitationSchema,
         },
         400: {
             "description": "Некорректный запрос",
@@ -363,7 +362,7 @@ async def invite_user_to_group_route(
     user_id: Annotated[InviteUserToGroupSchema, Body(...)],
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> InvitationSummarySchema:
+) -> GroupInvitationSchema:
     return await invite_user_to_group(
         group_id=group_id,
         inviter_id=token_payload.sub,
