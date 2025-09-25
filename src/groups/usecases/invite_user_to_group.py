@@ -38,7 +38,8 @@ async def invite_user_to_group(
     if invitee_id == inviter_id:
         raise CannotInviteYourselfException()
 
-    if not (await session.execute(select(exists().where(Group.id == group_id)))).scalar():
+    group: Group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
+    if group is None:
         raise GroupNotFoundException()
 
     if not (await session.execute(select(exists().where(User.id == invitee_id)))).scalar():
@@ -56,14 +57,15 @@ async def invite_user_to_group(
     if member_exists:
         raise CannotInviteUserThatIsAlreadyInThatGroupException()
 
-    if not await group_member_has_permission(
-        group_id,
-        inviter_id,
-        session,
-        GroupPermission.FULL_ACCESS,
-        GroupPermission.INVITE_MEMBERS,
-    ):
-        raise NotEnoughGroupPermissionsException()
+    if inviter_id != group.creator_id:
+        if not await group_member_has_permission(
+            group_id,
+            inviter_id,
+            session,
+            GroupPermission.FULL_ACCESS,
+            GroupPermission.INVITE_MEMBERS,
+        ):
+            raise NotEnoughGroupPermissionsException()
 
     stmt = (
         insert(GroupInvitation)
