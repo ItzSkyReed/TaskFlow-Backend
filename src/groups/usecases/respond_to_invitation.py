@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user import User
@@ -26,14 +26,15 @@ async def respond_to_invitation(
     :param session: Сессия
     """
 
-    invitation = (
+    invitation: GroupInvitation = (
         await session.execute(
             select(GroupInvitation)
+            .join(Group, Group.id == GroupInvitation.group_id)
             .where(
                 GroupInvitation.id == invitation_id,
             )
             .options(
-                joinedload(GroupInvitation.group).selectinload(Group.members).joinedload(User.user_profile)
+                contains_eager(GroupInvitation.group).selectinload(Group.users).joinedload(User.user_profile)
             )
             .with_for_update(of=Group)
         )
@@ -48,6 +49,9 @@ async def respond_to_invitation(
     if respond_status.response.REJECTED:
         invitation.status = InvitationStatus.REJECTED
     else:
+        if len(invitation.group.users) == invitation.group.max_members:
+            raise GroupIsFullException()
+
         invitation.status = InvitationStatus.ACCEPTED
         invitation.group.members.append(GroupMember(user_id=user_id))
 
