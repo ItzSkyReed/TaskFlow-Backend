@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..exceptions import (
     CreatorCantLeaveFromGroupException,
     GroupNotFoundException,
+    RequiredUserNotInGroupException,
 )
 from ..models import Group, GroupMember
 
@@ -29,6 +30,16 @@ async def leave_from_group(
 
     if group.creator_id == user_id:
         raise CreatorCantLeaveFromGroupException()
+
+    if not (
+        await session.execute(
+            select(GroupMember).where(
+                GroupMember.group_id == group_id,
+                GroupMember.user_id == user_id,
+            )
+        )
+    ).scalar_one_or_none():
+        raise RequiredUserNotInGroupException(user_id)
 
     await session.execute(
         delete(GroupMember).where(GroupMember.group_id == group_id).where(GroupMember.user_id == user_id)
