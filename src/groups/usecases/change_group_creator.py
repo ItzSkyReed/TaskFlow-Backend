@@ -49,13 +49,13 @@ async def change_group_creator(
     if group.creator_id != actual_creator_user_id:
         raise NotEnoughGroupPermissionsException()
 
-    actual_creator = await session.execute(
-        select(User).where(User.id == actual_creator_user_id).with_for_update()
-    )
-    new_creator = await session.execute(select(User).where(User.id == new_creator_user_id).with_for_update())
-
-    if actual_creator is None:
-        raise RequiredUserNotInGroupException(actual_creator_user_id)
+    new_creator = (
+        await session.execute(
+            select(GroupMember)
+            .where(GroupMember.user_id == new_creator_user_id, GroupMember.group_id == group_id)
+            .with_for_update()
+        )
+    ).scalar_one_or_none()
 
     if new_creator is None:
         raise RequiredUserNotInGroupException(new_creator_user_id)
