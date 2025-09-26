@@ -4,8 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
-from ...user import User
+from ...user import User, UserNotFoundException
 from ...utils import lock_rows
+from .. import GroupMember
 from ..exceptions import (
     CannotChangeCreatorToYourselfException,
     NotEnoughGroupPermissionsException,
@@ -38,7 +39,10 @@ async def change_group_creator(
 
     # Лочим пользователей
     await lock_rows(session, User, User.id == actual_creator_user_id)
-    await lock_rows(session, User, User.id == new_creator_user_id)
+    new_user = (await lock_rows(session, User, User.id == new_creator_user_id)).scalar_one_or_none()
+
+    if not new_user:
+        raise UserNotFoundException(new_creator_user_id)
 
     group = await get_group_with_members(group_id, session, with_for_update=True)
 
