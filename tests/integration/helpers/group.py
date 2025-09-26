@@ -50,5 +50,4 @@ async def add_user_to_group(
         f"{group_router.prefix}/invitations/{invite_response.json()['id']}",
         json={"response": "ACCEPTED"},
     )
-    print(21311, user_to_add_accept_invite_response)
     assert user_to_add_accept_invite_response.status_code == status.HTTP_200_OK
