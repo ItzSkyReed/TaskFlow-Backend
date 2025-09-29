@@ -42,35 +42,21 @@ services:
       - /data
 
   minio-test:
-    image: quay.io/minio/minio:latest
+    build: ./minio
     container_name: minio_test
-    env_file:
-      - .env.test
     expose:
       - "${MINIO_STORAGE_PORT}"
       - "${MINIO_WEB_PORT}"
-    command: server /data --console-address ":${MINIO_WEB_PORT}" --address ":${MINIO_STORAGE_PORT}"
+    tmpfs:
+      - /data
+    env_file:
+      - .env.test
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${MINIO_WEB_PORT}/minio/health/live" ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - taskflow_net_test
-    tmpfs:
-      - /data
-
-  minio-init-test:
-    image: minio/mc
-    depends_on:
-      minio-test:
-        condition: service_healthy
-    volumes:
-      - ./init-minio.sh:/init-minio.sh:ro
-    env_file:
-      - .env.test
-    entrypoint: [ "/bin/sh", "/init-minio.sh" ]
     networks:
       - taskflow_net_test
 
