@@ -22,7 +22,7 @@ async def test_get_received_invitations(client: AsyncClient):
     await set_authorization(client, user)
     created_group_response = await create_group(client)
 
-    invite_response = await client.post(
+    await client.post(
         f"{group_router.prefix}/{created_group_response.json()['id']}/invitations",
         json={"user_id": user2["id"]},
     )
