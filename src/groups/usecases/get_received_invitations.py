@@ -41,6 +41,9 @@ async def get_received_invitations(
 
     invitations = (await session.execute(stmt)).scalars().all()
 
+    if not invitations:
+        return []
+
     return await ObjectMapper.map_bulk(
         invitations, GroupInvitationSchema, user_id=invitee_id, session=session
     )
