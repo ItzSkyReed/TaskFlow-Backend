@@ -98,6 +98,7 @@ class PatchGroupSchema(BaseModel):
 
 class GroupUserContextSchema(BaseModel):
     is_creator: Annotated[bool, Field(...)]
+    is_join_request_sent: Annotated[bool, Field(...)]
     is_member: Annotated[bool, Field(...)]
     permissions: list[str]
 
