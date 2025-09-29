@@ -5,7 +5,7 @@ from integration.helpers import get_random_symbols
 from integration.helpers.user import AuthResult, set_authorization
 from starlette import status
 
-from src.groups import group_router
+from src.groups import InvitationStatus, group_router
 
 
 async def create_group(
@@ -48,6 +48,6 @@ async def add_user_to_group(
     await set_authorization(client, user_to_add)
     user_to_add_accept_invite_response = await client.patch(
         f"{group_router.prefix}/invitations/{invite_response.json()['id']}",
-        json={"response": "ACCEPTED"},
+        json={"response": InvitationStatus.ACCEPTED.value},
     )
     assert user_to_add_accept_invite_response.status_code == status.HTTP_200_OK
