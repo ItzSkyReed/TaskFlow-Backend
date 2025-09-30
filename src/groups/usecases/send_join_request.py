@@ -1,13 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
-from ...exceptions import SomethingWentWrongException
 from ...user import User
 from ...utils import lock_rows
 from .. import JoinRequestStatus
@@ -40,13 +38,18 @@ async def send_join_request(
     # Блокируем всех участников группы
     await lock_rows(session, GroupMember, GroupMember.group_id == group_id)
 
-    # Проверяем — не в группе ли уже этот пользователь
     if (
         await session.execute(
-            select(GroupMember).where(
-                GroupMember.user_id == requester_id,
-                GroupMember.group_id == group_id,
+            select(GroupMember)
+            .where(
+                or_(
+                    # пользователь уже в участниках
+                    (GroupMember.user_id == requester_id) & (GroupMember.group_id == group_id),
+                    # пользователь — создатель группы
+                    (Group.creator_id == requester_id) & (Group.id == group_id),
+                )
             )
+            .join(Group, Group.id == GroupMember.group_id, isouter=True)
         )
     ).scalar_one_or_none():
         raise UserAlreadyInGroupRequestException()
