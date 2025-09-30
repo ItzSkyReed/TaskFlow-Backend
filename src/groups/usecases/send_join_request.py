@@ -74,14 +74,15 @@ async def send_join_request(
     join_request = (
         await session.execute(
             select(GroupJoinRequest)
-            .join(GroupJoinRequest.requester)
-            .join(User.user_profile)
             .where(
                 GroupJoinRequest.group_id == group_id,
                 GroupJoinRequest.requester_id == requester_id,
                 GroupJoinRequest.status == JoinRequestStatus.PENDING,
             )
-            .options(joinedload(GroupJoinRequest.group).selectinload(Group.members))
+            .options(
+                joinedload(GroupJoinRequest.group).selectinload(Group.members),
+                joinedload(GroupJoinRequest.requester).joinedload(User.user_profile),
+            )
             .with_for_update(of=GroupJoinRequest)
         )
     ).scalar_one_or_none()
