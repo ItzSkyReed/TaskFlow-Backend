@@ -852,7 +852,7 @@ async def get_group_join_requests_route(
 
 
 @group_router.post(
-    "/{group_id}/join-requests/",
+    "/{group_id}/join-requests",
     status_code=status.HTTP_200_OK,
     name="Отправка пользователем запроса на вступление в группу",
     response_model=JoinRequestSchema,
