@@ -62,7 +62,6 @@ async def send_join_request(
     if members_count >= group.max_members:
         raise GroupIsFullException()
 
-    # Вставляем заявку
     await session.execute(
         insert(GroupJoinRequest)
         .values(group_id=group_id, requester_id=requester_id)
@@ -71,10 +70,6 @@ async def send_join_request(
             index_where=(GroupJoinRequest.status == JoinRequestStatus.PENDING),
         )
     )
-    try:
-        await session.flush()
-    except IntegrityError as err:
-        raise SomethingWentWrongException() from err
 
     join_request = (
         await session.execute(
