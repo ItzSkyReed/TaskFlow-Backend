@@ -90,5 +90,5 @@
 
    > Запускать из корня проекта
    ```shell
-   docker compose -p taskflow_test -f docker-compose.test.yml --env-file .env.test up --build
+   docker compose -p taskflow_test -f docker-compose.test.yml --env-file .env.test up --build --abort-on-container-exit --exit-code-from web-test
    ```
