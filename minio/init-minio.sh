@@ -28,4 +28,5 @@ mc anonymous set public local/avatars
 echo "Инициализация завершена."
 
 # Держим контейнер живым
+# shellcheck disable=SC3045
 wait -n
