@@ -38,14 +38,16 @@ async def respond_to_join_request(
     :raises NotEnoughGroupPermissionsException: 403. Возвращается если недостаточно прав для изменения группы
     """
 
-    # Загружаем и блокируем заявку, группу и участников
-    join_request = (
+    # Загружаем и блокируем заявку, группу
+    join_request: GroupJoinRequest = (
         await session.execute(
             select(GroupJoinRequest)
-            .join(GroupJoinRequest.requester)
-            .join(User.user_profile)
+            .join(GroupJoinRequest.group)
             .where(GroupJoinRequest.id == join_request_id)
-            .options(joinedload(GroupJoinRequest.group).selectinload(Group.members))
+            .options(
+                contains_eager(GroupJoinRequest.group).selectinload(Group.members),
+                joinedload(GroupJoinRequest.requester).joinedload(User.user_profile),
+            )
             .with_for_update(of=(GroupJoinRequest, Group))
         )
     ).scalar_one_or_none()
