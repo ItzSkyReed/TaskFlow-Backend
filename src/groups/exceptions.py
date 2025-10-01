@@ -291,7 +291,7 @@ class GroupJoinRequestAlreadyResolvedException(BaseAPIException):
             status_code=status.HTTP_409_CONFLICT,
             msg="На данное приглашение уже дан ответ",
             loc=["group", "join_request_id"],
-            err_type="group.join_request.already_resolved",
+            err_type="group.conflict.join_request_already_resolved",
         )
 
 
