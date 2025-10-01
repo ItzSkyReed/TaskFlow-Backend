@@ -899,7 +899,7 @@ async def send_join_request_route(
 
 
 @group_router.patch(
-    "/join-requests/{join_request_id}/",
+    "/join-requests/{join_request_id}",
     status_code=status.HTTP_200_OK,
     name="Ответ на запрос на вступление пользователя в группу",
     response_model=JoinRequestSchema,
