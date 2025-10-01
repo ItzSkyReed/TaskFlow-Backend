@@ -80,12 +80,11 @@ async def respond_to_join_request(
         await session.execute(
             (insert(GroupMember).values(group_id=join_request.group_id, user_id=join_request.requester_id))
         )
-        join_request.status = JoinRequestStatus.APPROVED
-
-    elif respond_status == JoinRequestStatus.REJECTED:
+        join_request.status = respond_status
+    else:
         join_request.status = JoinRequestStatus.REJECTED
 
-    join_request_schema = await ObjectMapper.map(
+    join_request_schema: JoinRequestSchema = await ObjectMapper.map(
         join_request, JoinRequestSchema, user_id=acceptor_id, session=session
     )
     await session.commit()
