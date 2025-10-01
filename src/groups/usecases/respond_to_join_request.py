@@ -3,21 +3,27 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user import User
-from .. import GroupMember, GroupPermission, JoinRequestStatus
 from ..exceptions import (
     GroupIsFullException,
     GroupJoinRequestAlreadyResolvedException,
     GroupJoinRequestNotFoundException,
     NotEnoughGroupPermissionsException,
 )
-from ..models import Group, GroupJoinRequest, GroupUserPermission
+from ..models import (
+    Group,
+    GroupJoinRequest,
+    GroupMember,
+    GroupPermission,
+    JoinRequestStatus,
+)
 from ..schemas import (
     JoinRequestSchema,
 )
+from ..services import group_member_has_permission
 
 
 async def respond_to_join_request(
@@ -61,22 +67,15 @@ async def respond_to_join_request(
     if len(join_request.group.members) >= join_request.group.max_members:
         raise GroupIsFullException()
 
-    perm = (
-        await session.execute(
-            select(GroupUserPermission)
-            .where(
-                GroupUserPermission.group_id == join_request.group_id,
-                GroupUserPermission.user_id == acceptor_id,
-                GroupUserPermission.permission.in_(
-                    [GroupPermission.ACCEPT_JOIN_REQUESTS, GroupPermission.FULL_ACCESS]
-                ),
-            )
-            .with_for_update(of=GroupUserPermission)
-        )
-    ).scalar_one_or_none()
-
-    if perm is None:
-        raise NotEnoughGroupPermissionsException()
+    if acceptor_id != join_request.group.creator_id:
+        if not await group_member_has_permission(
+            join_request.group.id,
+            acceptor_id,
+            session,
+            GroupPermission.ACCEPT_JOIN_REQUESTS,
+            GroupPermission.FULL_ACCESS,
+        ):
+            raise NotEnoughGroupPermissionsException()
 
     if respond_status == JoinRequestStatus.APPROVED:
         await session.execute(
