@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, literal, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -67,7 +67,7 @@ async def send_join_request(
         .values(group_id=group_id, requester_id=requester_id)
         .on_conflict_do_nothing(
             index_elements=["group_id", "requester_id"],
-            index_where=(GroupJoinRequest.status == JoinRequestStatus.PENDING),
+            index_where=(GroupJoinRequest.status == literal(JoinRequestStatus.PENDING, literal_execute=True)),
         )
     )
 
