@@ -5,7 +5,6 @@ requires-python = ">=3.13"
 
 dependencies = [
     "fastapi[standard-no-fastapi-cloud-cli]",
-    "fastapi-limiter",
     "orjson",
     "uvicorn[standard]",
     "pydantic_settings",
