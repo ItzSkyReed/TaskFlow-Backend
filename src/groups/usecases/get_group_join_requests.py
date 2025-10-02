@@ -49,18 +49,21 @@ async def get_group_join_requests(
         ):
             raise NotEnoughGroupPermissionsException()
 
-    stmt = (
+    join_requests_query = (
         select(GroupJoinRequest)
-        .options(joinedload(GroupJoinRequest.group).selectinload(Group.users).joinedload(User.user_profile))
+        .options(
+            joinedload(GroupJoinRequest.group).selectinload(Group.users).joinedload(User.user_profile),
+            joinedload(GroupJoinRequest.requester).joinedload(User.user_profile),
+        )
         .where(GroupJoinRequest.group_id == group_id)
         .order_by(GroupJoinRequest.created_at.desc())
         .offset(offset)
         .limit(limit)
     )
     if join_request_status:
-        stmt = stmt.where(GroupInvitation.status.in_(join_request_status))
+        join_requests_query = join_requests_query.where(GroupJoinRequest.status.in_(join_request_status))
 
-    join_requests = (await session.execute(stmt)).scalars().all()
+    join_requests = (await session.execute(join_requests_query)).scalars().all()
 
     if not join_requests:
         return []
