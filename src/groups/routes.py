@@ -803,7 +803,7 @@ async def change_group_creator_route(
 
 
 @group_router.get(
-    "/{group_id}/join-requests/",
+    "/{group_id}/join-requests",
     status_code=status.HTTP_200_OK,
     name="Получения списка заявок на вступление в группу",
     response_model=list[JoinRequestSchema],
