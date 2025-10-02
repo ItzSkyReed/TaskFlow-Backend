@@ -1,17 +1,17 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy_pydantic_mapper import ObjectMapper
 
 from ...user import User
-from .. import GroupJoinRequest
 from ..enums import GroupPermission, JoinRequestStatus
 from ..exceptions import GroupNotFoundException, NotEnoughGroupPermissionsException
-from ..models import Group, GroupInvitation, GroupMember, GroupUserPermission
+from ..models import Group, GroupJoinRequest, GroupMember
 from ..schemas import JoinRequestSchema
+from ..services import group_member_has_permission
 
 
 async def get_group_join_requests(
@@ -33,36 +33,21 @@ async def get_group_join_requests(
 
     :raises NotEnoughGroupPermissionsException: 403. Возвращается если недостаточно прав для изменения ресурса
     """
-    group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
+    group: Group = (await session.execute(select(Group).where(Group.id == group_id))).scalar_one_or_none()
 
     if group is None:
         raise GroupNotFoundException()
 
     # Проверяем, что пользователь в группе, и у него есть необходимые для просмотра права, если этого нет, не даем смотреть заявки.
-    if not (
-        await session.execute(
-            select(GroupMember)
-            .join(
-                GroupUserPermission,
-                and_(
-                    GroupUserPermission.user_id == user_id,
-                    GroupUserPermission.group_id == group_id,
-                ),
-                isouter=True,  # outer join, чтобы не потерять creator
+    if user_id != group.creator_id:
+        if not (
+            await session.execute(
+                select(exists().where(GroupMember.group_id == group_id, GroupMember.user_id == user_id))
             )
-            .join(Group, Group.id == GroupMember.group_id)
-            .where(
-                GroupMember.group_id == group_id,
-                GroupMember.user_id == user_id,
-                or_(
-                    GroupUserPermission.permission == GroupPermission.FULL_ACCESS,
-                    GroupUserPermission.permission == GroupPermission.ACCEPT_JOIN_REQUESTS,
-                    Group.creator_id == user_id,  # проверка на создателя
-                ),
-            )
-        )
-    ).scalar_one_or_none():
-        raise NotEnoughGroupPermissionsException()
+        ).scalar_one_or_none() or not await group_member_has_permission(
+            group_id, user_id, session, GroupPermission.FULL_ACCESS, GroupPermission.ACCEPT_JOIN_REQUESTS
+        ):
+            raise NotEnoughGroupPermissionsException()
 
     stmt = (
         select(GroupJoinRequest)
