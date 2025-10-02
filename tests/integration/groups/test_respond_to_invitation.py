@@ -1,6 +1,5 @@
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from integration.helpers import create_group, register_and_login, set_authorization
 from starlette import status
@@ -19,7 +18,6 @@ async def test_invitation_not_found(client: AsyncClient):
     assert invite_response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.order(after="test_invite_user_to_group.py::test_invite_user_no_permissions")
 async def test_invitation_success_accept(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -47,7 +45,6 @@ async def test_invitation_success_accept(client: AsyncClient):
     assert user2["id"] in [member["user"]["id"] for member in group_data.json()["members"]]
 
 
-@pytest.mark.order(after="test_invite_user_to_group.py::test_invite_user_no_permissions")
 async def test_invitation_success_rejected(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -75,7 +72,6 @@ async def test_invitation_success_rejected(client: AsyncClient):
     assert user2["id"] not in [member["user"]["id"] for member in group_data.json()["members"]]
 
 
-@pytest.mark.order(after="test_invite_user_to_group.py::test_invite_user_no_permissions")
 async def test_invitation_members_limit(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)

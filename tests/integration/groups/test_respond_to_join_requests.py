@@ -1,6 +1,5 @@
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from integration.helpers import add_user_to_group, create_group, register_and_login, set_authorization
 from starlette import status
@@ -8,7 +7,6 @@ from starlette import status
 from src.groups import JoinRequestStatus, group_router
 
 
-@pytest.mark.order(after="test_send_group_join_requests.py::test_join_requests_success")
 async def test_no_join_request_found(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
@@ -20,7 +18,6 @@ async def test_no_join_request_found(client: AsyncClient):
     assert join_response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.order(after="test_send_group_join_requests.py::test_join_requests_success")
 async def test_group_is_full(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -47,7 +44,6 @@ async def test_group_is_full(client: AsyncClient):
     assert user2_respond_join_response.json()["detail"][0]["type"] == "group.conflict.group_is_full"
 
 
-@pytest.mark.order(after="test_send_group_join_requests.py::test_join_requests_success")
 async def test_no_permissions(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -73,7 +69,6 @@ async def test_no_permissions(client: AsyncClient):
     assert user2_respond_join_response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.order(after="test_send_group_join_requests.py::test_join_requests_success")
 async def test_success_rejected_response(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -97,7 +92,6 @@ async def test_success_rejected_response(client: AsyncClient):
     assert user2_respond_join_response.json()["status"] == JoinRequestStatus.REJECTED.value
 
 
-@pytest.mark.order(after="test_send_group_join_requests.py::test_join_requests_success")
 async def test_success_approved_response(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -121,7 +115,6 @@ async def test_success_approved_response(client: AsyncClient):
     assert user2_respond_join_response.json()["status"] == JoinRequestStatus.APPROVED.value
 
 
-@pytest.mark.order(after="test_send_group_join_requests.py::test_join_requests_success")
 async def test_join_request_already_resolved(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)

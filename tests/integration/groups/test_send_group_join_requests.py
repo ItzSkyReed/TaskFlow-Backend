@@ -1,6 +1,5 @@
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from integration.helpers import add_user_to_group, create_group, register_and_login, set_authorization
 from starlette import status
@@ -8,7 +7,6 @@ from starlette import status
 from src.groups import group_router
 
 
-@pytest.mark.order(after="test_create_group.py::test_create_group_unauthorized")
 async def test_no_group_found(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
@@ -19,7 +17,6 @@ async def test_no_group_found(client: AsyncClient):
     assert join_response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_user_already_in_group_group_creator(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
@@ -32,7 +29,6 @@ async def test_user_already_in_group_group_creator(client: AsyncClient):
     assert join_response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_user_already_in_group_group_member(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -49,7 +45,6 @@ async def test_user_already_in_group_group_member(client: AsyncClient):
     assert join_response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_group_is_full(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -67,7 +62,6 @@ async def test_group_is_full(client: AsyncClient):
     assert join_response.status_code == status.HTTP_409_CONFLICT
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_join_requests_already_sent(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -90,7 +84,6 @@ async def test_join_requests_already_sent(client: AsyncClient):
     assert join_response_2.json()["created_at"] == join_response.json()["created_at"]
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_join_requests_success(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)

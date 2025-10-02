@@ -1,13 +1,9 @@
-import pytest
 from httpx import AsyncClient
 from integration.helpers import add_user_to_group, create_group, register_and_login, set_authorization
 
 from src.groups import InvitationStatus, group_router
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -35,9 +31,6 @@ async def test_get_received_invitations(client: AsyncClient):
     assert invitations_response.json()[0]["group"]["id"] == created_group_response.json()["id"]
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations_pending(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -67,9 +60,6 @@ async def test_get_received_invitations_pending(client: AsyncClient):
     assert invitations_response.json()[0]["status"] == InvitationStatus.PENDING.value
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations_accepted(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -99,9 +89,6 @@ async def test_get_received_invitations_accepted(client: AsyncClient):
     assert invitations_response.json()[0]["status"] == InvitationStatus.ACCEPTED.value
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations_rejected(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -128,9 +115,6 @@ async def test_get_received_invitations_rejected(client: AsyncClient):
     assert invitations_response.json()[0]["status"] == InvitationStatus.REJECTED.value
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations_limit(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -169,9 +153,6 @@ async def test_get_received_invitations_limit(client: AsyncClient):
     assert invitation_response_2.json()["id"] in ids
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations_offset(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -223,9 +204,6 @@ async def test_get_received_invitations_offset(client: AsyncClient):
     assert invitation_response_2.json()["id"] in ids
 
 
-@pytest.mark.order(
-    after="test_change_group_creator.py::test_change_group_creator_success",
-)
 async def test_get_received_invitations_offset_limit(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)

@@ -1,6 +1,5 @@
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from integration.helpers import add_user_to_group, create_group, register_and_login, set_authorization
 from starlette import status
@@ -83,7 +82,6 @@ async def test_invite_user_not_found(client: AsyncClient):
     assert invite_response.json()["detail"][0]["type"] == "group.not_found"
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_invite_user_already_invited(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -105,7 +103,6 @@ async def test_invite_user_already_invited(client: AsyncClient):
     assert invite_response.json()["created_at"] == invite_response_2.json()["created_at"]
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_invite_user_already_in_group(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
@@ -123,7 +120,6 @@ async def test_invite_user_already_in_group(client: AsyncClient):
     assert invite_response.json()["detail"][0]["type"] == "group.invitation.invited_user_already_in_group"
 
 
-@pytest.mark.order(after="test_respond_to_invitation.py::test_invitation_members_limit")
 async def test_invite_user_no_permissions(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
