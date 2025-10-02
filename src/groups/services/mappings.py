@@ -195,7 +195,7 @@ async def map_to_group_join_request_schema(
     )
 
 
-@ObjectMapper.register_bulk(GroupJoinRequest, GroupInvitationSchema)
+@ObjectMapper.register_bulk(GroupJoinRequest, JoinRequestSchema)
 async def map_to_group_join_request_schemas(
     join_requests: Sequence[GroupJoinRequest], user_id: UUID, session: AsyncSession
 ) -> list[JoinRequestSchema]:
