@@ -199,7 +199,7 @@ async def get_groups_member_count(groups: Sequence[Group], session: AsyncSession
 async def get_group_member_count(group: Group, session: AsyncSession) -> int:
     """
     Находит кол-во участников для одной группы.
-    :param group: группа.
+    :param group: Группа.
     :param session: Сессия
     :return: актуальное кол-во участников
     """
