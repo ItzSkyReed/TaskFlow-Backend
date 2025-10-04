@@ -85,14 +85,19 @@ async def add_user_group_permission(
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
-    if GroupPermission.CONTROL_MEMBERS not in changer_member.permissions:
-        raise NotEnoughGroupPermissionsException()
-
-    if (
-        permission == GroupPermission.CONTROL_MEMBERS
-        and GroupPermission.FULL_ACCESS not in changer_member.permissions
-    ):
-        raise NotEnoughGroupPermissionsException()
+    if changer_user_id != group.creator_id:
+        # Для выдачи CONTROL_MEMBERS нужен FULL_ACCESS
+        if (
+            permission == GroupPermission.CONTROL_MEMBERS
+            and GroupPermission.FULL_ACCESS not in changer_member.permissions
+        ):
+            raise NotEnoughGroupPermissionsException()
+        # Для остальных прав достаточно либо CONTROL_MEMBERS, либо FULL_ACCESS
+        elif not (
+            GroupPermission.CONTROL_MEMBERS in changer_member.permissions
+            or GroupPermission.FULL_ACCESS in changer_member.permissions
+        ):
+            raise NotEnoughGroupPermissionsException()
 
     target_member.permission_objs.append(
         GroupUserPermission(
