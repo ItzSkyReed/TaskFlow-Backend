@@ -43,8 +43,7 @@ async def add_user_group_permission(
         raise UserCantChangeOwnPermissionException()
 
     # Лочим пользователей
-    await lock_rows(session, User, User.id == target_user_id)
-    await lock_rows(session, User, User.id == changer_user_id)
+    await lock_rows(session, User, User.id.in_([target_user_id, changer_user_id]))
 
     # Получаем группу с членами
     group = await get_group_with_members(group_id, session, with_for_update=True)
