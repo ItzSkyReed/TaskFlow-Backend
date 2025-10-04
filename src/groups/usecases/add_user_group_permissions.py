@@ -61,30 +61,27 @@ async def add_user_group_permission(
                     GroupMember.group_id == group.id,
                 )
                 .options(joinedload(GroupMember.permission_objs))
-                .with_for_update()
+                .with_for_update(of=GroupMember)
             )
         )
-        .scalars()
-        .one_or_none()
+        .unique()
+        .scalar_one_or_none()
     )
     if not changer_member:
         raise RequiredUserNotInGroupException(user_id=changer_user_id)
 
     target_member = (
-        (
-            await session.execute(
-                select(GroupMember)
-                .where(
-                    GroupMember.user_id == target_user_id,
-                    GroupMember.group_id == group.id,
-                )
-                .options(joinedload(GroupMember.user).joinedload(User.user_profile))
-                .with_for_update()
+        await session.execute(
+            select(GroupMember)
+            .where(
+                GroupMember.user_id == target_user_id,
+                GroupMember.group_id == group.id,
             )
+            .options(joinedload(GroupMember.user).joinedload(User.user_profile))
+            .with_for_update(of=GroupMember)
         )
-        .scalars()
-        .one_or_none()
-    )
+    ).scalar_one_or_none()
+
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
