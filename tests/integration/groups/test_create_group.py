@@ -73,7 +73,7 @@ async def test_create_group_max_members_too_big(client: AsyncClient):
         },
     )
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 @pytest.mark.order(1)
@@ -93,7 +93,7 @@ async def test_create_group_max_members_too_small(client: AsyncClient):
         },
     )
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 @pytest.mark.order(1)
@@ -112,7 +112,7 @@ async def test_create_group_no_name(client: AsyncClient):
         },
     )
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 @pytest.mark.order(1)

@@ -83,7 +83,7 @@ async def test_sign_in_invalid_identifier_schema(client):
     }
     response = await client.post(f"{auth_router.prefix}/sign_in", json=signin_payload)
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json()["detail"] is not None
 
 
@@ -96,5 +96,5 @@ async def test_sign_in_invalid_password_schema(client):
     }
     response = await client.post(f"{auth_router.prefix}/sign_in", json=signin_payload)
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json()["detail"] is not None

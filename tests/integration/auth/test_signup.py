@@ -117,5 +117,5 @@ async def test_conflict_sign_up_login_only(client: AsyncClient):
 async def test_invalid_schema_sign_up(client: AsyncClient):
     payload = {"name": "A", "login": "ab", "email": "not-an-email", "password": "123"}
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json()["detail"] is not None
