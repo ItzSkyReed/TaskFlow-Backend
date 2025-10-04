@@ -42,7 +42,7 @@ class SomethingWentWrongException(BaseAPIException):
 class ExceededAvatarSizeException(BaseAPIException):
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             msg=f"Max avatar size is {MAX_AVATAR_SIZE} bytes",
             loc=["body", "avatar"],
             err_type="avatar_error.avatar_too_large",

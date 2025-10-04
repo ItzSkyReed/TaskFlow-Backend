@@ -114,7 +114,7 @@ async def test_patch_group_avatar_too_large(client: AsyncClient):
         files=files,
     )
 
-    assert resp.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert resp.status_code == status.HTTP_413_CONTENT_TOO_LARGE
 
 
 async def test_patch_group_avatar_invalid_content_type(client: AsyncClient):
