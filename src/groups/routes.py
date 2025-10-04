@@ -662,7 +662,7 @@ async def delete_user_from_group_route(
 
 @group_router.post(
     "/{group_id}/members/{user_id}/{permission}",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
     name="Добавление права пользователю в группе",
     response_model=GroupMemberSchema,
     description="Позволяет пользователю добавлять права в группе другому пользователю",
