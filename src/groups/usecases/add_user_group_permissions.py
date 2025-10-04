@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -99,12 +100,15 @@ async def add_user_group_permission(
         ):
             raise NotEnoughGroupPermissionsException()
 
-    target_member.permission_objs.append(
-        GroupUserPermission(
-            group_id=group.id,
-            user_id=target_user_id,
-            permission=permission,
-            granted_by=changer_user_id,
+    await session.execute(
+        insert(GroupUserPermission)
+        .values(group_id=group_id, user_id=target_user_id, permission=permission, granted_by=changer_user_id)
+        .on_conflict_do_nothing(
+            index_elements=[
+                GroupUserPermission.user_id,
+                GroupUserPermission.permission,
+                GroupUserPermission.group_id,
+            ]
         )
     )
     await session.commit()
