@@ -171,4 +171,4 @@ class JoinRequestSchema(BaseModel):
 
 
 class RespondToJoinRequestSchema(BaseModel):
-    response: Annotated[Literal[JoinRequestStatus.REJECTED, JoinRequestStatus.APPROVED], Field(...)]
+    response: Annotated[Literal[JoinRequestStatus.REJECTED, JoinRequestStatus.ACCEPTED], Field(...)]

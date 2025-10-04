@@ -17,7 +17,7 @@ class JoinRequestStatus(str, Enum):
     """
 
     PENDING = "PENDING"
-    APPROVED = "APPROVED"
+    ACCEPTED = "ACCEPTED"
     REJECTED = "REJECTED"
 
 

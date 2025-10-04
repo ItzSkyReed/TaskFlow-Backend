@@ -77,7 +77,7 @@ async def respond_to_join_request(
         ):
             raise NotEnoughGroupPermissionsException()
 
-    if respond_status == JoinRequestStatus.APPROVED:
+    if respond_status == JoinRequestStatus.ACCEPTED:
         await session.execute(
             (insert(GroupMember).values(group_id=join_request.group_id, user_id=join_request.requester_id))
         )

@@ -208,7 +208,7 @@ class GroupInvitation(Base):
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now(), server_onupdate=func.now()
-    )  # Время изменения статуса приглашения (pending -> approved)
+    )  # Время изменения статуса приглашения (pending -> accepted)
 
     group: Mapped["Group"] = relationship(back_populates="invitations")
     inviter: Mapped["User"] = relationship(foreign_keys=[inviter_id])

@@ -34,7 +34,7 @@ def upgrade() -> None:
         sa.Column("requester_id", sa.UUID(), nullable=False),
         sa.Column(
             "status",
-            sa.Enum("PENDING", "APPROVED", "REJECTED", name="join_request_status"),
+            sa.Enum("PENDING", "ACCEPTED", "REJECTED", name="join_request_status"),
             server_default=sa.text("'PENDING'::join_request_status"),
             nullable=False,
         ),

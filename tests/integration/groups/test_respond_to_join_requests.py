@@ -13,7 +13,7 @@ async def test_no_join_request_found(client: AsyncClient):
 
     join_response = await client.patch(
         f"{group_router.prefix}/join-requests/{str(uuid.uuid4())}",
-        json={"response": JoinRequestStatus.APPROVED},
+        json={"response": JoinRequestStatus.ACCEPTED},
     )
     assert join_response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -37,7 +37,7 @@ async def test_group_is_full(client: AsyncClient):
     await set_authorization(client, user)
     user2_respond_join_response = await client.patch(
         f"{group_router.prefix}/join-requests/{user2_send_join_response.json()['id']}",
-        json={"response": JoinRequestStatus.APPROVED},
+        json={"response": JoinRequestStatus.ACCEPTED},
     )
 
     assert user2_respond_join_response.status_code == status.HTTP_409_CONFLICT
@@ -63,7 +63,7 @@ async def test_no_permissions(client: AsyncClient):
     await set_authorization(client, user3)
     user2_respond_join_response = await client.patch(
         f"{group_router.prefix}/join-requests/{user2_send_join_response.json()['id']}",
-        json={"response": JoinRequestStatus.APPROVED},
+        json={"response": JoinRequestStatus.ACCEPTED},
     )
 
     assert user2_respond_join_response.status_code == status.HTTP_403_FORBIDDEN
@@ -92,7 +92,7 @@ async def test_success_rejected_response(client: AsyncClient):
     assert user2_respond_join_response.json()["status"] == JoinRequestStatus.REJECTED.value
 
 
-async def test_success_approved_response(client: AsyncClient):
+async def test_success_accepted_response(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
     await set_authorization(client, user)
@@ -108,11 +108,11 @@ async def test_success_approved_response(client: AsyncClient):
     await set_authorization(client, user)
     user2_respond_join_response = await client.patch(
         f"{group_router.prefix}/join-requests/{user2_send_join_response.json()['id']}",
-        json={"response": JoinRequestStatus.APPROVED},
+        json={"response": JoinRequestStatus.ACCEPTED},
     )
 
     assert user2_respond_join_response.status_code == status.HTTP_200_OK
-    assert user2_respond_join_response.json()["status"] == JoinRequestStatus.APPROVED.value
+    assert user2_respond_join_response.json()["status"] == JoinRequestStatus.ACCEPTED.value
 
 
 async def test_join_request_already_resolved(client: AsyncClient):
