@@ -68,7 +68,7 @@ def upgrade() -> None:
                 "KICK_MEMBERS",
                 "ACCEPT_JOIN_REQUESTS",
                 "MANAGE_GROUP",
-                "MANAGE_MEMBERS",
+                "CONTROL_MEMBERS",
                 "MANAGE_TASKS",
                 "FULL_ACCESS",
                 name="group_permission",
