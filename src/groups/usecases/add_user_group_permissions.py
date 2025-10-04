@@ -33,8 +33,8 @@ async def add_user_group_permission(
     :param session: Сессия
     Notes
     -----
-    - Для изменения любого права нужно MANAGE_MEMBERS.
-    - Для выдачи MANAGE_MEMBERS нужно FULL_ACCESS.
+    - Для изменения любого права нужно CONTROL_MEMBERS или FULL_ACCESS.
+    - Для выдачи CONTROL_MEMBERS нужно FULL_ACCESS.
     - Для выдачи FULL_ACCESS нужно быть создателем группы.
 
     """
