@@ -1,9 +1,7 @@
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 
 from ...user.models import User
 from ...utils import lock_rows
@@ -13,9 +11,9 @@ from ..exceptions import (
     RequiredUserNotInGroupException,
     UserCantChangeOwnPermissionException,
 )
-from ..models import GroupMember, GroupUserPermission
+from ..models import GroupUserPermission
 from ..schemas import GroupMemberSchema
-from ..services import get_group_with_members
+from ..services import ensure_has_permission, get_group_member, get_group_with_members
 
 
 async def add_user_group_permission(
@@ -53,52 +51,19 @@ async def add_user_group_permission(
         raise NotEnoughGroupPermissionsException()
 
     # Получаем права того, кто меняет права
-    changer_member = (
-        (
-            await session.execute(
-                select(GroupMember)
-                .where(
-                    GroupMember.user_id == changer_user_id,
-                    GroupMember.group_id == group.id,
-                )
-                .options(joinedload(GroupMember.permission_objs))
-                .with_for_update(of=GroupMember)
-            )
-        )
-        .unique()
-        .scalar_one_or_none()
+    changer_member = await get_group_member(
+        changer_user_id, group.id, session, with_for_update=True, with_permissions=True
     )
     if not changer_member:
         raise RequiredUserNotInGroupException(user_id=changer_user_id)
 
-    target_member = (
-        await session.execute(
-            select(GroupMember)
-            .where(
-                GroupMember.user_id == target_user_id,
-                GroupMember.group_id == group.id,
-            )
-            .options(joinedload(GroupMember.user).joinedload(User.user_profile))
-            .with_for_update(of=GroupMember)
-        )
-    ).scalar_one_or_none()
-
+    target_member = await get_group_member(
+        target_user_id, group.id, session, with_for_update=True, with_profile=True
+    )
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
-    if changer_user_id != group.creator_id:
-        # Для выдачи CONTROL_MEMBERS нужен FULL_ACCESS
-        if (
-            permission == GroupPermission.CONTROL_MEMBERS
-            and GroupPermission.FULL_ACCESS not in changer_member.permissions
-        ):
-            raise NotEnoughGroupPermissionsException()
-        # Для остальных прав достаточно либо CONTROL_MEMBERS, либо FULL_ACCESS
-        elif not (
-            GroupPermission.CONTROL_MEMBERS in changer_member.permissions
-            or GroupPermission.FULL_ACCESS in changer_member.permissions
-        ):
-            raise NotEnoughGroupPermissionsException()
+    ensure_has_permission(changer_member, group, permission)
 
     await session.execute(
         insert(GroupUserPermission)
@@ -111,6 +76,7 @@ async def add_user_group_permission(
             ]
         )
     )
+    await session.refresh(target_member)
     await session.commit()
 
     return GroupMemberSchema.model_validate(target_member, from_attributes=True)

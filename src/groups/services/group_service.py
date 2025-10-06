@@ -3,11 +3,11 @@ from uuid import UUID
 
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from ...user import User
 from .. import JoinRequestStatus
-from ..exceptions import GroupNotFoundException
+from ..exceptions import GroupNotFoundException, NotEnoughGroupPermissionsException
 from ..models import (
     Group,
     GroupJoinRequest,
@@ -207,3 +207,53 @@ async def get_group_member_count(group: Group, session: AsyncSession) -> int:
 
     count = await session.scalar(query)
     return count or 0
+
+
+async def get_group_member(
+    user_id: UUID,
+    group_id: UUID,
+    session: AsyncSession,
+    with_permissions: bool = False,
+    with_profile: bool = False,
+    with_for_update: bool = False,
+) -> GroupMember | None:
+    stmt = select(GroupMember).where(
+        GroupMember.user_id == user_id,
+        GroupMember.group_id == group_id,
+    )
+
+    if with_permissions:
+        stmt = stmt.options(joinedload(GroupMember.permission_objs))
+    if with_profile:
+        stmt = stmt.options(joinedload(GroupMember.user).joinedload(User.user_profile))
+    if with_for_update:
+        stmt = stmt.with_for_update(of=GroupMember)
+
+    result = await session.execute(stmt)
+
+    if with_permissions:
+        result = result.unique()
+
+    return result.scalar_one_or_none()
+
+
+def ensure_has_permission(
+    group_member: GroupMember,
+    group: Group,
+    permission: GroupPermission,
+):
+    """
+    Проверяет, может ли данный участник выдать указанное право в группе.
+    :raises NotEnoughGroupPermissionsException при отсутствии прав.
+    """
+    # Создатель группы может всё
+    if group_member.user_id == group.creator_id:
+        return
+
+    perms = group_member.permissions
+
+    if permission == GroupPermission.CONTROL_MEMBERS and GroupPermission.FULL_ACCESS not in perms:
+        raise NotEnoughGroupPermissionsException()
+
+    if not (GroupPermission.CONTROL_MEMBERS in perms or GroupPermission.FULL_ACCESS in perms):
+        raise NotEnoughGroupPermissionsException()

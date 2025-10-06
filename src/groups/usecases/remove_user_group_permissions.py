@@ -1,19 +1,17 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 
-from ...user.models import User
 from ..enums import GroupPermission
 from ..exceptions import (
     NotEnoughGroupPermissionsException,
     RequiredUserNotInGroupException,
     UserCantChangeOwnPermissionException,
 )
-from ..models import GroupMember, GroupUserPermission
+from ..models import GroupUserPermission
 from ..schemas import GroupMemberSchema
-from ..services import get_group_with_members
+from ..services import ensure_has_permission, get_group_member, get_group_with_members
 
 
 async def remove_user_group_permission(
@@ -48,48 +46,20 @@ async def remove_user_group_permission(
         raise NotEnoughGroupPermissionsException()
 
     # Получаем права того, кто меняет права
-    changer_member = (
-        (
-            await session.execute(
-                select(GroupMember)
-                .where(
-                    GroupMember.user_id == changer_user_id,
-                    GroupMember.group_id == group.id,
-                )
-                .options(joinedload(GroupMember.permission_objs))
-            )
-        )
-        .scalars()
-        .one_or_none()
+    changer_member = await get_group_member(
+        changer_user_id, group.id, session, with_for_update=True, with_permissions=True
     )
     if not changer_member:
         raise RequiredUserNotInGroupException(user_id=changer_user_id)
-    target_member = (
-        (
-            await session.execute(
-                select(GroupMember)
-                .where(
-                    GroupMember.user_id == target_user_id,
-                    GroupMember.group_id == group.id,
-                )
-                .options(joinedload(GroupMember.user).joinedload(User.user_profile))
-                .with_for_update()
-            )
-        )
-        .scalars()
-        .one_or_none()
+
+    target_member = await get_group_member(
+        target_user_id, group.id, session, with_for_update=True, with_profile=True
     )
+
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
-    if GroupPermission.CONTROL_MEMBERS not in changer_member.permissions:
-        raise NotEnoughGroupPermissionsException()
-
-    if (
-        permission == GroupPermission.CONTROL_MEMBERS
-        and GroupPermission.FULL_ACCESS not in changer_member.permissions
-    ):
-        raise NotEnoughGroupPermissionsException()
+    ensure_has_permission(changer_member, group, permission)
 
     await session.execute(
         delete(GroupUserPermission).where(
