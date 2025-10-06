@@ -59,7 +59,7 @@ class JWTUtils:
         payload = {
             "iat": now,
             "sub": str(user_id),
-            "exp": now + timedelta(minutes=cls.__auth_settings.access_token_expires_in),
+            "exp": now + timedelta(seconds=cls.__auth_settings.access_token_expires_in),
         }
 
         return jwt.encode(
@@ -80,7 +80,7 @@ class JWTUtils:
         payload = {
             "iat": now,
             "sub": str(user_id),
-            "exp": now + timedelta(minutes=cls.__auth_settings.refresh_token_expires_in),
+            "exp": now + timedelta(seconds=cls.__auth_settings.refresh_token_expires_in),
             "jti": str(jti),
         }
 

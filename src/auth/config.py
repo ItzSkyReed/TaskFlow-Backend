@@ -7,8 +7,8 @@ logger = getLogger(__name__)
 
 
 class AuthSettings(BaseSettings):
-    access_token_expires_in: int  # минуты
-    refresh_token_expires_in: int  # минуты
+    access_token_expires_in: int  # секунды
+    refresh_token_expires_in: int  # секунды
 
     jwt_algorithm: str
     jwt_secret: str
