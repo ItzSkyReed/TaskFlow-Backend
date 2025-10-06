@@ -240,7 +240,6 @@ async def get_group_member(
 def ensure_has_permission(
     group_member: GroupMember,
     group: Group,
-    permission: GroupPermission,
 ):
     """
     Проверяет, может ли данный участник выдать указанное право в группе.
@@ -250,10 +249,5 @@ def ensure_has_permission(
     if group_member.user_id == group.creator_id:
         return
 
-    perms = group_member.permissions
-
-    if permission == GroupPermission.CONTROL_MEMBERS and GroupPermission.FULL_ACCESS not in perms:
-        raise NotEnoughGroupPermissionsException()
-
-    if not (GroupPermission.CONTROL_MEMBERS in perms or GroupPermission.FULL_ACCESS in perms):
+    if GroupPermission.FULL_ACCESS not in group_member.permissions:
         raise NotEnoughGroupPermissionsException()

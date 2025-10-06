@@ -29,17 +29,13 @@ async def delete_user_from_group(
 
     Notes
     -----
-
-    - KICK_MEMBERS может кикать всех, кроме FULL_ACCESS и CONTROL_MEMBERS
-    - CONTROL_MEMBERS может кикать всех, кроме FULL_ACCESS
     - FULL_ACCESS может кикать всех, кроме создателя
-    - Никто не может кикать создателя
     """
 
     if initiator_id == user_to_kick_id:
         raise CannotKickYourselfException()
 
-        # Загружаем группу и блокируем на время операции
+    # Загружаем группу и блокируем на время операции
     group = (
         await session.execute(select(Group).where(Group.id == group_id).with_for_update())
     ).scalar_one_or_none()
@@ -62,20 +58,9 @@ async def delete_user_from_group(
     if not initiator:
         raise RequiredUserNotInGroupException(user_id=initiator_id)
 
-    initiator_perms = initiator.permissions
-    target_perms = user_to_kick.permissions
-
     # Проверяем уровень инициатора
-    if GroupPermission.FULL_ACCESS in initiator_perms:
-        pass  # FULL_ACCESS может кикать любого (кроме создателя, проверено выше)
-    elif GroupPermission.CONTROL_MEMBERS in initiator_perms:
-        if GroupPermission.FULL_ACCESS in target_perms:  # CONTROL_MEMBERS не может кикать FULL_ACCESS
-            raise NotEnoughGroupPermissionsException()
-    elif GroupPermission.KICK_MEMBERS in initiator_perms:
-        if GroupPermission.FULL_ACCESS in target_perms or GroupPermission.CONTROL_MEMBERS in target_perms:
-            raise NotEnoughGroupPermissionsException()  # KICK_MEMBERS не может кикать FULL_ACCESS и CONTROL_MEMBERS
-    else:
-        raise NotEnoughGroupPermissionsException()  # Ни одно право не даёт права кика
+    if not (group.creator_id != initiator_id and (GroupPermission.FULL_ACCESS not in initiator.permissions)):
+        raise NotEnoughGroupPermissionsException()
 
     await session.execute(
         delete(GroupMember).where(

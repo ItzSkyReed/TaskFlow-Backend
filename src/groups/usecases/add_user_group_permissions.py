@@ -32,8 +32,7 @@ async def add_user_group_permission(
     :param session: Сессия
     Notes
     -----
-    - Для изменения любого права нужно CONTROL_MEMBERS или FULL_ACCESS.
-    - Для выдачи CONTROL_MEMBERS нужно FULL_ACCESS.
+    - Для изменения любого права нужно быть создателем группы или иметь FULL_ACCESS.
     - Для выдачи FULL_ACCESS нужно быть создателем группы.
 
     """
@@ -63,7 +62,7 @@ async def add_user_group_permission(
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
-    ensure_has_permission(changer_member, group, permission)
+    ensure_has_permission(changer_member, group)
 
     await session.execute(
         insert(GroupUserPermission)

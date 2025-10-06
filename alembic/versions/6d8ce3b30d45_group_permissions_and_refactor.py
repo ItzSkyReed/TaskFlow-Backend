@@ -65,10 +65,8 @@ def upgrade() -> None:
             "permission",
             sa.Enum(
                 "INVITE_MEMBERS",
-                "KICK_MEMBERS",
                 "ACCEPT_JOIN_REQUESTS",
                 "MANAGE_GROUP",
-                "CONTROL_MEMBERS",
                 "MANAGE_TASKS",
                 "FULL_ACCESS",
                 name="group_permission",

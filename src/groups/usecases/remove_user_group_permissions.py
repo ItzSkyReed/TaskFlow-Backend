@@ -59,7 +59,7 @@ async def remove_user_group_permission(
     if not target_member:
         raise RequiredUserNotInGroupException(user_id=target_user_id)
 
-    ensure_has_permission(changer_member, group, permission)
+    ensure_has_permission(changer_member, group)
 
     await session.execute(
         delete(GroupUserPermission).where(
