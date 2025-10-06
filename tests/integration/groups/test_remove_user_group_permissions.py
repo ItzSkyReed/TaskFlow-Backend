@@ -113,13 +113,12 @@ async def test_success_full_access_deleted(client: AsyncClient):
 async def test_success_permission_already_deleted(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)
-    user3 = await register_and_login(client)
     await set_authorization(client, user)
     create_group_response = await create_group(client)
 
     await add_user_to_group(client, user, user2, create_group_response.json()["id"])
-    await add_user_to_group(client, user, user3, create_group_response.json()["id"])
 
+    await set_authorization(client, user)
     permission_response_1 = await client.delete(
         f"{group_router.prefix}/{create_group_response.json()['id']}/members/{user2['id']}/{GroupPermission.INVITE_MEMBERS.value}"
     )
