@@ -145,11 +145,11 @@ class GroupMember(Base):
     )  # Список прав пользователя в данной группе как колонок таблиц
 
     @property
-    def permissions(self) -> list[GroupPermission]:
-        """Список строк прав"""
-        return [
+    def permissions(self) -> set[GroupPermission]:
+        """Множество строк прав"""
+        return {
             perm.permission for perm in self.permission_objs
-        ]  # Список прав пользователя в данной группе как enum-ов прав
+        }  # Список прав пользователя в данной группе как enum-ов прав
 
     __table_args__ = (
         UniqueConstraint(
