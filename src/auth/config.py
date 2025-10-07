@@ -1,9 +1,6 @@
 from functools import lru_cache
-from logging import getLogger
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-logger = getLogger(__name__)
 
 
 class AuthSettings(BaseSettings):
