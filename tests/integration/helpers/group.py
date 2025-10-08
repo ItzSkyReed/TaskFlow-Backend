@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from httpx import AsyncClient, Response
@@ -5,7 +6,7 @@ from integration.helpers import get_random_symbols
 from integration.helpers.user import AuthResult, set_authorization
 from starlette import status
 
-from src.groups import InvitationStatus, group_router
+from src.groups import GroupPermission, InvitationStatus, group_router
 
 
 async def create_group(
@@ -51,3 +52,26 @@ async def add_user_to_group(
         json={"response": InvitationStatus.ACCEPTED.value},
     )
     assert user_to_add_accept_invite_response.status_code == status.HTTP_200_OK
+
+
+async def add_permission(
+    client: AsyncClient,
+    initiator: AuthResult,
+    target: AuthResult,
+    group_id: UUID,
+    *permissions: GroupPermission,
+):
+    await set_authorization(client, initiator)
+    tasks = [
+        client.post(f"{group_router.prefix}/{group_id}/members/{target['id']}/{permission.value}")
+        for permission in permissions
+    ]
+
+    # запускаем их параллельно
+    responses = await asyncio.gather(*tasks)
+
+    # проверяем результаты
+    for permission, response in zip(permissions, responses, strict=True):
+        assert response.status_code == status.HTTP_201_CREATED, (
+            f"Не удалось добавить {permission}: {response.status_code}, {response.text}"
+        )
