@@ -58,8 +58,11 @@ async def delete_user_from_group(
     if not initiator:
         raise RequiredUserNotInGroupException(user_id=initiator_id)
 
-    # Проверяем уровень инициатора
-    if not (group.creator_id != initiator_id and (GroupPermission.FULL_ACCESS not in initiator.permissions)):
+    # Проверяем уровень инициатора и пользователя для кика
+    if group.creator_id != initiator_id and (
+        GroupPermission.FULL_ACCESS not in initiator.permissions
+        or GroupPermission.FULL_ACCESS in user_to_kick.permissions
+    ):
         raise NotEnoughGroupPermissionsException()
 
     await session.execute(
