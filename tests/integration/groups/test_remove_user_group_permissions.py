@@ -46,9 +46,9 @@ async def test_target_member_not_in_group(client: AsyncClient):
     create_group_response = await create_group(client)
     await add_user_to_group(client, user, user2, create_group_response.json()["id"])
 
-    await set_authorization(client, user3)
+    await set_authorization(client, user2)
     permission_response = await client.delete(
-        f"{group_router.prefix}/{create_group_response.json()['id']}/members/{user2['id']}/{GroupPermission.INVITE_MEMBERS.value}"
+        f"{group_router.prefix}/{create_group_response.json()['id']}/members/{user3['id']}/{GroupPermission.INVITE_MEMBERS.value}"
     )
     assert permission_response.status_code == status.HTTP_400_BAD_REQUEST
 

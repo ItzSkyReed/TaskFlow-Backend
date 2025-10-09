@@ -44,7 +44,7 @@ async def test_target_member_not_in_group(client: AsyncClient):
     await set_authorization(client, user)
 
     create_group_response = await create_group(client)
-    await add_user_to_group(client, user, user2, create_group_response.json()["id"])
+    await add_user_to_group(client, user, user3, create_group_response.json()["id"])
 
     await set_authorization(client, user3)
     permission_response = await client.post(

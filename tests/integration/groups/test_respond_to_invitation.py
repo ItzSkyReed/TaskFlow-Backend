@@ -18,6 +18,30 @@ async def test_invitation_not_found(client: AsyncClient):
     assert invite_response.status_code == status.HTTP_404_NOT_FOUND
 
 
+async def test_other_user_respond(client: AsyncClient):
+    user = await register_and_login(client)
+    user2 = await register_and_login(client)
+    user3 = await register_and_login(client)
+    await set_authorization(client, user)
+
+    created_group_response = await create_group(client)
+
+    assert created_group_response.status_code == status.HTTP_201_CREATED
+
+    invite_response = await client.post(
+        f"{group_router.prefix}/{created_group_response.json()['id']}/invitations",
+        json={"user_id": user2["id"]},
+    )
+    assert invite_response.status_code == status.HTTP_201_CREATED
+
+    await set_authorization(client, user3)
+    accept_invite_response = await client.patch(
+        f"{group_router.prefix}/invitations/{invite_response.json()['id']}",
+        json={"response": "ACCEPTED"},
+    )
+    assert accept_invite_response.status_code == status.HTTP_403_FORBIDDEN
+
+
 async def test_invitation_success_accept(client: AsyncClient):
     user = await register_and_login(client)
     user2 = await register_and_login(client)

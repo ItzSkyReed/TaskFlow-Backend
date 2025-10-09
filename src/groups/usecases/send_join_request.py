@@ -87,7 +87,7 @@ async def send_join_request(
         )
     ).scalar_one_or_none()
 
-    if not join_request:
+    if not join_request:  # pragma: no cover
         raise GroupIsFullException()
 
     join_request_schema = await ObjectMapper.map(

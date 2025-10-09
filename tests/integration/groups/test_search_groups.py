@@ -124,3 +124,14 @@ async def test_search_groups_offset(client: AsyncClient):
 
     assert data[0]["id"] == resp2.json()["id"]
     assert len(data) == 1
+
+
+async def test_search_groups_no_groups(client: AsyncClient):
+    user = await register_and_login(client)
+    await set_authorization(client, user)
+
+    get_response = await client.get(f"{group_router.prefix}/search", params={"name": get_random_symbols(32)})
+
+    assert get_response.status_code == status.HTTP_200_OK
+
+    assert len(get_response.json()) == 0

@@ -2,9 +2,10 @@ import uuid
 
 from httpx import AsyncClient
 from integration.helpers import add_user_to_group, create_group, register_and_login, set_authorization
+from integration.helpers.group import add_permission
 from starlette import status
 
-from src.groups import JoinRequestStatus, group_router
+from src.groups import GroupPermission, JoinRequestStatus, group_router
 
 
 async def test_group_not_found(client: AsyncClient):
@@ -56,6 +57,70 @@ async def test_success(client: AsyncClient):
     )
 
     await set_authorization(client, user)
+    join_requests_response = await client.get(
+        f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
+    )
+    assert send_join_response.json()["id"] == join_requests_response.json()[0]["id"]
+    assert send_join_response.status_code == status.HTTP_200_OK
+
+
+async def test_success_full_access(client: AsyncClient):
+    user = await register_and_login(client)
+    user2 = await register_and_login(client)
+    user3 = await register_and_login(client)
+    await set_authorization(client, user)
+
+    create_group_response = await create_group(client)
+    await add_user_to_group(client, user, user3, create_group_response.json()["id"])
+    await add_permission(client, user, user3, create_group_response.json()["id"], GroupPermission.FULL_ACCESS)
+
+    await set_authorization(client, user)
+    join_requests_response = await client.get(
+        f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
+    )
+
+    assert join_requests_response.json() == []
+    assert join_requests_response.status_code == status.HTTP_200_OK
+
+    await set_authorization(client, user2)
+    send_join_response = await client.post(
+        f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
+    )
+
+    await set_authorization(client, user3)
+    join_requests_response = await client.get(
+        f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
+    )
+    assert send_join_response.json()["id"] == join_requests_response.json()[0]["id"]
+    assert send_join_response.status_code == status.HTTP_200_OK
+
+
+async def test_success_accept_join_requests(client: AsyncClient):
+    user = await register_and_login(client)
+    user2 = await register_and_login(client)
+    user3 = await register_and_login(client)
+    await set_authorization(client, user)
+
+    create_group_response = await create_group(client)
+    await add_user_to_group(client, user, user3, create_group_response.json()["id"])
+    await add_permission(
+        client, user, user3, create_group_response.json()["id"], GroupPermission.ACCEPT_JOIN_REQUESTS
+    )
+
+    await set_authorization(client, user)
+    join_requests_response = await client.get(
+        f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
+    )
+
+    assert join_requests_response.json() == []
+    assert join_requests_response.status_code == status.HTTP_200_OK
+
+    await set_authorization(client, user2)
+    send_join_response = await client.post(
+        f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
+    )
+
+    await set_authorization(client, user3)
     join_requests_response = await client.get(
         f"{group_router.prefix}/{create_group_response.json()['id']}/join-requests",
     )
