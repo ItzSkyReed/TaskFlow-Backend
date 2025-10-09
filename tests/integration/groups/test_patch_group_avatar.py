@@ -58,7 +58,7 @@ async def test_patch_group_avatar_no_permission(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(
         client,
         random_symbols,
@@ -96,7 +96,7 @@ async def test_patch_group_avatar_too_large(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(
         client,
         random_symbols,
@@ -121,7 +121,7 @@ async def test_patch_group_avatar_invalid_content_type(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(
         client,
         random_symbols,
@@ -149,7 +149,7 @@ async def test_patch_group_avatar_invalid_webp(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(
         client,
         random_symbols,
@@ -178,7 +178,7 @@ async def test_patch_group_avatar_invalid_file(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(
         client,
         random_symbols,

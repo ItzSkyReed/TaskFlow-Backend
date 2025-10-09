@@ -14,7 +14,7 @@ async def test_delete_group_success(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     create_group_response = await create_group(client, random_symbols, random_symbols, 31)
 
     get_response = await client.get(f"{group_router.prefix}/{create_group_response.json()['id']}")
@@ -46,7 +46,7 @@ async def test_delete_group_no_permissons(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     create_group_response = await create_group(client, random_symbols, random_symbols, 31)
 
     get_response = await client.get(f"{group_router.prefix}/{create_group_response.json()['id']}")

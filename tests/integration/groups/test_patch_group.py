@@ -8,7 +8,7 @@ from src.groups import group_router
 async def test_patch_group_success(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(client, f"old_name{random_symbols}", f"old_desc{random_symbols}", 5)
     group_id = group_resp.json()["id"]
 
@@ -30,7 +30,7 @@ async def test_patch_group_success(client: AsyncClient):
 # async def test_patch_group_size_conflict(client: AsyncClient):
 #     user = await register_and_login(client)
 #     await set_authorization(client, user)
-#     random_symbols = await get_random_symbols()
+#     random_symbols = get_random_symbols()
 #     group_resp = await create_group(client, f"group_size_test{random_symbols}", max_members_count=3)
 #     group_id = group_resp.json()["id"]
 #
@@ -44,7 +44,7 @@ async def test_patch_group_success(client: AsyncClient):
 async def test_patch_group_no_permission(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     group_resp = await create_group(client, f"group_perm_test{random_symbols}", f"desc{random_symbols}", 5)
     group_id = group_resp.json()["id"]
 
@@ -59,7 +59,7 @@ async def test_patch_group_no_permission(client: AsyncClient):
 async def test_patch_group_duplicate_name(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     # Создаём две группы
     await create_group(client, f"group1{random_symbols}", f"desc{random_symbols}")
     group2 = await create_group(client, f"group2{random_symbols}", f"desc{random_symbols}")

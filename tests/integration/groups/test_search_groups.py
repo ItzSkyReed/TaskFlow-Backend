@@ -9,7 +9,7 @@ async def test_search_groups_ilike_p(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
 
     resp = await create_group(client, f"{random_symbols}_123")
     assert resp.status_code == status.HTTP_201_CREATED
@@ -26,8 +26,8 @@ async def test_search_groups_p_ilike_p(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_symbols = await get_random_symbols()
-    random_adds = await get_random_symbols(4)
+    random_symbols = get_random_symbols()
+    random_adds = get_random_symbols(4)
 
     resp1 = await create_group(client, f"{random_symbols}_{random_adds}")
     assert resp1.status_code == status.HTTP_201_CREATED
@@ -47,8 +47,8 @@ async def test_search_groups_trigram(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_for_trigram = await get_random_symbols()
-    random_symbols = await get_random_symbols(8)
+    random_for_trigram = get_random_symbols()
+    random_symbols = get_random_symbols(8)
 
     resp1 = await create_group(client, f"{random_for_trigram}_{random_symbols}")
     assert resp1.status_code == status.HTTP_201_CREATED
@@ -68,8 +68,8 @@ async def test_search_groups_limit(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_for_trigram = await get_random_symbols()
-    random_symbols = await get_random_symbols(8)
+    random_for_trigram = get_random_symbols()
+    random_symbols = get_random_symbols(8)
 
     resp1 = await create_group(client, f"{random_for_trigram}_{random_symbols}")
     assert resp1.status_code == status.HTTP_201_CREATED
@@ -99,8 +99,8 @@ async def test_search_groups_offset(client: AsyncClient):
     user = await register_and_login(client)
     await set_authorization(client, user)
 
-    random_for_trigram = await get_random_symbols()
-    random_symbols = await get_random_symbols(8)
+    random_for_trigram = get_random_symbols()
+    random_symbols = get_random_symbols(8)
 
     resp1 = await create_group(client, f"{random_for_trigram}_{random_symbols}")
     assert resp1.status_code == status.HTTP_201_CREATED

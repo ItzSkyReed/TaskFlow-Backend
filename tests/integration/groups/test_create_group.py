@@ -18,7 +18,7 @@ async def test_create_group_success(client: AsyncClient):
 
     client.cookies.set("refresh_token", user["refresh_token"])
     client.headers["Authorization"] = f"Bearer {user['access_token']}"
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     response = await client.post(
         f"{group_router.prefix}",
         json={
@@ -41,7 +41,7 @@ async def test_create_group_success_no_members(client: AsyncClient):
 
     client.cookies.set("refresh_token", user["refresh_token"])
     client.headers["Authorization"] = f"Bearer {user['access_token']}"
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     response = await client.post(
         f"{group_router.prefix}",
         json={
@@ -67,7 +67,7 @@ async def test_create_group_max_members_too_big(client: AsyncClient):
     response = await client.post(
         f"{group_router.prefix}",
         json={
-            "name": f"My First Group_{await get_random_symbols()}",
+            "name": f"My First Group_{get_random_symbols()}",
             "description": "Test group",
             "max_members_count": 1000,
         },
@@ -87,7 +87,7 @@ async def test_create_group_max_members_too_small(client: AsyncClient):
     response = await client.post(
         f"{group_router.prefix}",
         json={
-            "name": f"My First Group_{await get_random_symbols()}",
+            "name": f"My First Group_{get_random_symbols()}",
             "description": "Test group",
             "max_members_count": 1,
         },
@@ -129,7 +129,7 @@ async def test_create_group_with_invitations(client: AsyncClient):
     response = await client.post(
         f"{group_router.prefix}",
         json={
-            "name": f"Group With Invites_{await get_random_symbols()}",
+            "name": f"Group With Invites_{get_random_symbols()}",
             "description": "Test with invites",
             "max_members_count": 5,
             "invitations": [invitee_id],
@@ -151,7 +151,7 @@ async def test_create_group_limit_exceeded(client: AsyncClient):
         response = await client.post(
             f"{group_router.prefix}",
             json={
-                "name": f"Group{i}_{await get_random_symbols()}",
+                "name": f"Group{i}_{get_random_symbols()}",
                 "description": "Test",
                 "max_members_count": 5,
             },
@@ -161,7 +161,7 @@ async def test_create_group_limit_exceeded(client: AsyncClient):
     response = await client.post(
         f"{group_router.prefix}",
         json={
-            "name": f"OverflowGroup_{await get_random_symbols()}",
+            "name": f"OverflowGroup_{get_random_symbols()}",
             "description": "Should fail",
             "max_members_count": 5,
         },
@@ -177,7 +177,7 @@ async def test_create_group_duplicate_name(client: AsyncClient):
     client.cookies.set("refresh_token", user["refresh_token"])
     client.headers["Authorization"] = f"Bearer {user['access_token']}"
 
-    random_symbols = await get_random_symbols()
+    random_symbols = get_random_symbols()
     body = {
         "name": f"UniqueGroup_{random_symbols}",
         "description": "Test",

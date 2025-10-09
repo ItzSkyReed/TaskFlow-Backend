@@ -18,7 +18,7 @@ async def create_group(
 ) -> Response:
     """Создание группы и возврат её uuid"""
     if not name:
-        name = await get_random_symbols()
+        name = get_random_symbols()
 
     payload = {
         "name": name,

@@ -17,8 +17,8 @@ async def test_get_mine_groups_success(client: AsyncClient):
     get_response = await client.get(f"{group_router.prefix}/mine/groups")
     assert get_response.json() == []
 
-    random_symbols = await get_random_symbols()
-    random_symbols_2 = await get_random_symbols()
+    random_symbols = get_random_symbols()
+    random_symbols_2 = get_random_symbols()
 
     created_group_response_1 = await create_group(client, random_symbols, random_symbols, 31)
     created_group_response_2 = await create_group(client, random_symbols_2, random_symbols_2, 32)
@@ -38,8 +38,8 @@ async def test_get_user_groups_success(client: AsyncClient):
     user1 = await register_and_login(client)
     await set_authorization(client, user1)
 
-    random_symbols = await get_random_symbols()
-    random_symbols_2 = await get_random_symbols()
+    random_symbols = get_random_symbols()
+    random_symbols_2 = get_random_symbols()
 
     created_group_response_1 = await create_group(client, random_symbols, random_symbols, 31)
     created_group_response_2 = await create_group(client, random_symbols_2, random_symbols_2, 32)
