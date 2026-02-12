@@ -54,18 +54,17 @@ async def test_refresh_success(client: AsyncClient):
     new_refresh_token = response.cookies.get("refresh_token")
     assert new_refresh_token != old_refresh_token
 
+
 async def test_refresh_refresh_jti_not_valid(client: AsyncClient):
     """
     Проверяем, что после logout уже нельзя обновить refresh токен
     """
     user = await register_and_login(client)
-    client.headers["Authorization"] = f"Bearer {user["access_token"]}"
+    client.headers["Authorization"] = f"Bearer {user['access_token']}"
     response = await client.post(url=f"{auth_router.prefix}/logout")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     client.cookies.set("refresh_token", user["refresh_token"])
 
-    response = await client.post(
-        f"{auth_router.prefix}/refresh"
-    )
+    response = await client.post(f"{auth_router.prefix}/refresh")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED

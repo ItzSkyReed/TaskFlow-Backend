@@ -12,6 +12,7 @@ from starlette.responses import PlainTextResponse
 
 from .auth import auth_router
 from .config import get_settings
+from .groups import group_router
 from .logging_config import LOGGING_CONFIG
 
 # To correctly load all models
@@ -74,8 +75,10 @@ def create_app() -> FastAPI:
     api_router = APIRouter(prefix=settings.api_prefix)
     api_router.include_router(auth_router)
     api_router.include_router(profile_router)
+    api_router.include_router(group_router)
     fast_api_app.include_router(api_router)
 
     return fast_api_app
+
 
 app = create_app()

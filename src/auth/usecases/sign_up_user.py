@@ -1,10 +1,9 @@
-from asyncpg.exceptions import UniqueViolationError
+from asyncpg import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...user import User, UserProfile
-from ...user.exceptions import LoginAlreadyInUseException
-from ...user.services import check_email_unique
+from ...user.exceptions import EmailAlreadyInUseException, LoginAlreadyInUseException
 from ..schemas import SignUpSchema, TokenSchema
 from ..services import add_new_refresh_token
 from ..utils import JWTUtils, PasswordUtils
@@ -22,6 +21,7 @@ async def sign_up_user(
     """
     hashed_password = PasswordUtils.hash_password(user_in.password)
 
+    # noinspection PyTypeChecker
     user = User(
         login=user_in.login,
         email=user_in.email,
@@ -32,19 +32,18 @@ async def sign_up_user(
         session.add(user)
         await session.flush()
 
-        user_profile = UserProfile(id=user.id, name=user_in.name or user_in.login)
-        session.add(user_profile)
+        session.add(UserProfile(id=user.id, name=user_in.name or user_in.login))
 
-        await session.commit()
-
-    except IntegrityError as err: # pragma: no cover
+    except IntegrityError as err:
         await session.rollback()
-        if isinstance(err.orig, UniqueViolationError):
-            # если выбросит EmailAlreadyInUseException
-            await check_email_unique(user_in.email, session)
-            # если не выбросило, значит email свободен, ошибка по логину
-            raise LoginAlreadyInUseException() from err
-        raise
+        if isinstance(err.orig.__cause__, UniqueViolationError):
+            if err.orig.__cause__.constraint_name == "ix_users_email":
+                raise EmailAlreadyInUseException() from err
+            elif err.orig.__cause__.constraint_name == "ix_users_login":
+                raise LoginAlreadyInUseException() from err
+        raise  # pragma: no cover
+
+    await session.commit()
 
     # Создание токенов
     access_token = JWTUtils.create_access_token(user.id)

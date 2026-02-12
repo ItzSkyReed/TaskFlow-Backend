@@ -32,9 +32,7 @@ target_metadata = Base.metadata
 # ... etc.
 settings = get_settings()
 if os.getenv("MIGRATION_INSIDE_DOCKER") in ("1", "true", "True"):
-    config.set_main_option(
-        "sqlalchemy.url", settings.database_url.render_as_string(hide_password=False)
-    )
+    config.set_main_option("sqlalchemy.url", settings.database_url.render_as_string(hide_password=False))
 else:
     config.set_main_option(
         "sqlalchemy.url",

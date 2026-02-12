@@ -1,0 +1,311 @@
+from uuid import UUID
+
+from starlette import status
+
+from ..exceptions import BaseAPIException
+
+
+class CannotInviteYourselfException(BaseAPIException):
+    """
+    400
+
+    Вызывается если попытаться пригласить в группу самого себя
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Cannot invite yourself to the group",
+            loc=["groups"],
+            err_type="group.invitation.cannot_invite_yourself",
+        )
+
+
+class CannotInviteUserThatIsAlreadyInThatGroupException(BaseAPIException):
+    def __init__(self):
+        """
+        400
+
+        Вызывается если приглашаемый пользователь уже в группе
+        """
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Невозможно пригласить пользователя, который уже состоит в данной группе",
+            loc=["groups", "members"],
+            err_type="group.invitation.invited_user_already_in_group",
+        )
+
+
+class UserAlreadyInGroupRequestException(BaseAPIException):
+    def __init__(self):
+        """
+        400
+
+        Вызывается если приглашаемый пользователь уже в группе
+        """
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Невозможно отправить заявку в группу, в которой вы уже состоите",
+            loc=["groups", "members"],
+            err_type="group.invitation.invited_user_already_in_group",
+        )
+
+
+class GroupWithSuchNameAlreadyExistsException(BaseAPIException):
+    """
+    409
+
+    Вызывается при попытке создать группу или изменить название группы на уже существующее
+    """
+
+    def __init__(self, group_name: str):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg=f'Невозможно назвать группу "{group_name}" потому что группа с таким названием уже существует',
+            loc=["groups", "body", "name"],
+            err_type="group.conflict.group_name_already_exists",
+        )
+
+
+class TooManyCreatedGroupsException(BaseAPIException):
+    """
+    403
+
+    Возвращается если у пользователя создано слишком много групп
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Слишком много ранее созданных групп",
+            loc=["groups"],
+            err_type="group.conflict.too_many_groups_created",
+        )
+
+
+class GroupNotFoundException(BaseAPIException):
+    """
+    404
+
+    Вызывается если группа не найдена
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            msg="Группа с таким ID не найдена",
+            loc=["body", "group_id"],
+            err_type="group.not_found",
+        )
+
+
+class NotEnoughGroupPermissionsException(BaseAPIException):
+    """
+    403
+
+    Возвращается если недостаточно прав для изменения или получения ресурса
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            msg="У вас нет прав для изменения или получения ресурса",
+            loc=["permissions"],
+            err_type="group.permissions.forbidden",
+        )
+
+
+class GroupSizeConflictException(BaseAPIException):
+    """
+    409
+
+    Вызывается если пользователь пытается уменьшить размер группы до такого, что участников в ней должно быть меньше, чем есть сейчас.
+    """
+
+    def __init__(self, current_members: int, requested_size: int):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg=(
+                f"Невозможно уменьшить размер группы до {requested_size}, "
+                f"поскольку на данный момент в группе находится {current_members} человек"
+            ),
+            loc=["max_members_count"],
+            err_type="group.conflict.too_many_members",
+        )
+
+
+class CannotKickYourselfException(BaseAPIException):
+    """
+    400
+
+    Возвращается если пользователь пытается исключить сам себя из группы
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Нельзя исключить самого себя из группы",
+            loc=["group", "user_id"],
+            err_type="group.cannot_kick_self",
+        )
+
+
+class CannotChangeCreatorToYourselfException(BaseAPIException):
+    """
+    400
+
+    Возвращается если пользователь пытается самому себе передать создателя группы
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg="Нельзя самому себе передать создателя группы",
+            loc=["group", "user_id"],
+            err_type="group.cannot_change_creator_to_yourself",
+        )
+
+
+class RequiredUserNotInGroupException(BaseAPIException):
+    """
+    400
+
+    Возвращается если пользователь не состоит в группе, хотя это требуется запросом
+    """
+
+    def __init__(self, user_id: UUID):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            msg=f"Пользователь {user_id} не состоит в требуемой группе",
+            loc=["group", "user_id"],
+            err_type="group.required_user_not_in_group",
+        )
+
+
+class CannotKickGroupCreatorException(BaseAPIException):
+    """
+    403
+
+    Возвращается если пользователь пытается исключить создателя группы
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            msg="Нельзя исключить создателя группы из неё",
+            loc=["group", "creator_id"],
+            err_type="group.cannot_kick_creator",
+        )
+
+
+class CreatorCantLeaveFromGroupException(BaseAPIException):
+    """
+    409
+
+    Возвращается если пользователь, являющий создателем группы пытается выйти из нее
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Нельзя будучи создателем группы выйти из нее",
+            loc=["group", "creator_id"],
+            err_type="group.conflict.creator_cant_leave_from_group",
+        )
+
+
+class UserCantChangeOwnPermissionException(BaseAPIException):
+    """
+    409
+
+    Возвращается если пользователь пытается поменять собственные поля
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="Нельзя менять собственные права",
+            loc=["group", "creator_id"],
+            err_type="group.conflict.user_cant_change_own_permissions",
+        )
+
+
+class GroupInvitationNotFoundException(BaseAPIException):
+    """
+    404
+
+    Возвращается если приглашение пользователя не найдено
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            msg="Приглашение в группу не найдено",
+            loc=["group", "invitation_id"],
+            err_type="group.invitation.not_found",
+        )
+
+
+class GroupInvitationForbiddenException(BaseAPIException):
+    """
+    403
+
+    Возвращается, если приглашение пытается подтвердить/отклонить
+    пользователь, которому оно не адресовано.
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            msg="Вы не можете отвечать на это приглашение",
+            loc=["invitation_id"],
+            err_type="group.invitation.forbidden",
+        )
+
+
+class GroupJoinRequestNotFoundException(BaseAPIException):
+    """
+    404
+
+    Возвращается если приглашение пользователя не найдено
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            msg="Заявка на вступление в группу в группу не найдено",
+            loc=["group", "join_request_id"],
+            err_type="group.join_request.not_found",
+        )
+
+
+class GroupJoinRequestAlreadyResolvedException(BaseAPIException):
+    """
+    409
+
+    Возвращается если на приглашение пользователя уже отвечено
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="На данное приглашение уже дан ответ",
+            loc=["group", "join_request_id"],
+            err_type="group.conflict.join_request_already_resolved",
+        )
+
+
+class GroupIsFullException(BaseAPIException):
+    """
+    409
+
+    Возвращается если невозможно добавить в группу пользователя так как достигнуто максимальное количество
+    """
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            msg="В группе достигнуто максимальное кол-во пользователей",
+            loc=["group", "members"],
+            err_type="group.conflict.group_is_full",
+        )

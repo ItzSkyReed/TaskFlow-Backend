@@ -43,7 +43,7 @@ services:
       start_period: 5s
 
   minio:
-    image: quay.io/minio/minio:latest
+    build: ./minio
     container_name: minio
     ports:
       - "${MINIO_OUT_WEB_PORT}:${MINIO_WEB_PORT}"
@@ -53,41 +53,12 @@ services:
       - minio_data:/data
     env_file:
       - .env
-    command: server /data --console-address ":${MINIO_WEB_PORT}" --address ":${MINIO_STORAGE_PORT}"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${MINIO_WEB_PORT}/minio/health/live" ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - taskflow_net
-
-  minio-init:
-    image: minio/mc
-    depends_on:
-      minio:
-        condition: service_healthy
-    env_file:
-      - .env
-    volumes:
-      - ./init-minio.sh:/init-minio.sh:ro
-    entrypoint: [ "/bin/sh", "/init-minio.sh" ]
-    networks:
-      - taskflow_net
-
-  migrate:
-    build: .
-    container_name: taskflow_migrate
-    restart: "no"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      MIGRATION_INSIDE_DOCKER: 1
-    env_file:
-      - .env
-    command: alembic upgrade head
     networks:
       - taskflow_net
 
@@ -103,10 +74,10 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     env_file:
       - .env
+    environment:
+      MIGRATION_INSIDE_DOCKER: 1
     expose:
       - "8000"
     volumes:
@@ -119,7 +90,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    command: [ "fastapi", "dev", "src/main.py", "--host", "0.0.0.0" ]
+    command: ["sh", "-c", "alembic upgrade head && fastapi dev src/main.py --host 0.0.0.0"]
 
   nginx:
     image: nginx:stable-alpine

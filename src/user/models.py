@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import text
 from ..database import Base
 
 if TYPE_CHECKING:
-    from ..groups import Group, GroupMembers
+    from ..groups import Group, GroupJoinRequest, GroupMember
 
 
 class User(Base):
@@ -30,9 +30,7 @@ class User(Base):
         primary_key=True,
         server_default=text("uuid_generate_v4()"),
     )
-    login: Mapped[str] = mapped_column(
-        String(32), unique=True, index=True, nullable=False
-    )
+    login: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
     email: Mapped[str] = mapped_column(
         String(319),  # RFC-validated max length
         unique=True,
@@ -43,9 +41,7 @@ class User(Base):
         String(128),  # достаточная длина для bcrypt/scrypt/argon2
         nullable=False,
     )
-    has_avatar: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default=text("false")
-    )
+    has_avatar: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
@@ -63,8 +59,27 @@ class User(Base):
         passive_deletes=True,
     )
 
-    group_memberships: Mapped[list["GroupMembers"]] = relationship(
-        back_populates="user"
+    group_memberships: Mapped[list["GroupMember"]] = relationship(
+        back_populates="user", overlaps="groups,users"
+    )
+
+    groups: Mapped[list["Group"]] = relationship(
+        secondary="group_members",
+        back_populates="users",
+        overlaps="group_memberships,members",
+    )
+
+    join_requests: Mapped[list["GroupJoinRequest"]] = relationship(
+        "GroupJoinRequest", back_populates="requester", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index(
+            "idx_users_login_trgm",
+            "login",
+            postgresql_using="gin",
+            postgresql_ops={"login": "gin_trgm_ops"},
+        ),
     )
 
 
@@ -102,17 +117,11 @@ class UserProfile(Base):
         nullable=True,  # Макс. длина ТГ юзернейма
     )
 
-    show_discord: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    show_discord: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
-    show_telegram: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    show_telegram: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
-    show_email: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    show_email: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     __table_args__ = (
         # Проверка, что или оба параметра связанные с ТГ пустые, или оба имеют значение
@@ -133,15 +142,6 @@ class UserProfile(Base):
             """,
             name="ck_discord_fields_null_together",
         ),
-        # GIN индекс для быстрого использования функции SIMILARITY()
-        Index(
-            "idx_users_username_trgm",
-            "name",
-            postgresql_using="gin",
-            postgresql_ops={"name": "gin_trgm_ops"},
-        ),
     )
 
-    user: Mapped["User"] = relationship(
-        "User", back_populates="user_profile", uselist=False
-    )
+    user: Mapped["User"] = relationship("User", back_populates="user_profile", uselist=False)

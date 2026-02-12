@@ -1,11 +1,13 @@
 import uuid
 
+import pytest
 from starlette import status
 
 from src.auth import auth_router
 from tests.conftest import settings
 
 
+@pytest.mark.order(2)
 async def test_valid_sign_in(client):
     unique = uuid.uuid4().hex[:16]
     payload = {
@@ -34,12 +36,8 @@ async def test_valid_sign_in(client):
     assert cookie_value is not None, "refresh_token cookie должен быть установлен"
 
     set_cookie_headers = response.headers.get_list("set-cookie")
-    assert any("refresh_token=" in h for h in set_cookie_headers), (
-        "Нет refresh_token в Set-Cookie"
-    )
-    assert any("HttpOnly" in h for h in set_cookie_headers), (
-        "refresh_token должен быть HttpOnly"
-    )
+    assert any("refresh_token=" in h for h in set_cookie_headers), "Нет refresh_token в Set-Cookie"
+    assert any("HttpOnly" in h for h in set_cookie_headers), "refresh_token должен быть HttpOnly"
 
     expected_path = f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}"
     assert any(f"Path={expected_path}" in h for h in set_cookie_headers), (
@@ -47,6 +45,7 @@ async def test_valid_sign_in(client):
     )
 
 
+@pytest.mark.order(2)
 async def test_sign_in_invalid_password(client):
     unique = uuid.uuid4().hex[:16]
     payload = {
@@ -65,6 +64,7 @@ async def test_sign_in_invalid_password(client):
     assert response.json()["detail"] is not None
 
 
+@pytest.mark.order(2)
 async def test_sign_in_user_not_found(client):
     # Логинимся под несуществующим пользователем
     signin_payload = {"identifier": "NoSuchUser", "password": "somepassword"}
@@ -74,6 +74,7 @@ async def test_sign_in_user_not_found(client):
     assert response.json()["detail"] is not None
 
 
+@pytest.mark.order(2)
 async def test_sign_in_invalid_identifier_schema(client):
     # Передаем некорректный payload
     signin_payload = {
@@ -82,10 +83,11 @@ async def test_sign_in_invalid_identifier_schema(client):
     }
     response = await client.post(f"{auth_router.prefix}/sign_in", json=signin_payload)
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json()["detail"] is not None
 
 
+@pytest.mark.order(2)
 async def test_sign_in_invalid_password_schema(client):
     # Передаем некорректный payload
     signin_payload = {
@@ -94,5 +96,5 @@ async def test_sign_in_invalid_password_schema(client):
     }
     response = await client.post(f"{auth_router.prefix}/sign_in", json=signin_payload)
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json()["detail"] is not None

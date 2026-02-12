@@ -1,21 +1,16 @@
 from functools import lru_cache
-from logging import getLogger
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-logger = getLogger(__name__)
-
 
 class AuthSettings(BaseSettings):
-    access_token_expires_in: int  # минуты
-    refresh_token_expires_in: int  # минуты
+    access_token_expires_in: int  # секунды
+    refresh_token_expires_in: int  # секунды
 
     jwt_algorithm: str
     jwt_secret: str
 
-    model_config = SettingsConfigDict(
-        env_file=".env", extra="ignore", env_prefix="AUTH_"
-    )
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="AUTH_")
 
 
 # noinspection PyArgumentList

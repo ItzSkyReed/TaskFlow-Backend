@@ -19,9 +19,7 @@ async def delete_my_profile_avatar(
     user = await get_user_with_profile(user_id, session)
 
     async with get_minio_client() as client:
-        await client.delete_object(
-            Bucket=AVATARS_BUCKET_NAME, Key=f"users/{user_id}.webp"
-        )
+        await client.delete_object(Bucket=AVATARS_BUCKET_NAME, Key=f"users/{user_id}.webp")
 
     user.has_avatar = False
     session.add(user)

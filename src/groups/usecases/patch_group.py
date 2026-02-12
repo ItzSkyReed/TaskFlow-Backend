@@ -1,0 +1,73 @@
+from uuid import UUID
+
+from asyncpg import UniqueViolationError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy_pydantic_mapper import ObjectMapper
+
+from .. import GroupPermission
+from ..exceptions import (
+    GroupSizeConflictException,
+    GroupWithSuchNameAlreadyExistsException,
+    NotEnoughGroupPermissionsException,
+)
+from ..schemas import GroupDetailSchema, PatchGroupSchema
+from ..services import (
+    get_group_with_members,
+    group_member_has_permission,
+)
+
+
+async def patch_group(
+    group_id: UUID,
+    patched_group: PatchGroupSchema,
+    initiator_id: UUID,
+    session: AsyncSession,
+) -> GroupDetailSchema:
+    """
+    Создание группы
+    :param group_id: UUID изменяемой группы
+    :param patched_group: Поля для изменения в грыппе
+    :param initiator_id: UUID пользователя вызывающего изменения группы
+    :param session: Сессия
+    :raises GroupWithSuchNameAlreadyExistsException: Группа с таким названием уже есть (409)
+    :raises GroupWithSuchNameAlreadyExistsException: C
+    """
+    group = await get_group_with_members(group_id, session, with_for_update=True)
+
+    if patched_group.max_members_count is not None:
+        if patched_group.max_members_count < len(group.members):
+            raise GroupSizeConflictException(
+                current_members=len(group.members),
+                requested_size=patched_group.max_members_count,
+            )
+        group.max_members = patched_group.max_members_count
+
+    if initiator_id != group.creator_id:
+        if not await group_member_has_permission(
+            group_id,
+            initiator_id,
+            session,
+            GroupPermission.FULL_ACCESS,
+            GroupPermission.MANAGE_GROUP,
+        ):
+            raise NotEnoughGroupPermissionsException()
+
+    if patched_group.name:
+        group.name = patched_group.name
+
+    if patched_group.description:
+        group.description = patched_group.description
+
+    try:
+        await session.flush()
+    except IntegrityError as err:
+        await session.rollback()
+        if isinstance(err.orig.__cause__, UniqueViolationError):
+            if err.orig.__cause__.constraint_name == "ix_groups_name":
+                raise GroupWithSuchNameAlreadyExistsException(group_name=patched_group.name) from err
+        raise  # pragma: no cover
+
+    schemas = await ObjectMapper.map(group, GroupDetailSchema, user_id=initiator_id, session=session)
+    await session.commit()
+    return schemas

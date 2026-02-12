@@ -18,6 +18,8 @@ services:
       retries: 5
     networks:
       - taskflow_net_test
+    tmpfs:
+      - /var/lib/postgresql/data
 
   redis-test:
     image: redis:8.0.3-alpine
@@ -36,17 +38,19 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
-
+    tmpfs:
+      - /data
 
   minio-test:
-    image: quay.io/minio/minio:latest
+    build: ./minio
     container_name: minio_test
-    env_file:
-      - .env.test
     expose:
       - "${MINIO_STORAGE_PORT}"
       - "${MINIO_WEB_PORT}"
-    command: server /data --console-address ":${MINIO_WEB_PORT}" --address ":${MINIO_STORAGE_PORT}"
+    tmpfs:
+      - /data
+    env_file:
+      - .env.test
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${MINIO_WEB_PORT}/minio/health/live" ]
       interval: 30s
@@ -96,16 +100,16 @@ services:
         condition: service_healthy
       minio-test:
         condition: service_healthy
-      migrate-test:
-        condition: service_completed_successfully
     env_file:
       - .env.test   # монтируем папку для отчёта
+    environment:
+      MIGRATION_INSIDE_DOCKER: 1
     volumes:
       - ./htmlcov:/fast_api/htmlcov
       - ./src:/fast_api/src
     networks:
       - taskflow_net_test
-    command: [ "pytest", "-s"]
+    command: ["sh", "-c", "alembic upgrade head && pytest -s"]
 
 networks:
   taskflow_net_test:

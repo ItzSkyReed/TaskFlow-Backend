@@ -35,9 +35,7 @@ def upgrade() -> None:
         sa.Column("login", sa.String(length=64), nullable=False),
         sa.Column("email", sa.String(length=319), nullable=False),
         sa.Column("hashed_password", sa.String(length=128), nullable=False),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_users_email"), "users", ["email"], unique=True)
@@ -56,9 +54,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["creator_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_groups_creator_id"), "groups", ["creator_id"], unique=False
-    )
+    op.create_index(op.f("ix_groups_creator_id"), "groups", ["creator_id"], unique=False)
     op.create_index(op.f("ix_groups_name"), "groups", ["name"], unique=False)
     op.create_table(
         "user_profiles",
@@ -81,9 +77,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("discord_username"),
         sa.UniqueConstraint("telegram_id"),
     )
-    op.create_index(
-        op.f("ix_user_profiles_name"), "user_profiles", ["name"], unique=False
-    )
+    op.create_index(op.f("ix_user_profiles_name"), "user_profiles", ["name"], unique=False)
     op.create_table(
         "group_invitations",
         sa.Column(
@@ -101,12 +95,8 @@ def upgrade() -> None:
             server_default=sa.text("'PENDING'::status"),
             nullable=False,
         ),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
-        sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(["group_id"], ["groups.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["invitee_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["inviter_id"], ["users.id"], ondelete="CASCADE"),
@@ -129,9 +119,7 @@ def upgrade() -> None:
         ),
         sa.Column("group_id", sa.UUID(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column(
-            "joined_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("joined_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(["group_id"], ["groups.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),

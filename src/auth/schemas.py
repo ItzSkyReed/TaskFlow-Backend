@@ -12,8 +12,8 @@ from pydantic import (
     field_validator,
 )
 
-from ..user.constants import NAME_PATTERN
-from .constants import LOGIN_PATTERN, PASSWORD_PATTERN
+from ..constants import USER_LOGIN_PATTERN, USER_NAME_PATTERN
+from .constants import USER_PASSWORD_PATTERN
 
 
 class TokenSchema(BaseModel):
@@ -47,7 +47,7 @@ class TokenPayloadSchema(BaseModel):
     jti: Annotated[UUID | None, Field(default=None)]
 
 
-LoginStr = Annotated[str, StringConstraints(pattern=LOGIN_PATTERN)]
+LoginStr = Annotated[str, StringConstraints(pattern=USER_LOGIN_PATTERN)]
 
 
 class SignUpSchema(BaseModel):
@@ -61,7 +61,7 @@ class SignUpSchema(BaseModel):
             default=None,
             min_length=4,
             max_length=32,
-            pattern=NAME_PATTERN,
+            pattern=USER_NAME_PATTERN,
             examples=["Joe_Sardina", "Margaret' Kabina", "x-MarinaPro228"],
             description="Публичное имя (при отсутствии будет совпадать с login)",
         ),
@@ -72,7 +72,7 @@ class SignUpSchema(BaseModel):
             ...,
             min_length=4,
             max_length=64,
-            pattern=LOGIN_PATTERN,
+            pattern=USER_LOGIN_PATTERN,
             examples=["SuperUniqueLogin", "Login12345", "Login_megalogin"],
             description="Login",
         ),
@@ -92,7 +92,8 @@ class SignUpSchema(BaseModel):
             min_length=8,
             max_length=128,
             description="Пароль",
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123", "12121212a"],
         ),
     ]  # raw password
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -113,14 +114,21 @@ class SignInSchema(BaseModel):
         ),
     ]
     password: Annotated[
-        str, Field(..., min_length=8, max_length=128, pattern=PASSWORD_PATTERN)
+        str,
+        Field(
+            ...,
+            min_length=8,
+            max_length=128,
+            pattern=USER_PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123"],
+        ),
     ]
 
     @classmethod
     @field_validator("identifier", mode="after")
     def validate_identifier(cls, login_or_email: str) -> str:
         """
-        Проверка валидности идентификатора (должен соответствовать либо правилам Email, либо Login
+        Проверка валидности идентификатора (должен соответствовать либо правилам Email, либо Login).
         :param login_or_email: Login или Email пользователя
         :raises ValueError: Если login_or_email не проходит обе проверки валидации
         """
@@ -137,9 +145,7 @@ class SignInSchema(BaseModel):
         except ValidationError:
             pass
 
-        raise ValueError(
-            "Identifier must be a valid email or login (letters, digits, underscore)"
-        )
+        raise ValueError("Identifier must be a valid email or login (letters, digits, underscore)")
 
 
 class ChangePasswordSchema(BaseModel):
@@ -154,7 +160,8 @@ class ChangePasswordSchema(BaseModel):
             min_length=8,
             max_length=128,
             description="Старый пароль",
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123"],
         ),
     ]
     new_password: Annotated[
@@ -164,6 +171,7 @@ class ChangePasswordSchema(BaseModel):
             min_length=8,
             max_length=128,
             description="Новый пароль",
-            pattern=PASSWORD_PATTERN,
+            pattern=USER_PASSWORD_PATTERN,
+            examples=["MEGAPASSWORD", "123123123"],
         ),
     ]

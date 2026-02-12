@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     version: str = "0.0.1"
     cors_allowed_origins: List[str] = []
     environment: Literal["DEV", "PROD", "TEST"] = Field(
-        "DEV", description="App environment: DEV or PROD"
+        "DEV", description="App environment: DEV or PROD or TEST"
     )
     root_path: str
     api_prefix: str
@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     redis_port: int
     redis_out_port: int
 
+    minio_host: str
     minio_root_user: str
     minio_root_password: str
     minio_web_port: int

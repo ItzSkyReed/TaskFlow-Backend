@@ -33,7 +33,7 @@ class PasswordUtils:
         """
         Проверяет валидность введенного пароля
         :param hashed_password: Хэшированный пароль, с которым хотим сравнить.
-        :param password: Пароль, с которым сравниваем хэш
+        :param password: Пароль, с которым сравниваем хэш.
         :return: Являются ли пароли одинаковыми
         """
         try:
@@ -59,7 +59,7 @@ class JWTUtils:
         payload = {
             "iat": now,
             "sub": str(user_id),
-            "exp": now + timedelta(minutes=cls.__auth_settings.access_token_expires_in),
+            "exp": now + timedelta(seconds=cls.__auth_settings.access_token_expires_in),
         }
 
         return jwt.encode(
@@ -80,8 +80,7 @@ class JWTUtils:
         payload = {
             "iat": now,
             "sub": str(user_id),
-            "exp": now
-            + timedelta(minutes=cls.__auth_settings.refresh_token_expires_in),
+            "exp": now + timedelta(seconds=cls.__auth_settings.refresh_token_expires_in),
             "jti": str(jti),
         }
 
@@ -119,6 +118,4 @@ class JWTUtils:
         access_token = cls.create_access_token(user_id)
         refresh_token = cls.create_refresh_token(user_id)
 
-        return TokenRefreshSchema(
-            access_token=access_token, refresh_token=refresh_token
-        )
+        return TokenRefreshSchema(access_token=access_token, refresh_token=refresh_token)

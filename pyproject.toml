@@ -5,7 +5,6 @@ requires-python = ">=3.13"
 
 dependencies = [
     "fastapi[standard-no-fastapi-cloud-cli]",
-    "fastapi-limiter",
     "orjson",
     "uvicorn[standard]",
     "pydantic_settings",
@@ -21,11 +20,11 @@ dependencies = [
     "aioboto3",
     "types-aiobotocore-s3",
     "pillow",
-    "ty>=0.0.1a17",
+    "sqlalchemy-pydantic-mapper"
 ]
 
 [tool.ruff]
-line-length = 88
+line-length = 110
 target-version = "py313"
 lint.select = ["E", "F", "I", "B"]
 lint.ignore = ["E501", "B008"]
@@ -58,6 +57,10 @@ omit = [
     "*/tests/*",
     "alembic/*",
     "*/config.py",
+]
+concurrency = [
+    "greenlet",
+    "thread"
 ]
 
 [tool.coverage.report]

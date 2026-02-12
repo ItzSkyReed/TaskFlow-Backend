@@ -43,7 +43,5 @@ def downgrade() -> None:
         postgresql_using="gin",
         postgresql_ops={"name": "gin_trgm_ops"},
     )
-    op.create_index(
-        op.f("ix_user_profiles_name"), "user_profiles", ["name"], unique=False
-    )
+    op.create_index(op.f("ix_user_profiles_name"), "user_profiles", ["name"], unique=False)
     # ### end Alembic commands ###

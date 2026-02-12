@@ -10,9 +10,7 @@ class ErrorItem(BaseModel):
     """
 
     msg: Annotated[str, Field(..., description="Текст ошибки")]
-    type: Annotated[
-        str, Field(..., description="Тип ошибки (value_error, type_error и т.д.)")
-    ]
+    type: Annotated[str, Field(..., description="Тип ошибки (value_error, type_error и т.д.)")]
     loc: Annotated[
         None | list[str],
         Field(
@@ -27,9 +25,7 @@ class ErrorItem(BaseModel):
 
 
 class ErrorResponseModel(BaseModel):
-    detail: Annotated[
-        list[ErrorItem], Field(..., description="Список ошибок (даже если она одна)")
-    ]
+    detail: Annotated[list[ErrorItem], Field(..., description="Список ошибок (даже если она одна)")]
 
 
 class SuccessResponseModel(BaseModel):

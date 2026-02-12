@@ -1,12 +1,15 @@
 import uuid
 
+import pytest
+from httpx import AsyncClient
 from starlette import status
 
 from src.auth import auth_router
 from tests.conftest import settings
 
 
-async def test_valid_sign_up(client):
+@pytest.mark.order(1)
+async def test_valid_sign_up(client: AsyncClient):
     unique = uuid.uuid4().hex[:16]
     payload = {
         "name": f"Joe_Sardina{unique}",
@@ -20,7 +23,8 @@ async def test_valid_sign_up(client):
     assert response.status_code == status.HTTP_201_CREATED
 
 
-async def test_valid_sign_up_cookies(client):
+@pytest.mark.order(1)
+async def test_valid_sign_up_cookies(client: AsyncClient):
     unique = uuid.uuid4().hex[:16]
     payload = {
         "name": f"Joe_Sardina{unique}",
@@ -36,12 +40,8 @@ async def test_valid_sign_up_cookies(client):
 
     # Проверка заголовка Set-Cookie
     set_cookie_headers = response.headers.get_list("set-cookie")
-    assert any("refresh_token=" in h for h in set_cookie_headers), (
-        "Нет refresh_token в Set-Cookie"
-    )
-    assert any("HttpOnly" in h for h in set_cookie_headers), (
-        "refresh_token должен быть HttpOnly"
-    )
+    assert any("refresh_token=" in h for h in set_cookie_headers), "Нет refresh_token в Set-Cookie"
+    assert any("HttpOnly" in h for h in set_cookie_headers), "refresh_token должен быть HttpOnly"
 
     expected_path = f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}"
     assert any(f"Path={expected_path}" in h for h in set_cookie_headers), (
@@ -49,7 +49,8 @@ async def test_valid_sign_up_cookies(client):
     )
 
 
-async def test_conflict_sign_up(client):
+@pytest.mark.order(1)
+async def test_conflict_sign_up(client: AsyncClient):
     unique = uuid.uuid4().hex[:16]
     payload = {
         "name": f"User{unique}",
@@ -68,7 +69,8 @@ async def test_conflict_sign_up(client):
     assert response2.json()["detail"] is not None
 
 
-async def test_conflict_sign_up_email_only(client):
+@pytest.mark.order(1)
+async def test_conflict_sign_up_email_only(client: AsyncClient):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
     payload1 = {
@@ -89,7 +91,8 @@ async def test_conflict_sign_up_email_only(client):
     assert response.json()["detail"] is not None
 
 
-async def test_conflict_sign_up_login_only(client):
+@pytest.mark.order(1)
+async def test_conflict_sign_up_login_only(client: AsyncClient):
     unique1 = uuid.uuid4().hex[:16]
     unique2 = uuid.uuid4().hex[:16]
     payload1 = {
@@ -110,8 +113,9 @@ async def test_conflict_sign_up_login_only(client):
     assert response.json()["detail"] is not None
 
 
-async def test_invalid_schema_sign_up(client):
+@pytest.mark.order(1)
+async def test_invalid_schema_sign_up(client: AsyncClient):
     payload = {"name": "A", "login": "ab", "email": "not-an-email", "password": "123"}
     response = await client.post(f"{auth_router.prefix}/sign_up", json=payload)
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json()["detail"] is not None

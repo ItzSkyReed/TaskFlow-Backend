@@ -7,9 +7,10 @@ from starlette import status
 
 from ..auth.schemas import TokenPayloadSchema
 from ..auth.security import token_verification
+from ..constants import USER_LOGIN_PATTERN
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, UploadFileSchema
-from .schemas import PatchUserSchema, PublicUserSchema, UserSchema
+from .schemas import PatchUserSchema, PublicUserSchema, UserSchema, UserSearchSchema
 from .usecases import (
     delete_my_profile_avatar,
     get_my_profile,
@@ -24,14 +25,14 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
 
 @profile_router.get(
     "/search",
-    name="Поиск пользователей по имени",
+    name="Поиск пользователей по login",
     status_code=status.HTTP_200_OK,
-    response_model=list[PublicUserSchema],  # список публичных профилей
-    description="Возвращает список пользователей, чьё имя совпадает или содержит указанную подстроку",
+    response_model=list[UserSearchSchema],  # список публичных профилей
+    description="Возвращает список пользователей, чьи login максимально похожи на введенный текст",
     responses={
         200: {
             "description": "Успешный поиск пользователей",
-            "model": list[PublicUserSchema],
+            "model": list[UserSearchSchema],
         },
         400: {
             "description": "Некорректные данные в запросе.",
@@ -54,23 +55,19 @@ profile_router = APIRouter(prefix="/profile", tags=["Profile"])
 )
 async def search_profiles_route(
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    name: Annotated[
+    login: Annotated[
         str,
         Query(
             max_length=32,
             min_length=1,
             description="Строка подразумевающее возможное имя пользователя",
+            pattern=USER_LOGIN_PATTERN,
         ),
     ],
-    limit: Annotated[
-        int, Query(ge=1, le=100, description="Максимальное количество результатов")
-    ] = 20,
+    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
     offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
-) -> list[PublicUserSchema]:
-    pass
-    return await search_user_profiles(
-        name=name, limit=limit, offset=offset, session=session
-    )
+) -> list[UserSearchSchema]:
+    return await search_user_profiles(login=login, limit=limit, offset=offset, session=session)
 
 
 @profile_router.get(
@@ -173,7 +170,7 @@ async def delete_my_avatar_route(
     responses={
         200: {"description": "Аватарка успешно загружена", "model": UserSchema},
         400: {
-            "description": "Некорректный формат файла, должен быть webp",
+            "description": "Некорректный формат файла, или сам файл не фото",
             "model": ErrorResponseModel,
         },
         401: {
@@ -193,9 +190,7 @@ async def delete_my_avatar_route(
     },
 )
 async def patch_my_avatar_route(
-    file: Annotated[
-        UploadFileSchema, File(..., description="Файл аватарки в формате webp")
-    ],
+    file: Annotated[UploadFileSchema, File(..., description="Файл аватарки в формате webp")],
     token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> UserSchema:
@@ -203,7 +198,7 @@ async def patch_my_avatar_route(
 
 
 @profile_router.get(
-    "/{uuid}",
+    "/{user_id}",
     name="Получение публичного профиля пользователя",
     status_code=status.HTTP_200_OK,
     response_model=PublicUserSchema,
@@ -230,7 +225,7 @@ async def patch_my_avatar_route(
     ],
 )
 async def get_public_user_profile_route(
-    uuid: Annotated[UUID, Path(description="UUID пользователя")],
+    user_id: Annotated[UUID, Path(description="UUID пользователя")],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> PublicUserSchema:
-    return await get_public_user_profile(uuid, session)
+    return await get_public_user_profile(user_id, session)

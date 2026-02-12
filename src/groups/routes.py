@@ -1,0 +1,947 @@
+from collections.abc import Sequence
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Body, Depends, File, Path, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
+
+from ..auth.schemas import TokenPayloadSchema
+from ..auth.security import token_verification
+from ..database import get_async_session
+from ..schemas import ErrorResponseModel, UploadFileSchema
+from .enums import GroupPermission, InvitationStatus, JoinRequestStatus
+from .schemas import (
+    ChangeGroupCreatorSchema,
+    CreateGroupSchema,
+    GroupDetailSchema,
+    GroupInvitationSchema,
+    GroupMemberSchema,
+    GroupSearchSchema,
+    GroupSummarySchema,
+    InviteUserToGroupSchema,
+    JoinRequestSchema,
+    PatchGroupSchema,
+    RespondToInvitationSchema,
+    RespondToJoinRequestSchema,
+)
+from .usecases import (
+    add_user_group_permission,
+    change_group_creator,
+    create_group,
+    delete_group,
+    delete_group_avatar,
+    delete_user_from_group,
+    get_group,
+    get_group_join_requests,
+    get_received_invitations,
+    get_user_groups,
+    invite_user_to_group,
+    leave_from_group,
+    patch_group,
+    patch_group_avatar,
+    remove_user_group_permission,
+    respond_to_invitation,
+    respond_to_join_request,
+    search_groups,
+    send_join_request,
+)
+
+group_router = APIRouter(prefix="/group", tags=["Group"])
+
+
+@group_router.get(
+    "/search",
+    name="Поиск групп по имени",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GroupSearchSchema],  # список публичных групп (summary)
+    description="Возвращает список групп, чьи имена максимально похожи на введенный текст",
+    responses={
+        200: {
+            "description": "Успешный поиск групп",
+            "model": list[GroupSearchSchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def search_groups_route(
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    name: Annotated[
+        str,
+        Query(
+            max_length=50,
+            min_length=1,
+            description="Строка подразумевающее возможное название группы",
+        ),
+    ],
+    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
+    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+) -> Sequence[GroupSearchSchema]:
+    return await search_groups(
+        user_id=token_payload.sub,
+        name=name,
+        limit=limit,
+        offset=offset,
+        session=session,
+    )
+
+
+@group_router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    name="Создание группы пользователем",
+    response_model=GroupDetailSchema,
+    description="Создает группу, в которой пользователь будет являться владельцем",
+    responses={
+        201: {"description": "Группа успешно создана", "model": GroupDetailSchema},
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Группа с таким названием уже создана",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def create_group_route(
+    created_group: Annotated[
+        CreateGroupSchema,
+        Body(
+            ...,
+        ),
+    ],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await create_group(created_group, token_payload.sub, session)
+
+
+@group_router.patch(
+    "/{group_id}",
+    status_code=status.HTTP_200_OK,
+    name="Обновление информации о группе",
+    response_model=GroupDetailSchema,
+    description="Позволяет владельцу группы или пользователям с правами обновить параметры группы",
+    responses={
+        200: {"description": "Группа успешно изменена", "model": GroupDetailSchema},
+        400: {
+            "description": "Некорректный формат cхемы",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для изменения группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Группа с таким названием уже существует/Предложенное макс. кол-во участником меньше, чем актуальное число участников в группе",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def patch_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    patch_schema: Annotated[PatchGroupSchema, Body(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await patch_group(
+        patched_group=patch_schema,
+        group_id=group_id,
+        initiator_id=token_payload.sub,
+        session=session,
+    )
+
+
+@group_router.delete(
+    "/{group_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Удаление группы",
+    response_model=None,
+    description="Позволяет владельцу группы удалить её",
+    responses={
+        204: {"description": "Группа успешно удалена", "model": None},
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для удаления группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def delete_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> None:
+    return await delete_group(
+        group_id=group_id,
+        user_id=token_payload.sub,
+        session=session,
+    )
+
+
+@group_router.patch(
+    "/{group_id}/avatar",
+    status_code=status.HTTP_200_OK,
+    name="Обновление аватарки группы",
+    response_model=GroupDetailSchema,
+    description="Позволяет владельцу группы или пользователям с правами обновить аватарку группы",
+    responses={
+        200: {"description": "Аватарка успешно изменена", "model": GroupDetailSchema},
+        400: {
+            "description": "Некорректный формат файла, или сам файл не фото",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для изменения аватара группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        413: {
+            "description": "Аватар слишком большой (вес файла)",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def patch_group_avatar_route(
+    group_id: Annotated[UUID, Path(...)],
+    file: Annotated[UploadFileSchema, File(..., description="Файл аватарки в формате webp")],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await patch_group_avatar(
+        file=file.file,
+        group_id=group_id,
+        initiator_id=token_payload.sub,
+        session=session,
+    )
+
+
+@group_router.delete(
+    "/{group_id}/avatar",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Удаление аватарки группы",
+    response_model=None,
+    description="Позволяет владельцу группы или пользователям с правами удалить аватарку группы",
+    responses={
+        204: {"description": "Аватарка успешно удалена", "model": None},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для изменения аватара группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def delete_group_avatar_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    await delete_group_avatar(
+        group_id=group_id,
+        initiator_id=token_payload.sub,
+        session=session,
+    )
+    return None
+
+
+@group_router.post(
+    "/{group_id}/invitations",
+    status_code=status.HTTP_201_CREATED,
+    name="Приглашение пользователя в группу",
+    response_model=GroupInvitationSchema,
+    description="Позволяет владельцу группы или пользователям с правами пригласить человека в группу, если такое приглашение уже существовало, вернется ранее сделанное",
+    responses={
+        201: {
+            "description": "Приглашение пользователя в группу (новое или старое)",
+            "model": GroupInvitationSchema,
+        },
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для приглашения пользователя в группу",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def invite_user_to_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[InviteUserToGroupSchema, Body(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupInvitationSchema:
+    return await invite_user_to_group(
+        group_id=group_id,
+        inviter_id=token_payload.sub,
+        invitee_id=user_id.user_id,
+        session=session,
+    )
+
+
+@group_router.get(
+    "/{group_id}",
+    status_code=status.HTTP_200_OK,
+    name="Получение информации о группе по ID",
+    response_model=GroupDetailSchema,
+    description="Создает группу, в которой пользователь будет являться владельцем",
+    responses={
+        200: {"description": "Группа успешно найдена", "model": GroupDetailSchema},
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {"description": "Группы не существует", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def get_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await get_group(group_id, token_payload.sub, session)
+
+
+@group_router.get(
+    "/invitations/received",
+    status_code=status.HTTP_200_OK,
+    name="Получение списка групп, куда вы приглашены",
+    response_model=list[GroupInvitationSchema],
+    description="Создает группу, в которой пользователь будет являться владельцем",
+    responses={
+        200: {
+            "description": "Группа успешно найдена",
+            "model": list[GroupInvitationSchema],
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {"description": "Группы не существует", "model": ErrorResponseModel},
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def get_received_invitations_route(
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    invitation_status: Annotated[
+        list[InvitationStatus] | None,
+        Query(description="По каким статусам заявок фильтровать"),
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
+    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+) -> Sequence[GroupInvitationSchema]:
+    return await get_received_invitations(
+        invitation_status=invitation_status,
+        limit=limit,
+        offset=offset,
+        session=session,
+        invitee_id=token_payload.sub,
+    )
+
+
+@group_router.patch(
+    "/invitations/{invitation_id}",
+    status_code=status.HTTP_200_OK,
+    name="Отправка ответа на определенное приглашение в группу",
+    response_model=GroupInvitationSchema,
+    description="Принимает ответ пользователя на то, будет ли он вступать в опред. группу или нет",
+    responses={
+        200: {
+            "description": "Приглашение успешно обработано (отклонено/принято)",
+            "model": GroupInvitationSchema,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {"description": "Приглашения не существует", "model": ErrorResponseModel},
+        409: {
+            "description": "Группа переполнена пользователями",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def respond_to_invitation_route(
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    invitation_id: Annotated[UUID, Path(...)],
+    response: Annotated[
+        RespondToInvitationSchema,
+        Body(...),
+    ],
+) -> GroupInvitationSchema:
+    return await respond_to_invitation(
+        respond_status=response,
+        session=session,
+        invitation_id=invitation_id,
+        user_id=token_payload.sub,
+    )
+
+
+@group_router.get(
+    "/mine/groups",
+    name="Получение списка своих групп где состоит пользователь из access_token",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GroupSummarySchema],
+    description="Получение списка своих групп где состоит пользователь из access_token",
+    responses={
+        200: {
+            "description": "Успешное получение профиля",
+            "model": list[GroupSummarySchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Пользователь не найден",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def get_mine_groups_route(
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> Sequence[GroupSummarySchema]:
+    return await get_user_groups(token_payload.sub, session)
+
+
+@group_router.get(
+    "/{user_id}/groups",
+    name="Получение списка групп в которых есть пользователь",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GroupSummarySchema],
+    description="Получение списка групп в которых есть пользователь c опред. ID",
+    responses={
+        200: {
+            "description": "Успешное получение профиля",
+            "model": list[GroupSummarySchema],
+        },
+        400: {
+            "description": "Некорректные данные в запросе.",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Пользователь не найден",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+    dependencies=[
+        Depends(token_verification),
+    ],
+)
+async def get_user_groups_route(
+    user_id: Annotated[UUID, Path(description="UUID пользователя")],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> Sequence[GroupSummarySchema]:
+    return await get_user_groups(user_id, session)
+
+
+@group_router.delete(
+    "/{group_id}/members/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Выход пользователя из группы",
+    response_model=None,
+    description="Позволяет  пользователю выйти из определенной группы",
+    responses={
+        204: {"description": "Пользователь успешно вышел", "model": None},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно создателю группы выйти из неё",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def leave_from_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> None:
+    await leave_from_group(
+        group_id=group_id,
+        user_id=token_payload.sub,
+        session=session,
+    )
+    return None
+
+
+@group_router.delete(
+    "/{group_id}/members/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    name="Исключение пользователя из группы",
+    response_model=None,
+    description="Позволяет владельцу группы или пользователям с правами исключить пользователя из неё",
+    responses={
+        204: {"description": "Пользователь успешно исключен", "model": None},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для изменения исключения пользователя из группы; Невозможно исключить создателя группы",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно исключить из группы себя",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def delete_user_from_group_route(
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> None:
+    await delete_user_from_group(
+        group_id=group_id,
+        initiator_id=token_payload.sub,
+        user_to_kick_id=user_id,
+        session=session,
+    )
+    return None
+
+
+@group_router.post(
+    "/{group_id}/members/{user_id}/{permission}",
+    status_code=status.HTTP_201_CREATED,
+    name="Добавление права пользователю в группе",
+    response_model=GroupMemberSchema,
+    description="Позволяет пользователю добавлять права в группе другому пользователю",
+    responses={
+        200: {"description": "Право успешно добавлено", "model": GroupMemberSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для добавления данного права пользователю.",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно исключить из группы себя",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def add_user_group_permission_route(
+    permission: Annotated[GroupPermission, Path(...)],
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupMemberSchema:
+    return await add_user_group_permission(
+        permission=permission,
+        group_id=group_id,
+        changer_user_id=token_payload.sub,
+        target_user_id=user_id,
+        session=session,
+    )
+
+
+@group_router.delete(
+    "/{group_id}/members/{user_id}/{permission}",
+    status_code=status.HTTP_200_OK,
+    name="Удаление права пользователя в группе",
+    response_model=GroupMemberSchema,
+    description="Позволяет пользователю удалять права в группе другому пользователю",
+    responses={
+        200: {"description": "Право успешно удалено", "model": GroupMemberSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав для добавления данного права пользователю.",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Невозможно исключить из группы себя",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def remove_user_group_permission_route(
+    permission: Annotated[GroupPermission, Path(...)],
+    group_id: Annotated[UUID, Path(...)],
+    user_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupMemberSchema:
+    return await remove_user_group_permission(
+        permission=permission,
+        group_id=group_id,
+        changer_user_id=token_payload.sub,
+        target_user_id=user_id,
+        session=session,
+    )
+
+
+@group_router.patch(
+    "/{group_id}/creator",
+    status_code=status.HTTP_200_OK,
+    name="Изменяет создателя группы",
+    response_model=GroupDetailSchema,
+    description="Позволяет владельцу группы изменить её владельца",
+    responses={
+        200: {"description": "Создатель успешно изменен", "model": GroupDetailSchema},
+        400: {
+            "description": "Некорректный запрос",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Пользователь, пытающийся сменить владельца группы не является её актуальным владельцем",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def change_group_creator_route(
+    change_group_schema: Annotated[ChangeGroupCreatorSchema, Body(...)],
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> GroupDetailSchema:
+    return await change_group_creator(
+        group_id=group_id,
+        actual_creator_user_id=token_payload.sub,
+        new_creator_user_id=change_group_schema.new_creator_id,
+        session=session,
+    )
+
+
+@group_router.get(
+    "/{group_id}/join-requests",
+    status_code=status.HTTP_200_OK,
+    name="Получения списка заявок на вступление в группу",
+    response_model=list[JoinRequestSchema],
+    description="Позволяет пользователю с правами FULL_ACCESS или ACCEPT_JOIN_REQUESTS, а также создателю группы просматривать список заявок на вступление",
+    responses={
+        200: {
+            "description": "Успешное получение заявок на вступление",
+            "model": JoinRequestSchema,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав, чтобы увидеть список заявок",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def get_group_join_requests_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    request_status: Annotated[list[JoinRequestStatus] | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=100, description="Максимальное количество результатов")] = 20,
+    offset: Annotated[int, Query(ge=0, description="Смещение от начала выборки")] = 0,
+) -> Sequence[JoinRequestSchema]:
+    return await get_group_join_requests(
+        join_request_status=request_status,
+        group_id=group_id,
+        user_id=token_payload.sub,
+        session=session,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@group_router.post(
+    "/{group_id}/join-requests",
+    status_code=status.HTTP_200_OK,
+    name="Отправка пользователем запроса на вступление в группу",
+    response_model=JoinRequestSchema,
+    description="Позволяет владельцу группы изменить её владельца",
+    responses={
+        200: {
+            "description": "Успешная отправка заявки на вступление",
+            "model": JoinRequestSchema,
+        },
+        400: {
+            "description": "Пользователь уже в группе",
+            "model": ErrorResponseModel,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Группа полная",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def send_join_request_route(
+    group_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> JoinRequestSchema:
+    return await send_join_request(
+        group_id=group_id,
+        requester_id=token_payload.sub,
+        session=session,
+    )
+
+
+@group_router.patch(
+    "/join-requests/{join_request_id}",
+    status_code=status.HTTP_200_OK,
+    name="Ответ на запрос на вступление пользователя в группу",
+    response_model=JoinRequestSchema,
+    description="Позволяет человеку, обладающему правами для принятия новых пользователей принять запрос на вступление",
+    responses={
+        200: {
+            "description": "Успешная отправка заявки на вступление",
+            "model": JoinRequestSchema,
+        },
+        401: {
+            "description": "Access token не найден, истек или некорректен",
+            "model": ErrorResponseModel,
+        },
+        403: {
+            "description": "Недостаточно прав, чтобы принять заявку на вступление",
+            "model": ErrorResponseModel,
+        },
+        404: {
+            "description": "Группы с таким ID не существует",
+            "model": ErrorResponseModel,
+        },
+        409: {
+            "description": "Группа полная, или на заявку ранее уже был дан ответ",
+            "model": ErrorResponseModel,
+        },
+        422: {
+            "description": "Некорректные данные в запросе (валидация схемы).",
+            "model": ErrorResponseModel,
+        },
+        429: {"description": "Превышены лимиты API.", "model": ErrorResponseModel},
+        500: {"description": "Внутренняя ошибка сервера."},
+    },
+)
+async def respond_to_join_request_route(
+    join_request_respond: Annotated[RespondToJoinRequestSchema, Body(...)],
+    join_request_id: Annotated[UUID, Path(...)],
+    token_payload: Annotated[TokenPayloadSchema, Depends(token_verification)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> JoinRequestSchema:
+    return await respond_to_join_request(
+        respond_status=join_request_respond.response,
+        join_request_id=join_request_id,
+        session=session,
+        acceptor_id=token_payload.sub,
+    )

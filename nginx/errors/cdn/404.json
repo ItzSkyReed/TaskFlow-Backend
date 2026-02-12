@@ -1,0 +1,9 @@
+{
+  "detail": [
+    {
+      "msg": "Ресурс не найден в файловом хранилище",
+      "type": "value_error.resource_not_found",
+      "loc": ["path"]
+    }
+  ]
+}

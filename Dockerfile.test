@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13.7-alpine3.22
 
 # Установим uv
 RUN pip install --no-cache-dir uv
@@ -13,4 +13,6 @@ RUN uv pip install -r pyproject.toml --system
 RUN uv pip install -r requirements-dev.txt --system
 
 COPY ./src /fast_api/src
+COPY ./alembic.ini /fast_api/alembic.ini
 COPY ./tests /fast_api/tests
+COPY ./alembic /fast_api/alembic

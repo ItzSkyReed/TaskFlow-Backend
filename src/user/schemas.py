@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Optional, Self
+from typing import Annotated, Optional
 from uuid import UUID
 
 from pydantic import (
@@ -11,38 +11,37 @@ from pydantic import (
     model_validator,
 )
 
-from ..auth.constants import LOGIN_PATTERN
 from ..config import get_settings
-from .constants import NAME_PATTERN
+from ..constants import USER_LOGIN_PATTERN, USER_NAME_PATTERN
 
 settings = get_settings()
 
 
-class UserSchema(BaseModel):
-    """
-    Модель пользователя с профилем
-
-    """
-
-    id: UUID
-    login: Annotated[
-        str, Field(..., min_length=4, max_length=64, pattern=LOGIN_PATTERN)
-    ]
-    email: Annotated[EmailStr, Field(..., max_length=320)]
-
-    registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
-
-    profile: Annotated["ProfileSchema", Field(..., validation_alias="user_profile")]
-
+class UserAvatarMixin(BaseModel):
     has_avatar: Annotated[bool, Field(default=False, exclude=True)]
 
     @computed_field
     @property
     def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
         if getattr(self, "has_avatar", False):
             return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
         return None
+
+
+class UserSchema(UserAvatarMixin, BaseModel):
+    """
+    Модель пользователя с профилем
+    """
+
+    id: UUID
+
+    login: Annotated[str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)]
+
+    email: Annotated[EmailStr, Field(..., max_length=320)]
+
+    registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
+
+    profile: Annotated["ProfileSchema", Field(..., validation_alias="user_profile")]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,26 +57,16 @@ class ProfileSchema(BaseModel):
     show_email: Annotated[bool, Field(...)]
 
 
-class PublicUserSchema(BaseModel):
+class PublicUserSchema(UserAvatarMixin, BaseModel):
     id: UUID
+
+    login: Annotated[str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)]
 
     email: Annotated[EmailStr | None, Field(default=None, max_length=320)]
 
     registered_at: Annotated[datetime, Field(..., validation_alias="created_at")]
 
-    has_avatar: Annotated[bool, Field(default=False, exclude=True)]
-
-    profile: Annotated[
-        "PublicProfileSchema", Field(..., validation_alias="user_profile")
-    ]
-
-    @computed_field
-    @property
-    def avatar_url(self) -> str | None:
-        # Проверяем наличие атрибута has_avatar и что он True
-        if getattr(self, "has_avatar", False):
-            return f"{settings.cdn_path}/avatars/users/{self.id}.webp"
-        return None
+    profile: Annotated["PublicProfileSchema", Field(..., validation_alias="user_profile")]
 
     @model_validator(mode="after")
     def check_profile_visibility(self):
@@ -131,15 +120,6 @@ class PatchUserSchema(BaseModel):
         Field(default=None, serialization_alias="user_profile"),
     ]
 
-    @model_validator(mode="after")
-    def at_least_one_field(self) -> Self:
-        # noinspection PyTypeChecker
-        if not any(
-            getattr(self, field) is not None for field in self.__class__.model_fields
-        ):
-            raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
-        return self
-
 
 class PatchProfileSchema(BaseModel):
     name: Annotated[
@@ -148,7 +128,7 @@ class PatchProfileSchema(BaseModel):
             default=None,
             min_length=4,
             max_length=32,
-            pattern=NAME_PATTERN,
+            pattern=USER_NAME_PATTERN,
             examples=["Joe_Sardina", "Margaret' Kabina", "x-MarinaPro228"],
             description="Публичное имя",
         ),
@@ -172,11 +152,22 @@ class PatchProfileSchema(BaseModel):
         Field(default=None, description="Показывать ли остальным пользователям email"),
     ]
 
-    @model_validator(mode="after")
-    def at_least_one_field(self) -> Self:
-        # noinspection PyTypeChecker
-        if not any(
-            getattr(self, field) is not None for field in self.__class__.model_fields
-        ):
-            raise ValueError("Должно быть указано хотя бы одно поле для обновления.")
-        return self
+
+class UserSearchSchema(UserAvatarMixin, BaseModel):
+    """
+    Модель пользователя с профилем
+    """
+
+    id: UUID
+
+    login: Annotated[str, Field(..., min_length=4, max_length=64, pattern=USER_LOGIN_PATTERN)]
+
+    profile: Annotated["UserSearchProfileSchema", Field(..., validation_alias="user_profile")]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserSearchProfileSchema(BaseModel):
+    name: Annotated[str, Field(max_length=32)]
+
+    model_config = ConfigDict(from_attributes=True)

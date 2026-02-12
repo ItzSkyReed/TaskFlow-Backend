@@ -10,7 +10,6 @@ from ..config import get_settings
 from ..database import get_async_session
 from ..schemas import ErrorResponseModel, SuccessResponseModel
 from .config import get_auth_settings
-from .dependencies import validate_user_uniqueness
 from .exceptions import RefreshTokenNotFound
 from .schemas import (
     AccessTokenSchema,
@@ -59,7 +58,7 @@ auth_settings = get_auth_settings()
 )
 async def sign_up_user_route(
     response: Response,
-    user_in: Annotated[SignUpSchema, Depends(validate_user_uniqueness)],
+    user_in: Annotated[SignUpSchema, Body(...)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> AccessTokenSchema:
     register_result = await sign_up_user(user_in, session)
@@ -68,7 +67,7 @@ async def sign_up_user_route(
         key="refresh_token",
         value=register_result.refresh_token,
         httponly=True,
-        max_age=auth_settings.refresh_token_expires_in,
+        max_age=auth_settings.refresh_token_expires_in * 60,
         path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
@@ -111,7 +110,7 @@ async def sign_in_user_route(
         key="refresh_token",
         value=login_result.refresh_token,
         httponly=True,
-        max_age=auth_settings.refresh_token_expires_in,
+        max_age=auth_settings.refresh_token_expires_in * 60,
         path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
@@ -142,9 +141,7 @@ async def sign_in_user_route(
         500: {"description": "Внутренняя ошибка сервера."},
     },
 )
-async def refresh_tokens_route(
-    request: Request, response: Response
-) -> AccessTokenSchema:
+async def refresh_tokens_route(request: Request, response: Response) -> AccessTokenSchema:
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:
@@ -156,7 +153,7 @@ async def refresh_tokens_route(
         key="refresh_token",
         value=new_tokens.refresh_token,
         httponly=True,
-        max_age=auth_settings.refresh_token_expires_in,
+        max_age=auth_settings.refresh_token_expires_in * 60,
         path=f"{settings.root_path}{settings.api_prefix}{auth_router.prefix}",
     )
 
@@ -225,6 +222,9 @@ async def change_password_route(
         },
         500: {"description": "Внутренняя ошибка сервера."},
     },
+    dependencies=[
+        Depends(token_verification),
+    ],
 )
 async def logout_user_route(request: Request, response: Response) -> None:
     refresh_token = request.cookies.get("refresh_token")
